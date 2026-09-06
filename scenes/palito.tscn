@@ -1,0 +1,38 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/rope_end.gd" id="1_end"]
+
+[sub_resource type="RectangleShape2D" id="Rect_palito"]
+size = Vector2(22, 6)
+
+[sub_resource type="CircleShape2D" id="Circle_hook"]
+radius = 9.0
+
+[node name="Palito" type="RigidBody2D"]
+collision_layer = 8
+collision_mask = 5
+mass = 0.6
+gravity_scale = 1.0
+linear_damp = 0.3
+angular_damp = 1.5
+can_sleep = false
+continuous_cd = 2
+script = ExtResource("1_end")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Rect_palito")
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.62, 0.42, 0.24, 1)
+polygon = PackedVector2Array(-11, -3, 11, -3, 11, 3, -11, 3)
+
+[node name="Tip" type="Marker2D" parent="."]
+position = Vector2(11, 0)
+
+[node name="HookSensor" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 16
+monitoring = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HookSensor"]
+shape = SubResource("Circle_hook")

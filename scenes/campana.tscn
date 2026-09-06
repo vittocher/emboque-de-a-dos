@@ -1,0 +1,73 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/rope_end.gd" id="1_end"]
+
+[sub_resource type="RectangleShape2D" id="Rect_spine"]
+size = Vector2(6, 24)
+
+[sub_resource type="RectangleShape2D" id="Rect_bar"]
+size = Vector2(16, 6)
+
+[sub_resource type="RectangleShape2D" id="Rect_cavity"]
+size = Vector2(10, 10)
+
+[sub_resource type="CircleShape2D" id="Circle_hook"]
+radius = 9.0
+
+[node name="Campana" type="RigidBody2D"]
+collision_layer = 4
+collision_mask = 9
+mass = 1.0
+gravity_scale = 1.0
+linear_damp = 0.3
+angular_damp = 1.5
+can_sleep = false
+continuous_cd = 2
+script = ExtResource("1_end")
+
+[node name="Spine" type="CollisionShape2D" parent="."]
+position = Vector2(-8, 0)
+shape = SubResource("Rect_spine")
+
+[node name="Top" type="CollisionShape2D" parent="."]
+position = Vector2(-1, -9)
+shape = SubResource("Rect_bar")
+
+[node name="Bottom" type="CollisionShape2D" parent="."]
+position = Vector2(-1, 9)
+shape = SubResource("Rect_bar")
+
+[node name="VisualSpine" type="Polygon2D" parent="."]
+color = Color(0.72, 0.47, 0.26, 1)
+polygon = PackedVector2Array(-11, -12, -5, -12, -5, 12, -11, 12)
+
+[node name="VisualTop" type="Polygon2D" parent="."]
+color = Color(0.72, 0.47, 0.26, 1)
+polygon = PackedVector2Array(-9, -12, 7, -12, 7, -6, -9, -6)
+
+[node name="VisualBottom" type="Polygon2D" parent="."]
+color = Color(0.72, 0.47, 0.26, 1)
+polygon = PackedVector2Array(-9, 6, 7, 6, 7, 12, -9, 12)
+
+[node name="Mouth" type="Marker2D" parent="."]
+position = Vector2(7, 0)
+
+[node name="Cavity" type="Marker2D" parent="."]
+position = Vector2(-1, 0)
+
+[node name="CavitySensor" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 8
+monitoring = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CavitySensor"]
+position = Vector2(-1, 0)
+shape = SubResource("Rect_cavity")
+
+[node name="HookSensor" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 16
+monitoring = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HookSensor"]
+shape = SubResource("Circle_hook")
