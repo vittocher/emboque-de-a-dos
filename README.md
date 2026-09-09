@@ -2,4 +2,4 @@
 
 Repositorio del juego "Emboque de a Dos" para el curso IIC3686
 
-Engine: Godot 4.6
+Engine: Godot 4.7
