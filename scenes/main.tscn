@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://cmain00000001"]
+[gd_scene load_steps=11 format=3 uid="uid://cmain00000001"]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/emboque.tscn" id="2_emboque"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/win_manager.gd" id="4_win"]
 [ext_resource type="PackedScene" path="res://scenes/campana.tscn" id="5_campana"]
 [ext_resource type="PackedScene" path="res://scenes/palito.tscn" id="6_palito"]
+[ext_resource type="Script" path="res://scripts/pause_menu.gd" id="7_pause"]
 
 [sub_resource type="RectangleShape2D" id="Shape_ground"]
 size = Vector2(1280, 40)
@@ -95,6 +96,62 @@ end_scene = ExtResource("6_palito")
 end_kind = "palito"
 
 [node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("7_pause")
+
+[node name="PausePanel" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dimmer" type="ColorRect" parent="UI/PausePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.48)
+
+[node name="Panel" type="Panel" parent="UI/PausePanel"]
+layout_mode = 0
+offset_left = 460.0
+offset_top = 220.0
+offset_right = 820.0
+offset_bottom = 500.0
+
+[node name="VBox" type="VBoxContainer" parent="UI/PausePanel/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 36.0
+offset_top = 28.0
+offset_right = -36.0
+offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="UI/PausePanel/Panel/VBox"]
+layout_mode = 2
+text = "Pausa"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+
+[node name="ContinueButton" type="Button" parent="UI/PausePanel/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Continuar"
+theme_override_font_sizes/font_size = 24
+
+[node name="RestartButton" type="Button" parent="UI/PausePanel/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Reiniciar nivel"
+theme_override_font_sizes/font_size = 24
 
 [node name="WinLabel" type="Label" parent="UI"]
 anchor_right = 1.0
