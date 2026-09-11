@@ -1,0 +1,247 @@
+[gd_scene load_steps=18 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/emboque.tscn" id="2_emboque"]
+[ext_resource type="PackedScene" path="res://scenes/hook_point.tscn" id="3_hook"]
+[ext_resource type="Script" path="res://scripts/win_manager.gd" id="4_win"]
+[ext_resource type="PackedScene" path="res://scenes/campana.tscn" id="5_campana"]
+[ext_resource type="PackedScene" path="res://scenes/palito.tscn" id="6_palito"]
+[ext_resource type="Script" path="res://scripts/pause_menu.gd" id="7_pause"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="8_collectible"]
+[ext_resource type="Script" path="res://scripts/score_manager.gd" id="9_score"]
+
+[sub_resource type="RectangleShape2D" id="Shape_ground"]
+size = Vector2(1280, 40)
+
+[sub_resource type="RectangleShape2D" id="Shape_top_platform"]
+size = Vector2(280, 24)
+
+[sub_resource type="RectangleShape2D" id="Shape_platform"]
+size = Vector2(340, 20)
+
+[sub_resource type="RectangleShape2D" id="Shape_bridge"]
+size = Vector2(230, 20)
+
+[sub_resource type="RectangleShape2D" id="Shape_wall"]
+size = Vector2(26, 560)
+
+[sub_resource type="RectangleShape2D" id="Shape_red_left"]
+size = Vector2(165, 24)
+
+[sub_resource type="RectangleShape2D" id="Shape_red_right"]
+size = Vector2(165, 24)
+
+[node name="Level2" type="Node2D"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="Ground" type="StaticBody2D" parent="."]
+position = Vector2(640, 700)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
+shape = SubResource("Shape_ground")
+
+[node name="Visual" type="Polygon2D" parent="Ground"]
+color = Color(0.25, 0.22, 0.2, 1)
+polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
+
+[node name="TopPlatformLeft" type="StaticBody2D" parent="."]
+position = Vector2(150, 130)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TopPlatformLeft"]
+shape = SubResource("Shape_top_platform")
+
+[node name="Visual" type="Polygon2D" parent="TopPlatformLeft"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-140, -12, 140, -12, 140, 12, -140, 12)
+
+[node name="TopPlatformRight" type="StaticBody2D" parent="."]
+position = Vector2(1130, 130)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TopPlatformRight"]
+shape = SubResource("Shape_top_platform")
+
+[node name="Visual" type="Polygon2D" parent="TopPlatformRight"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-140, -12, 140, -12, 140, 12, -140, 12)
+
+[node name="LeftPlatform" type="StaticBody2D" parent="."]
+position = Vector2(400, 300)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftPlatform"]
+shape = SubResource("Shape_platform")
+
+[node name="Visual" type="Polygon2D" parent="LeftPlatform"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-170, -10, 170, -10, 170, 10, -170, 10)
+
+[node name="CenterBridge" type="StaticBody2D" parent="."]
+position = Vector2(640, 455)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CenterBridge"]
+shape = SubResource("Shape_bridge")
+
+[node name="Visual" type="Polygon2D" parent="CenterBridge"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-115, -10, 115, -10, 115, 10, -115, 10)
+
+[node name="WallCenter" type="StaticBody2D" parent="."]
+position = Vector2(640, 280)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallCenter"]
+shape = SubResource("Shape_wall")
+
+[node name="Visual" type="Polygon2D" parent="WallCenter"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-13, -280, 13, -280, 13, 280, -13, 280)
+
+[node name="RedBlockLeft" type="StaticBody2D" parent="."]
+position = Vector2(400, 270)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RedBlockLeft"]
+shape = SubResource("Shape_red_left")
+one_way_collision = true
+one_way_collision_margin = 8.0
+
+[node name="Visual" type="Polygon2D" parent="RedBlockLeft"]
+color = Color(0.9, 0.15, 0.12, 1)
+polygon = PackedVector2Array(-82, -12, 82, -12, 82, 12, -82, 12)
+
+[node name="RedBlockRight" type="StaticBody2D" parent="."]
+position = Vector2(900, 325)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RedBlockRight"]
+shape = SubResource("Shape_red_right")
+one_way_collision = true
+one_way_collision_margin = 8.0
+
+[node name="Visual" type="Polygon2D" parent="RedBlockRight"]
+color = Color(0.9, 0.15, 0.12, 1)
+polygon = PackedVector2Array(-82, -12, 82, -12, 82, 12, -82, 12)
+
+[node name="HookPointLeft" parent="." instance=ExtResource("3_hook")]
+position = Vector2(340, 315)
+
+[node name="HookPointCenter" parent="." instance=ExtResource("3_hook")]
+position = Vector2(755, 505)
+
+[node name="HookPointTop" parent="." instance=ExtResource("3_hook")]
+position = Vector2(845, 155)
+
+[node name="Player1" parent="." instance=ExtResource("1_player")]
+position = Vector2(150, 70)
+input_prefix = "p1"
+
+[node name="Player2" parent="." instance=ExtResource("1_player")]
+modulate = Color(1, 0.5, 0.4, 1)
+position = Vector2(1130, 70)
+input_prefix = "p2"
+
+[node name="WinManager" type="Node2D" parent="."]
+script = ExtResource("4_win")
+emboque_a = NodePath("../Emboque1")
+emboque_b = NodePath("../Emboque2")
+win_label = NodePath("../UI/WinLabel")
+
+[node name="Emboque1" parent="." instance=ExtResource("2_emboque")]
+anchor_node = NodePath("../Player1/RopeAnchor")
+input_prefix = "p1"
+end_scene = ExtResource("5_campana")
+end_kind = "campana"
+
+[node name="Emboque2" parent="." instance=ExtResource("2_emboque")]
+anchor_node = NodePath("../Player2/RopeAnchor")
+input_prefix = "p2"
+end_scene = ExtResource("6_palito")
+end_kind = "palito"
+
+[node name="ScoreManager" type="Node" parent="."]
+script = ExtResource("9_score")
+score_label = NodePath("../UI/ScoreLabel")
+
+[node name="Collectible1" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(570, 225)
+
+[node name="Collectible2" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(555, 395)
+
+[node name="Collectible3" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(695, 395)
+
+[node name="Collectible4" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(940, 650)
+
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("7_pause")
+
+[node name="ScoreLabel" type="Label" parent="UI"]
+offset_left = 30.0
+offset_top = 20.0
+offset_right = 300.0
+offset_bottom = 65.0
+text = "Puntos: 0"
+theme_override_colors/font_color = Color(0.1, 0.75, 0.62, 1)
+theme_override_font_sizes/font_size = 30
+
+[node name="PausePanel" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dimmer" type="ColorRect" parent="UI/PausePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.48)
+
+[node name="Panel" type="Panel" parent="UI/PausePanel"]
+layout_mode = 0
+offset_left = 460.0
+offset_top = 220.0
+offset_right = 820.0
+offset_bottom = 500.0
+
+[node name="VBox" type="VBoxContainer" parent="UI/PausePanel/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 36.0
+offset_top = 28.0
+offset_right = -36.0
+offset_bottom = -28.0
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="UI/PausePanel/Panel/VBox"]
+layout_mode = 2
+text = "Pausa"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+
+[node name="ContinueButton" type="Button" parent="UI/PausePanel/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Continuar"
+theme_override_font_sizes/font_size = 24
+
+[node name="RestartButton" type="Button" parent="UI/PausePanel/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Reiniciar nivel"
+theme_override_font_sizes/font_size = 24
+
+[node name="WinLabel" type="Label" parent="UI"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "¡Emboque logrado!"
+theme_override_font_sizes/font_size = 72
+theme_override_colors/font_color = Color(1, 0.95, 0.4, 1)
