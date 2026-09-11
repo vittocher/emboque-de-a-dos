@@ -6,11 +6,11 @@ Guía para trabajar en este repositorio. Léela antes de tocar código.
 
 **Emboque de a Dos**: puzzle **cooperativo local de 2 jugadores** (estilo *Fireboy & Watergirl*), en **Godot 4.6**, apuntado a **web (Newgrounds)**. Tema: amistad y tradición chilena.
 
-De cada personaje cuelga **media mitad del emboque** por una cuerda: J1 lleva el **palito**, J2 la **campana**. La física de la cuerda (balanceo tipo péndulo) es la mecánica central. El objetivo de cada nivel es **juntar palito + campana** (embocar). El concepto completo está en `EmboqueDA2 Concepto.pdf`.
+De cada personaje cuelga **media mitad del emboque** por una cuerda: J1 lleva la **campana**, J2 el **palito**. La física de la cuerda (balanceo tipo péndulo) es la mecánica central. El objetivo de cada nivel es **juntar palito + campana** (embocar). El concepto completo está en `EmboqueDA2 Concepto.pdf`.
 
 ## Setup / cómo correr
 
-- **Editor:** Godot 4.6 (ejecutable en `C:\Users\vitto\OneDrive\Desktop\Godot\Godot_v4.6-stable_win64.exe`; la variante `..._console.exe` sirve para CLI headless).
+- **Editor:** Godot **4.7.2** (ejecutable en `C:\Users\vitto\OneDrive\Desktop\Godot\Godot_v4.7.2-stable_win64.exe`; la variante `..._console.exe` sirve para CLI headless). En esa misma carpeta también está el 4.6 (versión previa). `config/features` en `project.godot` = `4.7`.
 - **Abrir:** importar el `project.godot` de esta carpeta desde el Project Manager, o **F5** para jugar.
 - **Escena de arranque:** `res://scenes/ui/main_menu.tscn` (menú). El **nivel de gameplay** es `res://scenes/main.tscn`. Durante el desarrollo del gameplay, abrir `main.tscn` y correr con **F6** (ejecutar escena actual) para saltarse el menú.
 - **Resolución base:** 1280×720 (16:9). Stretch `canvas_items` + aspect `keep` (default en Godot 4, por eso el editor lo omite del archivo). No pixel-art; se adapta a cualquier tamaño de embed sin deformar.
@@ -18,7 +18,7 @@ De cada personaje cuelga **media mitad del emboque** por una cuerda: J1 lleva el
 ### Validación headless (sin abrir el editor)
 
 ```bash
-GODOT="/c/Users/vitto/OneDrive/Desktop/Godot/Godot_v4.6-stable_win64_console.exe"
+GODOT="/c/Users/vitto/OneDrive/Desktop/Godot/Godot_v4.7.2-stable_win64_console.exe"
 # Importar recursos:
 "$GODOT" --headless --editor --quit-after 2 --path .
 # Correr N frames de la escena principal y filtrar errores:
@@ -37,6 +37,8 @@ Se puede correr una escena puntual pasándola como argumento posicional:
 
 Las acciones siguen el patrón `<prefix>_<accion>`: `_left`, `_right`, `_jump`, `_down` (S / flecha abajo), `_release` (soltar = alargar), `_pull` (tirar = acortar). Usan `physical_keycode` (independiente del layout del teclado).
 
+**Esc** (`ui_cancel`) abre/cierra el **menú de pausa** en el nivel (ver `pause_menu.gd`).
+
 **Enganchado** (ver Fase 4.5): `soltar` baja al jugador (rapel), `tirar` lo sube, `abajo` (S / ↓) lo **desengancha** (por defecto solo se suelta y cae; `unhook_hop` permite un impulso).
 
 ## Arquitectura
@@ -50,17 +52,33 @@ scenes/
   palito.tscn          Extremo RigidBody2D: rectángulo largo y flaco + Tip + HookSensor. (J2)
   campana.tscn         Extremo RigidBody2D: forma de C (3 rects) + CavitySensor + Mouth/Cavity + HookSensor. (J1)
   hook_point.tscn      Area2D (punto de enganche del entorno) + rombo visual.
+  player_death_zone.tscn  Area2D que mata al JUGADOR al tocarlo (visual roja).
+  emboque_death_zone.tscn Area2D que mata al EMBOQUE al tocarlo (visual morada).
+  both_death_zone.tscn    Zona que mata a ambos (visual naranja); compone los dos scripts.
+  test_death.tscn      Nivel de prueba de las zonas de muerte (2 jugadores + 2 emboques + las 3 zonas).
   ui/main_menu.tscn      Menú: Jugar, Ajustes, y texto de controles.
-  ui/level_selector.tscn Selector de niveles (1 nivel por ahora; futuro: grafo conectado).
+  ui/level_selector.tscn Selector de niveles (Nivel 1 + "Prueba: muerte"; futuro: grafo conectado).
   ui/settings.tscn       Ajustes: volumen maestro + pantalla completa.
+  ui/pause_menu.tscn     Menú de pausa reutilizable (Esc). Instanciar en cada nivel.
 scripts/
   player.gd        Controlador de plataformas parametrizado por input_prefix.
   emboque.gd       Coordina la media-cuerda: largo, enganche, límite del jugador, cuerda visual;
                    instancia el extremo (end_scene) y le pasa los parámetros de la cuerda.
   rope_end.gd      RigidBody2D del extremo (palito/campana): restricción de cuerda en _integrate_forces.
   win_manager.gd   Magnetismo distancia+ángulo entre extremos + victoria (palito dentro de campana).
+  player_death_zone.gd   Al entrar un jugador (mask=2) → reinicia el nivel. Señal triggered; export reload_on_death.
+  emboque_death_zone.gd  Al entrar un extremo (mask=12 = campana 4 + palito 8) → reinicia. (Scripts separados a propósito.)
+  pause_menu.gd    Menú de pausa del nivel (Esc): Continuar / Reiniciar. Es un CanvasLayer.
+                   La pausa NO es global: cada nivel debe TENER el nodo. Reutilizable vía ui/pause_menu.tscn
+                   (test_death lo instancia; main.tscn lo tiene inline en su CanvasLayer "UI").
   ui/*.gd          Lógica de los menús (navegación con change_scene_to_file).
 ```
+
+### Zonas de muerte
+
+`Area2D` que al ser tocadas (`body_entered`) recargan el nivel. El **filtro por máscara** decide a quién matan: jugadores = `mask 2`; emboque = `mask 12`. Hay **dos scripts separados** (jugador / emboque) para poder darles mecánicas distintas a futuro; la zona "ambos" los **compone** (dos `Area2D` hijas, una con cada script) y tiene su propio visual. Cada script setea su `collision_mask` en `_ready`, expone `signal triggered(body)` y `@export reload_on_death` (ponerlo en `false` en tests para no recargar). Guard `_fired` evita disparos repetidos.
+
+La recarga se hace con `get_tree().call_deferred("reload_current_scene")`: **recargar dentro de `body_entered` (callback de física) está prohibido** en Godot (libera CollisionObjects a mitad del callback) — hay que diferirlo. Nota: los niveles reales instancian `WinManager` (victoria) y `ui/pause_menu.tscn` (pausa) además de las zonas; `test_death.tscn` los tiene los tres.
 
 J1 = **campana**, J2 = **palito** (asignados en `main.tscn` vía `end_scene` + `end_kind`).
 
@@ -113,6 +131,8 @@ Identifica palito y campana por `end_kind`. Cada frame, si la punta del palito e
 - **Restricción de cuerda en RigidBody:** hacerla por **velocidad** en `_integrate_forces` (no fijando `transform.origin`), para no teletransportar a través de paredes. Definir `_integrate_forces` NO desactiva las colisiones (salvo `custom_integrator = true`).
 - **Formas cóncavas en 2D:** no existen como shape convexa única. La campana (C) se arma con **varios `CollisionShape2D` rectangulares** (convexos), no un polígono cóncavo.
 - **Al medir en tests una colisión con péndulo:** medir el **pico** (ej. máximo empuje), no el frame final — el péndulo/gravedad ya devolvió el cuerpo a su sitio y da un falso negativo.
+- **No liberar/recargar dentro de un callback de física** (`body_entered`, `area_entered`, etc.): Godot prohíbe destruir CollisionObjects a mitad del paso físico. Usar `call_deferred(...)`. (Pasó con `reload_current_scene` en las zonas de muerte.)
+- **En tests headless, simular input con `Input.parse_input_event(ev)`**, no `Input.action_press` — este último solo cambia el estado interno y no llega a `_input`/`_unhandled_input`.
 - Godot re-guarda escenas/`project.godot` al abrirlos (puede cambiar `uid`/`load_steps` u omitir valores por default); es esperado.
 
 ## Estado de desarrollo (prototipo de la mecánica)
@@ -127,6 +147,10 @@ Hecho (verificado con tests headless donde aplica):
 - **Fase 5** — Victoria con magnetismo: atracción entre extremos + captura por dwell.
 - **Menú** — main_menu / level_selector / settings (navegación + ajustes funcionales).
 - **Extremos como emboque real** — palito (rectángulo) y campana (C), `RigidBody2D` que rotan y **colisionan entre sí** por física; magnetismo de **distancia + ángulo**; victoria = **palito dentro de la campana** (`CavitySensor`). Tests headless: colisión sin atravesar (incl. velocidad capada) PASS; emboque por magnetismo PASS; enganche PASS.
+- **Partes pequeñas + física 120 Hz** — palito/campana a ~1/3 del jugador; magnetismo más sutil; `physics_ticks_per_second=120` para evitar tunneling con paredes finas.
+- **Upgrade a Godot 4.7.2** (antes 4.6) — proyecto importa y corre limpio en 4.7.
+- **Menú de pausa** (`pause_menu.gd`, vía PR #1) — Esc pausa (`get_tree().paused`); botones Continuar / Reiniciar. El nodo usa `process_mode = ALWAYS` para seguir respondiendo con el juego pausado.
+- **Zonas de muerte** — `player_death_zone` / `emboque_death_zone` (scripts separados) + `both_death_zone`, cada una con visual distinta; reinician el nivel al contacto. Nivel `test_death.tscn` en el selector. Test headless: detección + aislamiento por máscara + zona "ambos" PASS.
 
 Pendiente:
 - **Fase 6** — Nivel de prueba definitivo a medida de cámara + pasada de tuning de la sensación (magnetismo, masas, largos, velocidades).
