@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://cmain00000001"]
+[gd_scene load_steps=12 format=3 uid="uid://cmain00000001"]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/emboque.tscn" id="2_emboque"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/campana.tscn" id="5_campana"]
 [ext_resource type="PackedScene" path="res://scenes/palito.tscn" id="6_palito"]
 [ext_resource type="Script" path="res://scripts/pause_menu.gd" id="7_pause"]
+[ext_resource type="PackedScene" path="res://scenes/closeup_manager.tscn" id="8_closeup"]
 
 [sub_resource type="RectangleShape2D" id="Shape_ground"]
 size = Vector2(1280, 40)
@@ -82,6 +83,11 @@ script = ExtResource("4_win")
 emboque_a = NodePath("../Emboque1")
 emboque_b = NodePath("../Emboque2")
 win_label = NodePath("../UI/WinLabel")
+
+[node name="CloseupManager" parent="." instance=ExtResource("8_closeup")]
+camera_path = NodePath("../Camera2D")
+emboque_a = NodePath("../Emboque1")
+emboque_b = NodePath("../Emboque2")
 
 [node name="Emboque1" parent="." instance=ExtResource("2_emboque")]
 anchor_node = NodePath("../Player1/RopeAnchor")

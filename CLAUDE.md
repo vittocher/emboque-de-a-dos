@@ -56,6 +56,7 @@ scenes/
   emboque_death_zone.tscn Area2D que mata al EMBOQUE al tocarlo (visual morada).
   both_death_zone.tscn    Zona que mata a ambos (visual naranja); compone los dos scripts.
   test_death.tscn      Nivel de prueba de las zonas de muerte (2 jugadores + 2 emboques + las 3 zonas).
+  closeup_manager.tscn Efecto reutilizable: closeup + cámara lenta al acercarse los extremos (instanciar por nivel).
   ui/main_menu.tscn      Menú: Jugar, Ajustes, y texto de controles.
   ui/level_selector.tscn Selector de niveles (Nivel 1 + "Prueba: muerte"; futuro: grafo conectado).
   ui/settings.tscn       Ajustes: volumen maestro + pantalla completa.
@@ -65,6 +66,7 @@ scripts/
   emboque.gd       Coordina la media-cuerda: largo, enganche, límite del jugador, cuerda visual;
                    instancia el extremo (end_scene) y le pasa los parámetros de la cuerda.
   rope_end.gd      RigidBody2D del extremo (palito/campana): restricción de cuerda en _integrate_forces.
+  closeup_manager.gd Closeup de cámara + slowdown (Engine.time_scale) al acercarse los extremos; reutilizable; reinicia time_scale en _exit_tree.
   win_manager.gd   Magnetismo distancia+ángulo entre extremos + victoria (palito dentro de campana).
   player_death_zone.gd   Al entrar un jugador (mask=2) → reinicia el nivel. Señal triggered; export reload_on_death.
   emboque_death_zone.gd  Al entrar un extremo (mask=12 = campana 4 + palito 8) → reinicia. (Scripts separados a propósito.)
@@ -110,7 +112,7 @@ El **extremo** (palito/campana) es un `RigidBody2D` (`rope_end.gd`) con física 
 4. `_limit_player` — si el extremo quedó a más de `rope_length` (trabado o colgando de un gancho), **tira del jugador** hacia el extremo con `_move_sliding`.
 5. `_update_rope_visual`.
 
-`rope_end.gd` en `_integrate_forces`: si `hooked`, fija el extremo al gancho; si no, aplica la **restricción de cuerda por velocidad** (quita la velocidad radial hacia afuera + corrige el exceso), sin fijar posición → el motor resuelve colisiones y el extremo **nunca atraviesa geometría**. Además **capa la rapidez** (`max_speed`) para evitar tunneling con el otro extremo.
+`rope_end.gd` en `_integrate_forces`: si `hooked`, fija el extremo al gancho; si no, aplica la **restricción de cuerda por velocidad** (quita la velocidad radial hacia afuera + corrige el exceso), sin fijar posición → el motor resuelve colisiones y el extremo **nunca atraviesa geometría**.
 
 API para el WinManager: `get_end()` (RigidBody), `get_end_position()`, `get_cavity_sensor()` (solo campana).
 
@@ -126,7 +128,7 @@ Identifica palito y campana por `end_kind`. Cada frame, si la punta del palito e
 - **Orden en el árbol importa:** `WinManager` antes que los `Emboque`, y los `Emboque` después de los `Player` (para que las correcciones se apliquen el mismo frame).
 - **UIDs:** no inventar `uid://...` a mano (Godot los rechaza como inválidos). Dejar que el editor los genere; en referencias `ext_resource` basta el `path`.
 - **Inferencia de tipos:** acceder a propiedades de un nodo tipado genéricamente (`Node2D`) devuelve Variant y rompe `:=`. Tipar con el `class_name` real (p. ej. `var e: Emboque`).
-- **Tunneling entre cuerpos delgados y rápidos:** un extremo veloz atraviesa al otro. Mitigado con tres cosas juntas: `continuous_cd = 2` (CCD cast-shape), un tope de rapidez (`max_speed` en `rope_end.gd`, hoy 300), y **física a 120 Hz** (`physics/common/physics_ticks_per_second`) → menos avance por frame. Regla práctica: `max_speed / ticks` debe ser bastante menor que el grosor de pared más fino (hoy 6px). El CCD dinámico-vs-dinámico en 2D por sí solo no basta.
+- **Tunneling entre cuerpos delgados y rápidos:** un extremo veloz puede atravesar al otro. Protección actual: `continuous_cd = 2` (CCD cast-shape) + **física a 120 Hz**. **El tope de velocidad (`max_speed`) se QUITÓ** por decisión de diseño (el closeup ya frena el juego al acercarse). Si reaparece tunneling a velocidades altas, reconsiderar (subir ticks, engrosar paredes, o reintroducir un tope alto). Nota: `Engine.time_scale` NO reduce el avance por *tick* de física (solo hay menos ticks por segundo real), así que el slowdown no elimina el tunneling por sí solo.
 - **Tamaños actuales (placeholders):** jugador 40×64; palito 22×6; campana ~18×24 (paredes 6px, hoyo ~12px). Las partes son ~1/3 del jugador. Magnetismo suave: `magnet_radius=70`, `linear_accel=900`, `angular_gain=2.5`. Todo es tuneable en el Inspector.
 - **Restricción de cuerda en RigidBody:** hacerla por **velocidad** en `_integrate_forces` (no fijando `transform.origin`), para no teletransportar a través de paredes. Definir `_integrate_forces` NO desactiva las colisiones (salvo `custom_integrator = true`).
 - **Formas cóncavas en 2D:** no existen como shape convexa única. La campana (C) se arma con **varios `CollisionShape2D` rectangulares** (convexos), no un polígono cóncavo.
@@ -151,11 +153,12 @@ Hecho (verificado con tests headless donde aplica):
 - **Upgrade a Godot 4.7.2** (antes 4.6) — proyecto importa y corre limpio en 4.7.
 - **Menú de pausa** (`pause_menu.gd`, vía PR #1) — Esc pausa (`get_tree().paused`); botones Continuar / Reiniciar. El nodo usa `process_mode = ALWAYS` para seguir respondiendo con el juego pausado.
 - **Zonas de muerte** — `player_death_zone` / `emboque_death_zone` (scripts separados) + `both_death_zone`, cada una con visual distinta; reinician el nivel al contacto. Nivel `test_death.tscn` en el selector. Test headless: detección + aislamiento por máscara + zona "ambos" PASS.
+- **Closeup + slowdown estilo Peggle** (`closeup_manager.gd`, reutilizable) — al acercarse los extremos, la cámara hace zoom hacia el punto medio y `Engine.time_scale` baja; continuo y reversible; se reinicia el time_scale al salir. En `main` y `level_2`. Test headless: lejos→normal, cerca→zoom~2 + ts 0.35 + cámara al midpoint, revierte, y reset PASS. Se quitó el tope de velocidad del emboque.
 
 Pendiente:
-- **Fase 6** — Nivel de prueba definitivo a medida de cámara + pasada de tuning de la sensación (magnetismo, masas, largos, velocidades).
+- **Fase 6** — Nivel de prueba definitivo a medida de cámara + pasada de tuning de la sensación (magnetismo, masas, largos, velocidades, radios del closeup).
 
-Post-prototipo (del concepto): objetos empujables, mapa de progresión de niveles, celebración estilo Peggle (zoom + cámara lenta al acercarse los extremos), estética Tikitiklip (animación tradicional + imágenes reales chilenas), sonido, export a web.
+Post-prototipo (del concepto): objetos empujables, mapa de progresión de niveles, estética Tikitiklip (animación tradicional + imágenes reales chilenas), sonido, export a web.
 
 ## Convenciones
 

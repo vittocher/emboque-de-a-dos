@@ -104,5 +104,7 @@ func _win() -> void:
 	_won = true
 	if _label != null:
 		_label.visible = true
-	await get_tree().create_timer(restart_delay).timeout
+	# ignore_time_scale=true: si hay slow-mo del closeup al ganar, la recarga
+	# ocurre igual tras restart_delay reales (no se alarga por la cámara lenta).
+	await get_tree().create_timer(restart_delay, true, false, true).timeout
 	get_tree().reload_current_scene()

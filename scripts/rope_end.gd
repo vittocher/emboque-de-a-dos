@@ -15,9 +15,6 @@ var constrained: bool = false  # el Emboque lo activa tras posicionar el extremo
 
 ## Fracción del exceso de largo que se corrige por frame (estabilización).
 @export var stiffness: float = 0.5
-## Rapidez máxima del extremo (px/s). Evita tunneling a través del otro extremo.
-## Con partes/paredes más pequeñas, bajar este valor reduce el riesgo.
-@export var max_speed: float = 300.0
 
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	if not constrained:
@@ -45,7 +42,3 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 		# resuelve las colisiones y el extremo nunca atraviesa geometría).
 		var overshoot := dist - rope_length
 		state.linear_velocity -= n * (overshoot / state.step) * stiffness
-
-	# Tope de rapidez: junto con el CCD, evita atravesar el otro extremo.
-	if state.linear_velocity.length() > max_speed:
-		state.linear_velocity = state.linear_velocity.normalized() * max_speed
