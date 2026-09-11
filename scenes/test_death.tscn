@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/emboque.tscn" id="2_emboque"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/emboque_death_zone.tscn" id="6_edz"]
 [ext_resource type="PackedScene" path="res://scenes/both_death_zone.tscn" id="7_bdz"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="8_pause"]
+[ext_resource type="Script" path="res://scripts/win_manager.gd" id="9_win"]
 
 [sub_resource type="RectangleShape2D" id="Shape_ground"]
 size = Vector2(1280, 40)
@@ -36,6 +37,12 @@ modulate = Color(1, 0.5, 0.4, 1)
 position = Vector2(880, 410)
 input_prefix = "p2"
 
+[node name="WinManager" type="Node2D" parent="."]
+script = ExtResource("9_win")
+emboque_a = NodePath("../Emboque1")
+emboque_b = NodePath("../Emboque2")
+win_label = NodePath("../UI/WinLabel")
+
 [node name="Emboque1" parent="." instance=ExtResource("2_emboque")]
 anchor_node = NodePath("../Player1/RopeAnchor")
 input_prefix = "p1"
@@ -58,3 +65,14 @@ position = Vector2(1130, 665)
 position = Vector2(640, 665)
 
 [node name="PauseMenu" parent="." instance=ExtResource("8_pause")]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="WinLabel" type="Label" parent="UI"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "¡Emboque logrado!"
+theme_override_font_sizes/font_size = 72
+theme_override_colors/font_color = Color(1, 0.95, 0.4, 1)

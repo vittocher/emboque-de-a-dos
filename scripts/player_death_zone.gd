@@ -23,4 +23,6 @@ func _on_body_entered(body: Node) -> void:
 	_fired = true
 	triggered.emit(body)
 	if reload_on_death:
-		get_tree().reload_current_scene()
+		# Diferido: body_entered es un callback de física; recargar (liberar
+		# CollisionObjects) en medio de él está prohibido en Godot.
+		get_tree().call_deferred("reload_current_scene")
