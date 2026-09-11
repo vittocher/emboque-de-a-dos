@@ -18,6 +18,7 @@ config/features=PackedStringArray("4.7")
 [autoload]
 
 SettingsManager="*res://scripts/settings_manager.gd"
+ScoreBoard="*res://scripts/score_board.gd"
 
 [display]
 
