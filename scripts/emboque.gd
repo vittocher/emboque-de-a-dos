@@ -26,6 +26,12 @@ class_name Emboque
 @export_group("Enganche")
 ## Tiempo tras desenganchar antes de poder volver a engancharse (s).
 @export var rehook_cooldown: float = 0.35
+## Aceleración tangencial que produce el movimiento mientras el jugador cuelga.
+@export var swing_acceleration: float = 1050.0
+## Velocidad tangencial máxima al balancearse.
+@export var swing_max_speed: float = 620.0
+## Distancia dentro de la cual la cuerda se considera tensa.
+@export var swing_taut_tolerance: float = 8.0
 
 @export_group("Visual")
 @export var rope_segments: int = 18
@@ -84,6 +90,8 @@ func _physics_process(delta: float) -> void:
 	_end.hooked = _hooked
 	_end.hook_position = _hook_position
 
+	if _hooked:
+		_apply_hook_swing(delta)
 	_limit_player()
 	_update_rope_visual()
 
@@ -104,10 +112,40 @@ func _limit_player() -> void:
 	if not limit_player_movement or _player == null:
 		return
 	var anchor_pos := _anchor.global_position
-	var to_end := _end.global_position - anchor_pos
+	var target := _hook_position if _hooked else _end.global_position
+	var to_end := target - anchor_pos
 	var dist := to_end.length()
 	if dist > rope_length + 1.0 and dist > 0.001:
 		_move_sliding(_player, (to_end / dist) * (dist - rope_length))
+
+## Convierte el movimiento horizontal en una aceleración tangencial cuando el
+## extremo está enganchado. La velocidad radial hacia afuera se elimina solo
+## cuando la cuerda está tensa, dejando que el jugador caiga con holgura.
+func _apply_hook_swing(delta: float) -> void:
+	if _player == null:
+		return
+
+	var anchor_pos := _anchor.global_position
+	var from_hook := anchor_pos - _hook_position
+	var distance := from_hook.length()
+	if distance <= 0.001 or distance < rope_length - swing_taut_tolerance:
+		return
+
+	var radial := from_hook / distance
+	var tangent := Vector2(radial.y, -radial.x)
+	var direction := Input.get_axis(input_prefix + "_left", input_prefix + "_right")
+
+	# El control se proyecta sobre la tangente para que izquierda/derecha
+	# impulsen el péndulo sin forzar al jugador a atravesar la cuerda.
+	_player.velocity += tangent * direction * swing_acceleration * delta
+
+	var radial_speed := _player.velocity.dot(radial)
+	if radial_speed > 0.0:
+		_player.velocity -= radial * radial_speed
+
+	var tangential_speed := _player.velocity.dot(tangent)
+	if absf(tangential_speed) > swing_max_speed:
+		_player.velocity += tangent * (signf(tangential_speed) * swing_max_speed - tangential_speed)
 
 ## Mueve un cuerpo por 'motion' deslizando sobre las superficies con las que
 ## choca (como move_and_slide, pero con un desplazamiento explícito).
