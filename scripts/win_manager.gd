@@ -25,7 +25,18 @@ class_name WinManager
 ## Tiempo que debe cumplirse la condición para ganar (s).
 @export var capture_time: float = 0.2
 @export var win_label: NodePath
+## Segundos que se muestra el cartel de victoria (con el slow-mo del closeup)
+## antes de saltar a la pantalla de victoria.
 @export var restart_delay: float = 2.5
+
+@export_group("Resultado")
+## Id estable del nivel para el highscore (ej. "level_1"). Si queda vacío, se
+## deriva del nombre de archivo de la escena.
+@export var level_id: String = ""
+## Nombre del nivel a mostrar en la pantalla de victoria (ej. "Nivel 1").
+@export var level_name: String = ""
+## Escena de la pantalla de victoria a la que se salta al ganar.
+@export var victory_scene: String = "res://scenes/ui/victory.tscn"
 
 var _palito: Emboque
 var _campana: Emboque
@@ -104,7 +115,24 @@ func _win() -> void:
 	_won = true
 	if _label != null:
 		_label.visible = true
-	# ignore_time_scale=true: si hay slow-mo del closeup al ganar, la recarga
-	# ocurre igual tras restart_delay reales (no se alarga por la cámara lenta).
+	# Registrar el resultado (actualiza highscore y deja los datos para la
+	# pantalla de victoria).
+	var id := level_id if level_id != "" else _fallback_id()
+	var display_name := level_name if level_name != "" else id
+	ScoreBoard.report_win(id, display_name, _current_score())
+	# ignore_time_scale=true: si hay slow-mo del closeup al ganar, el salto a la
+	# pantalla de victoria ocurre igual tras restart_delay reales (no se alarga
+	# por la cámara lenta).
 	await get_tree().create_timer(restart_delay, true, false, true).timeout
-	get_tree().reload_current_scene()
+	get_tree().change_scene_to_file(victory_scene)
+
+## Puntaje actual del nivel (0 si el nivel no tiene ScoreManager).
+func _current_score() -> int:
+	var sm := get_tree().get_first_node_in_group("score_manager") as ScoreManager
+	return sm.score if sm != null else 0
+
+## Id derivado del nombre de archivo de la escena (ej. "level_2"), como respaldo
+## si no se configuró level_id en el Inspector.
+func _fallback_id() -> String:
+	var path := get_tree().current_scene.scene_file_path
+	return path.get_file().get_basename() if path != "" else "nivel"

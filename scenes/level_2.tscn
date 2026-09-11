@@ -123,6 +123,8 @@ script = ExtResource("4_win")
 emboque_a = NodePath("../Emboque1")
 emboque_b = NodePath("../Emboque2")
 win_label = NodePath("../UI/WinLabel")
+level_id = "level_2"
+level_name = "Nivel 2"
 
 [node name="CloseupManager" parent="." instance=ExtResource("11_closeup")]
 camera_path = NodePath("../Camera2D")
