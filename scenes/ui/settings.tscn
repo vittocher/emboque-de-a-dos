@@ -67,8 +67,16 @@ custom_minimum_size = Vector2(220, 0)
 text = "Pantalla completa"
 theme_override_font_sizes/font_size = 26
 
-[node name="FullscreenCheck" type="CheckButton" parent="Center/VBox/FullscreenRow"]
+[node name="FullscreenCheck" type="CheckBox" parent="Center/VBox/FullscreenRow"]
 layout_mode = 2
+text = "Activar"
+
+[node name="ResetButton" type="Button" parent="Center/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(220, 52)
+text = "Restaurar valores"
+theme_override_font_sizes/font_size = 24
 
 [node name="BackButton" type="Button" parent="Center/VBox"]
 layout_mode = 2

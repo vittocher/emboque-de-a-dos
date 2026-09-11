@@ -15,6 +15,10 @@ config/description="Repositorio del juego \"Emboque de a Dos\" para el curso IIC
 run/main_scene="res://scenes/ui/main_menu.tscn"
 config/features=PackedStringArray("4.7")
 
+[autoload]
+
+SettingsManager="*res://scripts/settings_manager.gd"
+
 [display]
 
 window/size/viewport_width=1280
