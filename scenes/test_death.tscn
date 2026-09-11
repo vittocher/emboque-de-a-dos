@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/emboque.tscn" id="2_emboque"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/player_death_zone.tscn" id="5_pdz"]
 [ext_resource type="PackedScene" path="res://scenes/emboque_death_zone.tscn" id="6_edz"]
 [ext_resource type="PackedScene" path="res://scenes/both_death_zone.tscn" id="7_bdz"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="8_pause"]
 
 [sub_resource type="RectangleShape2D" id="Shape_ground"]
 size = Vector2(1280, 40)
@@ -55,3 +56,5 @@ position = Vector2(1130, 665)
 
 [node name="BothDeathZone" parent="." instance=ExtResource("7_bdz")]
 position = Vector2(640, 665)
+
+[node name="PauseMenu" parent="." instance=ExtResource("8_pause")]

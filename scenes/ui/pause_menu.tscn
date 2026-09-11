@@ -1,0 +1,61 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/pause_menu.gd" id="1_pause"]
+
+[node name="PauseMenu" type="CanvasLayer"]
+script = ExtResource("1_pause")
+
+[node name="PausePanel" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dimmer" type="ColorRect" parent="PausePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.48)
+
+[node name="Panel" type="Panel" parent="PausePanel"]
+layout_mode = 0
+offset_left = 460.0
+offset_top = 220.0
+offset_right = 820.0
+offset_bottom = 500.0
+
+[node name="VBox" type="VBoxContainer" parent="PausePanel/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 36.0
+offset_top = 28.0
+offset_right = -36.0
+offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="PausePanel/Panel/VBox"]
+layout_mode = 2
+text = "Pausa"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+
+[node name="ContinueButton" type="Button" parent="PausePanel/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Continuar"
+theme_override_font_sizes/font_size = 24
+
+[node name="RestartButton" type="Button" parent="PausePanel/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Reiniciar nivel"
+theme_override_font_sizes/font_size = 24

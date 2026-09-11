@@ -59,6 +59,7 @@ scenes/
   ui/main_menu.tscn      Menú: Jugar, Ajustes, y texto de controles.
   ui/level_selector.tscn Selector de niveles (Nivel 1 + "Prueba: muerte"; futuro: grafo conectado).
   ui/settings.tscn       Ajustes: volumen maestro + pantalla completa.
+  ui/pause_menu.tscn     Menú de pausa reutilizable (Esc). Instanciar en cada nivel.
 scripts/
   player.gd        Controlador de plataformas parametrizado por input_prefix.
   emboque.gd       Coordina la media-cuerda: largo, enganche, límite del jugador, cuerda visual;
@@ -67,7 +68,9 @@ scripts/
   win_manager.gd   Magnetismo distancia+ángulo entre extremos + victoria (palito dentro de campana).
   player_death_zone.gd   Al entrar un jugador (mask=2) → reinicia el nivel. Señal triggered; export reload_on_death.
   emboque_death_zone.gd  Al entrar un extremo (mask=12 = campana 4 + palito 8) → reinicia. (Scripts separados a propósito.)
-  pause_menu.gd    Menú de pausa del nivel (Esc): Continuar / Reiniciar. Va en el CanvasLayer "UI" de main.tscn.
+  pause_menu.gd    Menú de pausa del nivel (Esc): Continuar / Reiniciar. Es un CanvasLayer.
+                   La pausa NO es global: cada nivel debe TENER el nodo. Reutilizable vía ui/pause_menu.tscn
+                   (test_death lo instancia; main.tscn lo tiene inline en su CanvasLayer "UI").
   ui/*.gd          Lógica de los menús (navegación con change_scene_to_file).
 ```
 
