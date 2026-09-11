@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/emboque_death_zone.gd" id="1_edz"]
+
+[sub_resource type="RectangleShape2D" id="Rect_zone"]
+size = Vector2(100, 30)
+
+[node name="EmboqueDeathZone" type="Area2D"]
+collision_layer = 0
+collision_mask = 12
+monitorable = false
+script = ExtResource("1_edz")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Rect_zone")
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.55, 0.2, 0.75, 1)
+polygon = PackedVector2Array(-50, -15, 50, -15, 50, 15, -50, 15)

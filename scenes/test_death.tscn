@@ -1,0 +1,57 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/emboque.tscn" id="2_emboque"]
+[ext_resource type="PackedScene" path="res://scenes/campana.tscn" id="3_campana"]
+[ext_resource type="PackedScene" path="res://scenes/palito.tscn" id="4_palito"]
+[ext_resource type="PackedScene" path="res://scenes/player_death_zone.tscn" id="5_pdz"]
+[ext_resource type="PackedScene" path="res://scenes/emboque_death_zone.tscn" id="6_edz"]
+[ext_resource type="PackedScene" path="res://scenes/both_death_zone.tscn" id="7_bdz"]
+
+[sub_resource type="RectangleShape2D" id="Shape_ground"]
+size = Vector2(1280, 40)
+
+[node name="TestDeath" type="Node2D"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="Ground" type="StaticBody2D" parent="."]
+position = Vector2(640, 700)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
+shape = SubResource("Shape_ground")
+
+[node name="Visual" type="Polygon2D" parent="Ground"]
+color = Color(0.25, 0.22, 0.2, 1)
+polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
+
+[node name="Player1" parent="." instance=ExtResource("1_player")]
+position = Vector2(400, 460)
+input_prefix = "p1"
+
+[node name="Player2" parent="." instance=ExtResource("1_player")]
+modulate = Color(1, 0.5, 0.4, 1)
+position = Vector2(880, 410)
+input_prefix = "p2"
+
+[node name="Emboque1" parent="." instance=ExtResource("2_emboque")]
+anchor_node = NodePath("../Player1/RopeAnchor")
+input_prefix = "p1"
+end_scene = ExtResource("3_campana")
+end_kind = "campana"
+
+[node name="Emboque2" parent="." instance=ExtResource("2_emboque")]
+anchor_node = NodePath("../Player2/RopeAnchor")
+input_prefix = "p2"
+end_scene = ExtResource("4_palito")
+end_kind = "palito"
+
+[node name="PlayerDeathZone" parent="." instance=ExtResource("5_pdz")]
+position = Vector2(150, 665)
+
+[node name="EmboqueDeathZone" parent="." instance=ExtResource("6_edz")]
+position = Vector2(1130, 665)
+
+[node name="BothDeathZone" parent="." instance=ExtResource("7_bdz")]
+position = Vector2(640, 665)

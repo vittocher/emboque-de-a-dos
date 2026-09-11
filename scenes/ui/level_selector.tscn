@@ -56,3 +56,10 @@ layout_mode = 2
 custom_minimum_size = Vector2(170, 170)
 text = "Nivel 1"
 theme_override_font_sizes/font_size = 28
+
+[node name="TestDeathButton" type="Button" parent="Center/LevelsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(170, 170)
+text = "Prueba:
+muerte"
+theme_override_font_sizes/font_size = 28
