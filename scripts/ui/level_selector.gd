@@ -6,14 +6,17 @@ extends Control
 
 const LEVELS := [
 	"res://scenes/main.tscn",
+	"res://scenes/level_2.tscn",
 ]
 
 @onready var _back_button: Button = $BackButton
 @onready var _level_1_button: Button = $Center/LevelsRow/Level1Button
 
 func _ready() -> void:
-	_back_button.pressed.connect(_on_back_pressed)
-	_level_1_button.pressed.connect(_on_level_1_pressed)
+
+	$BackButton.pressed.connect(_on_back_pressed)
+	$Center/LevelsRow/Level1Button.pressed.connect(_on_level_1_pressed)
+	$Center/LevelsRow/Level2Button.pressed.connect(_on_level_2_pressed)
 
 func _on_back_pressed() -> void:
 	get_tree().paused = false
@@ -22,3 +25,6 @@ func _on_back_pressed() -> void:
 func _on_level_1_pressed() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file(LEVELS[0])
+
+func _on_level_2_pressed() -> void:
+	get_tree().change_scene_to_file(LEVELS[1])
