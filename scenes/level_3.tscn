@@ -1,0 +1,389 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/emboque.tscn" id="2_emboque"]
+[ext_resource type="PackedScene" path="res://scenes/hook_point.tscn" id="3_hook"]
+[ext_resource type="Script" path="res://scripts/win_manager.gd" id="4_win"]
+[ext_resource type="PackedScene" path="res://scenes/campana.tscn" id="5_campana"]
+[ext_resource type="PackedScene" path="res://scenes/palito.tscn" id="6_palito"]
+[ext_resource type="Script" path="res://scripts/pause_menu.gd" id="7_pause"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="8_collectible"]
+[ext_resource type="Script" path="res://scripts/score_manager.gd" id="9_score"]
+[ext_resource type="PackedScene" path="res://scenes/both_death_zone.tscn" id="10_deathzone"]
+[ext_resource type="PackedScene" path="res://scenes/closeup_manager.tscn" id="11_closeup"]
+
+[sub_resource type="RectangleShape2D" id="Shape_start"]
+size = Vector2(200, 24)
+
+[sub_resource type="RectangleShape2D" id="Shape_step"]
+size = Vector2(150, 24)
+
+[sub_resource type="RectangleShape2D" id="Shape_cima"]
+size = Vector2(180, 24)
+
+[sub_resource type="RectangleShape2D" id="Shape_final"]
+size = Vector2(240, 24)
+
+[node name="Level3" type="Node2D"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="StartPlatformLeft" type="StaticBody2D" parent="."]
+position = Vector2(110, 500)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StartPlatformLeft"]
+shape = SubResource("Shape_start")
+
+[node name="Visual" type="Polygon2D" parent="StartPlatformLeft"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-100, -12, 100, -12, 100, 12, -100, 12)
+
+[node name="StartPlatformRight" type="StaticBody2D" parent="."]
+position = Vector2(1170, 500)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StartPlatformRight"]
+shape = SubResource("Shape_start")
+
+[node name="Visual" type="Polygon2D" parent="StartPlatformRight"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-100, -12, 100, -12, 100, 12, -100, 12)
+
+[node name="StepLeft1" type="StaticBody2D" parent="."]
+position = Vector2(170, 400)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StepLeft1"]
+shape = SubResource("Shape_step")
+
+[node name="Visual" type="Polygon2D" parent="StepLeft1"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-75, -12, 75, -12, 75, 12, -75, 12)
+
+[node name="StepLeft2" type="StaticBody2D" parent="."]
+position = Vector2(110, 300)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StepLeft2"]
+shape = SubResource("Shape_step")
+
+[node name="Visual" type="Polygon2D" parent="StepLeft2"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-75, -12, 75, -12, 75, 12, -75, 12)
+
+[node name="StepLeft3" type="StaticBody2D" parent="."]
+position = Vector2(170, 210)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StepLeft3"]
+shape = SubResource("Shape_step")
+
+[node name="Visual" type="Polygon2D" parent="StepLeft3"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-75, -12, 75, -12, 75, 12, -75, 12)
+
+[node name="CimaLeft" type="StaticBody2D" parent="."]
+position = Vector2(150, 120)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CimaLeft"]
+shape = SubResource("Shape_cima")
+
+[node name="Visual" type="Polygon2D" parent="CimaLeft"]
+color = Color(0.5, 0.44, 0.34, 1)
+polygon = PackedVector2Array(-90, -12, 90, -12, 90, 12, -90, 12)
+
+[node name="StepRight1" type="StaticBody2D" parent="."]
+position = Vector2(1110, 400)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StepRight1"]
+shape = SubResource("Shape_step")
+
+[node name="Visual" type="Polygon2D" parent="StepRight1"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-75, -12, 75, -12, 75, 12, -75, 12)
+
+[node name="StepRight2" type="StaticBody2D" parent="."]
+position = Vector2(1170, 300)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StepRight2"]
+shape = SubResource("Shape_step")
+
+[node name="Visual" type="Polygon2D" parent="StepRight2"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-75, -12, 75, -12, 75, 12, -75, 12)
+
+[node name="StepRight3" type="StaticBody2D" parent="."]
+position = Vector2(1110, 210)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StepRight3"]
+shape = SubResource("Shape_step")
+
+[node name="Visual" type="Polygon2D" parent="StepRight3"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-75, -12, 75, -12, 75, 12, -75, 12)
+
+[node name="CimaRight" type="StaticBody2D" parent="."]
+position = Vector2(1130, 120)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CimaRight"]
+shape = SubResource("Shape_cima")
+
+[node name="Visual" type="Polygon2D" parent="CimaRight"]
+color = Color(0.5, 0.44, 0.34, 1)
+polygon = PackedVector2Array(-90, -12, 90, -12, 90, 12, -90, 12)
+
+[node name="FinalPlatform" type="StaticBody2D" parent="."]
+position = Vector2(640, 520)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FinalPlatform"]
+shape = SubResource("Shape_final")
+
+[node name="Visual" type="Polygon2D" parent="FinalPlatform"]
+color = Color(0.45, 0.4, 0.32, 1)
+polygon = PackedVector2Array(-120, -12, 120, -12, 120, 12, -120, 12)
+
+[node name="OrangeFloor" parent="." instance=ExtResource("10_deathzone")]
+position = Vector2(640, 700)
+scale = Vector2(12.8, 1.6)
+
+[node name="HookPointLeft" parent="." instance=ExtResource("3_hook")]
+position = Vector2(400, 330)
+
+[node name="HookPointRight" parent="." instance=ExtResource("3_hook")]
+position = Vector2(880, 330)
+
+[node name="Player1" parent="." instance=ExtResource("1_player")]
+position = Vector2(110, 456)
+input_prefix = "p1"
+
+[node name="Player2" parent="." instance=ExtResource("1_player")]
+modulate = Color(1, 0.5, 0.4, 1)
+position = Vector2(1170, 456)
+input_prefix = "p2"
+
+[node name="WinManager" type="Node2D" parent="."]
+script = ExtResource("4_win")
+emboque_a = NodePath("../Emboque1")
+emboque_b = NodePath("../Emboque2")
+win_label = NodePath("../UI/WinLabel")
+level_id = "level_3"
+level_name = "Nivel 3"
+
+[node name="CloseupManager" parent="." instance=ExtResource("11_closeup")]
+camera_path = NodePath("../Camera2D")
+emboque_a = NodePath("../Emboque1")
+emboque_b = NodePath("../Emboque2")
+
+[node name="Emboque1" parent="." instance=ExtResource("2_emboque")]
+anchor_node = NodePath("../Player1/RopeAnchor")
+input_prefix = "p1"
+end_scene = ExtResource("5_campana")
+end_kind = "campana"
+
+[node name="Emboque2" parent="." instance=ExtResource("2_emboque")]
+anchor_node = NodePath("../Player2/RopeAnchor")
+input_prefix = "p2"
+end_scene = ExtResource("6_palito")
+end_kind = "palito"
+
+[node name="ScoreManager" type="Node" parent="."]
+script = ExtResource("9_score")
+score_label = NodePath("../UI/ScoreLabel")
+
+[node name="Collectible1" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(170, 360)
+
+[node name="Collectible2" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(110, 260)
+
+[node name="Collectible3" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(150, 80)
+
+[node name="Collectible4" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(1110, 360)
+
+[node name="Collectible5" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(1170, 260)
+
+[node name="Collectible6" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(1130, 80)
+
+[node name="Collectible7" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(400, 250)
+
+[node name="Collectible8" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(880, 250)
+
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("7_pause")
+
+[node name="ScoreLabel" type="Label" parent="UI"]
+offset_left = 330.0
+offset_top = 20.0
+offset_right = 600.0
+offset_bottom = 65.0
+text = "Puntos: 0"
+theme_override_colors/font_color = Color(0.1, 0.75, 0.62, 1)
+theme_override_font_sizes/font_size = 30
+
+[node name="PausePanel" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dimmer" type="ColorRect" parent="UI/PausePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.48)
+
+[node name="Panel" type="Panel" parent="UI/PausePanel"]
+layout_mode = 0
+offset_left = 460.0
+offset_top = 150.0
+offset_right = 820.0
+offset_bottom = 570.0
+
+[node name="VBox" type="VBoxContainer" parent="UI/PausePanel/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 36.0
+offset_top = 28.0
+offset_right = -36.0
+offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="UI/PausePanel/Panel/VBox"]
+layout_mode = 2
+text = "Pausa"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+
+[node name="ContinueButton" type="Button" parent="UI/PausePanel/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Continuar"
+theme_override_font_sizes/font_size = 24
+
+[node name="RestartButton" type="Button" parent="UI/PausePanel/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Reiniciar nivel"
+theme_override_font_sizes/font_size = 24
+
+[node name="SettingsButton" type="Button" parent="UI/PausePanel/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Ajustes"
+theme_override_font_sizes/font_size = 24
+
+[node name="MainMenuButton" type="Button" parent="UI/PausePanel/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Menú principal"
+theme_override_font_sizes/font_size = 24
+
+[node name="SettingsVBox" type="VBoxContainer" parent="UI/PausePanel/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 36.0
+offset_top = 28.0
+offset_right = -36.0
+offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="UI/PausePanel/Panel/SettingsVBox"]
+layout_mode = 2
+text = "Ajustes"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 30
+
+[node name="VolumeRow" type="HBoxContainer" parent="UI/PausePanel/Panel/SettingsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UI/PausePanel/Panel/SettingsVBox/VolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(125, 0)
+text = "General"
+
+[node name="VolumeSlider" type="HSlider" parent="UI/PausePanel/Panel/SettingsVBox/VolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(180, 0)
+size_flags_vertical = 4
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+
+[node name="MusicVolumeRow" type="HBoxContainer" parent="UI/PausePanel/Panel/SettingsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UI/PausePanel/Panel/SettingsVBox/MusicVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(125, 0)
+text = "Música"
+
+[node name="MusicVolumeSlider" type="HSlider" parent="UI/PausePanel/Panel/SettingsVBox/MusicVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(180, 0)
+size_flags_vertical = 4
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+
+[node name="SfxVolumeRow" type="HBoxContainer" parent="UI/PausePanel/Panel/SettingsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UI/PausePanel/Panel/SettingsVBox/SfxVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(125, 0)
+text = "Efectos"
+
+[node name="SfxVolumeSlider" type="HSlider" parent="UI/PausePanel/Panel/SettingsVBox/SfxVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(180, 0)
+size_flags_vertical = 4
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+
+[node name="FullscreenRow" type="HBoxContainer" parent="UI/PausePanel/Panel/SettingsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UI/PausePanel/Panel/SettingsVBox/FullscreenRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(125, 0)
+text = "Pantalla completa"
+
+[node name="FullscreenCheck" type="CheckBox" parent="UI/PausePanel/Panel/SettingsVBox/FullscreenRow"]
+layout_mode = 2
+text = "Activar"
+
+[node name="BackButton" type="Button" parent="UI/PausePanel/Panel/SettingsVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 46)
+text = "Volver a pausa"
+theme_override_font_sizes/font_size = 20
+
+[node name="WinLabel" type="Label" parent="UI"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "¡Emboque logrado!"
+theme_override_font_sizes/font_size = 72
+theme_override_colors/font_color = Color(1, 0.95, 0.4, 1)
