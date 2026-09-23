@@ -52,6 +52,13 @@ custom_minimum_size = Vector2(260, 56)
 text = "Ajustes"
 theme_override_font_sizes/font_size = 30
 
+[node name="QuitButton" type="Button" parent="Center/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(260, 56)
+text = "Salir"
+theme_override_font_sizes/font_size = 30
+
 [node name="Spacer" type="Control" parent="Center/VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 20)
