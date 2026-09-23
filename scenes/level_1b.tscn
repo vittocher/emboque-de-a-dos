@@ -31,7 +31,7 @@ size = Vector2(22, 894)
 [sub_resource type="RectangleShape2D" id="Shape_side_wall"]
 size = Vector2(40, 1200)
 
-[node name="Level2" type="Node2D"]
+[node name="Level1B" type="Node2D"]
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(640, 360)
@@ -148,8 +148,8 @@ script = ExtResource("4_win")
 emboque_a = NodePath("../Emboque1")
 emboque_b = NodePath("../Emboque2")
 win_label = NodePath("../UI/WinLabel")
-level_id = "level_2"
-level_name = "Nivel 2"
+level_id = "level_1b"
+level_name = "Nivel 1-B"
 
 [node name="CloseupManager" parent="." instance=ExtResource("11_closeup")]
 camera_path = NodePath("../Camera2D")

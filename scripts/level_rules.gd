@@ -22,15 +22,22 @@ func _enter_tree() -> void:
 static func of(tree: SceneTree) -> LevelRules:
 	return tree.get_first_node_in_group("level_rules") as LevelRules
 
-## True si la escena de un nivel tiene la mecánica de lanzar activada. Lee lo
-## guardado en la escena (sin instanciarla), así sigue solo a la casilla del
-## Inspector. El nodo LevelRules tiene que estar directo en la escena del nivel.
+## True si la escena de un nivel tiene la mecánica de lanzar activada. Sigue
+## sola a la casilla del Inspector. El nodo LevelRules tiene que estar directo en
+## la escena del nivel.
 static func scene_throw_enabled(scene: PackedScene) -> bool:
+	return scene_value(scene, &"throw_enabled", false) == true
+
+## Valor guardado de una propiedad en la escena de un nivel (el primer nodo que
+## la tenga, p. ej. level_name del WinManager), sin instanciarla. Solo ve lo que
+## está guardado directo en esa escena (no dentro de sub-escenas instanciadas);
+## si no está guardada (vale su default), devuelve `default`.
+static func scene_value(scene: PackedScene, property: StringName, default: Variant) -> Variant:
 	if scene == null:
-		return false
+		return default
 	var state := scene.get_state()
 	for i in state.get_node_count():
 		for j in state.get_node_property_count(i):
-			if state.get_node_property_name(i, j) == &"throw_enabled":
-				return state.get_node_property_value(i, j) == true
-	return false
+			if state.get_node_property_name(i, j) == property:
+				return state.get_node_property_value(i, j)
+	return default

@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://cmain00000001"]
+[gd_scene format=3 uid="uid://cmain00000001"]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/emboque.tscn" id="2_emboque"]
@@ -21,7 +21,7 @@ size = Vector2(30, 260)
 [sub_resource type="RectangleShape2D" id="Shape_side_wall"]
 size = Vector2(40, 1200)
 
-[node name="Main" type="Node2D"]
+[node name="Level1A" type="Node2D"]
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(640, 360)
@@ -106,8 +106,8 @@ script = ExtResource("4_win")
 emboque_a = NodePath("../Emboque1")
 emboque_b = NodePath("../Emboque2")
 win_label = NodePath("../UI/WinLabel")
-level_id = "level_1"
-level_name = "Nivel 1"
+level_id = "level_1a"
+level_name = "Nivel 1-A"
 
 [node name="CloseupManager" parent="." instance=ExtResource("8_closeup")]
 camera_path = NodePath("../Camera2D")

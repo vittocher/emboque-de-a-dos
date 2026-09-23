@@ -12,7 +12,7 @@ De cada personaje cuelga **media mitad del emboque** por una cuerda: J1 lleva la
 
 - **Editor:** Godot **4.7.2** (ejecutable en `C:\Users\vitto\OneDrive\Desktop\Godot\Godot_v4.7.2-stable_win64.exe`; la variante `..._console.exe` sirve para CLI headless). En esa misma carpeta también está el 4.6 (versión previa). `config/features` en `project.godot` = `4.7`.
 - **Abrir:** importar el `project.godot` de esta carpeta desde el Project Manager, o **F5** para jugar.
-- **Escena de arranque:** `res://scenes/ui/main_menu.tscn` (menú). El **nivel de gameplay** es `res://scenes/main.tscn`. Durante el desarrollo del gameplay, abrir `main.tscn` y correr con **F6** (ejecutar escena actual) para saltarse el menú.
+- **Escena de arranque:** `res://scenes/ui/main_menu.tscn` (menú). Los **niveles** son `res://scenes/level_<fila><columna>.tscn` (ver "Organización de niveles"; el primero es `level_1a.tscn`). Durante el desarrollo, abrir el nivel y correr con **F6** (ejecutar escena actual) para saltarse el menú.
 - **Resolución base:** 1280×720 (16:9). Stretch `canvas_items` + aspect `keep` (default en Godot 4, por eso el editor lo omite del archivo). No pixel-art; se adapta a cualquier tamaño de embed sin deformar.
 
 ### Validación headless (sin abrir el editor)
@@ -49,8 +49,15 @@ Las acciones siguen el patrón `<prefix>_<accion>`: `_left`, `_right`, `_jump`, 
 
 ```
 scenes/
-  main.tscn            Nivel de gameplay: cámara fija (640,360), suelo, 2 plataformas,
+  level_1a.tscn        Nivel 1-A (ex main.tscn): cámara fija (640,360), suelo, 2 plataformas,
                        muro central, 2 HookPoint, WinManager, 2×(Player+Emboque), UI/WinLabel.
+  level_1b.tscn        Nivel 1-B (ex level_2.tscn), ver más abajo.
+  level_2a.tscn        Nivel 2-A "Pasar la caja" (intro de las cajas): torre al centro (240×270, techo y=410) que
+                       no se alcanza saltando (ni con la cuerda al máximo). J2 tiene una caja en su piso: la
+                       empuja contra la torre y sube (soltando cuerda para saltar más alto). Arriba hay otra caja
+                       que J2 empuja por el borde izquierdo: cae del lado de J1, que sube igual. Un reborde de
+                       8 px en el borde derecho de la torre impide tirarla hacia J2 (dejaría el nivel imposible).
+  level_3a.tscn        Nivel 3-A (ex test_throw.tscn / "Prueba: lanzar"), ver más abajo.
   player.tscn          CharacterBody2D + colisión + Polygon2D placeholder + RopeAnchor (Marker2D, "la mano").
   emboque.tscn         Node2D raíz: solo Rope (Line2D). El extremo se instancia en runtime.
   palito.tscn          Extremo RigidBody2D: rectángulo largo y flaco + Tip + HookSensor. (J2)
@@ -60,10 +67,10 @@ scenes/
   emboque_death_zone.tscn Area2D que mata al EMBOQUE al tocarlo (visual morada).
   both_death_zone.tscn    Zona que mata a ambos (visual naranja); compone los dos scripts.
   test_death.tscn      Nivel de prueba de las zonas de muerte (2 jugadores + 2 emboques + las 3 zonas).
-  test_physics.tscn    "Prueba: Física": copia del Nivel 1 SIN muro central (para probar el balanceo), plataformas
+  test_physics.tscn    "Prueba: Física": copia del Nivel 1-A SIN muro central (para probar el balanceo), plataformas
                        más afuera (x=170 / x=1110), muros laterales justo fuera de cámara (x<0 y x>1280, no se
                        puede salir del nivel), 3 HookPoint (izq/centro/der) y 2 cajas (PushBox) en el suelo.
-  test_throw.tscn      "Prueba: lanzar": primer nivel con la mecánica de lanzar (LevelRules.throw_enabled). Una
+  level_3a.tscn        Nivel 3-A: primer nivel con la mecánica de lanzar (LevelRules.throw_enabled). Una
                        torre al centro (240×270, techo y=410) que no se alcanza saltando; un HookPoint afuera de
                        cada esquina de arriba. Cada jugador lanza al gancho de su lado, sube tirando la cuerda y
                        salta arriba de la torre, donde se juntan para embocar. Label de ayuda arriba.
@@ -71,7 +78,7 @@ scenes/
   closeup_manager.tscn Efecto reutilizable: closeup + cámara lenta al acercarse los extremos (instanciar por nivel).
   collectible.tscn     Area2D recolectable (rombo turquesa): lo toca un jugador o un extremo del emboque (mask 14)
                        → suma puntos y se destruye. La cuerda no recoge (es solo una Line2D).
-  level_2.tscn         Segundo nivel, hecho según un boceto del equipo (escala x·0.64, y·0.473): J1 arriba a la
+  level_1b.tscn        Nivel 1-B, hecho según un boceto del equipo (escala x·0.64, y·0.473): J1 arriba a la
                        izquierda, J2 arriba a la derecha, muro central (hasta y=-400: no se salta por arriba) con
                        una plataforma media a la izquierda (con bloque ROJO encima: mata solo al jugador) y una
                        "T" abajo que lo cruza; bloque NARANJA flotante a la derecha y PISO NARANJA (matan a ambos);
@@ -79,8 +86,8 @@ scenes/
                        6 coleccionables + ScoreManager/ScoreLabel, WinManager, CloseupManager, pausa inline.
                        Se emboca con los extremos colgando bajo el muro, parados cada uno en su mitad de la T.
   ui/main_menu.tscn      Menú: Jugar, Ajustes, y texto de controles (la línea de lanzar, ThrowControls, en verde).
-  ui/level_selector.tscn Selector de niveles (Nivel 1, Prueba: muerte, Nivel 2, Prueba: física, Prueba: lanzar;
-                         futuro: grafo conectado).
+  ui/level_selector.tscn Selector de niveles en grilla (filas 1–3 × columnas A–D, pruebas abajo). Los botones se
+                         arman solos desde ROWS / TESTS de level_selector.gd (ver "Organización de niveles").
   ui/settings.tscn       Ajustes: volumen general / música / efectos + pantalla completa.
   ui/pause_menu.tscn     Menú de pausa reutilizable (Esc). Instanciar en cada nivel.
   ui/victory.tscn        Pantalla de victoria (minimalista): puntaje + récord del nivel + "Menú principal".
@@ -111,7 +118,7 @@ tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python 
                    por nivel en user://scores.cfg. WinManager lo usa al ganar; victory.gd lo lee.
   pause_menu.gd    Menú de pausa del nivel (Esc): Continuar / Reiniciar. Es un CanvasLayer.
                    La pausa NO es global: cada nivel debe TENER el nodo. Reutilizable vía ui/pause_menu.tscn
-                   (test_death lo instancia; main.tscn lo tiene inline en su CanvasLayer "UI").
+                   (test_death lo instancia; level_1a.tscn lo tiene inline en su CanvasLayer "UI").
   ui/*.gd          Lógica de los menús (navegación con change_scene_to_file); victory.gd muestra puntaje + récord.
 ```
 
@@ -153,7 +160,7 @@ Para poner el arte definitivo: reemplazar los hijos de `Visual/Art` por el dibuj
 
 La recarga se hace con `get_tree().call_deferred("reload_current_scene")`: **recargar dentro de `body_entered` (callback de física) está prohibido** en Godot (libera CollisionObjects a mitad del callback) — hay que diferirlo. Nota: los niveles reales instancian `WinManager` (victoria) y `ui/pause_menu.tscn` (pausa) además de las zonas; `test_death.tscn` los tiene los tres.
 
-J1 = **campana**, J2 = **palito** (asignados en `main.tscn` vía `end_scene` + `end_kind`).
+J1 = **campana**, J2 = **palito** (asignados en cada nivel vía `end_scene` + `end_kind`).
 
 ### Coleccionables y puntaje (`collectible.gd` + `score_manager.gd`)
 
@@ -167,9 +174,23 @@ Un `CharacterBody2D` no empuja cuerpos rígidos por sí solo, así que el empuje
 
 ### Flujo de escenas (UI)
 
-`main_menu` → (Jugar) → `level_selector` → (Nivel 1 / Nivel 2 / Prueba: muerte / Prueba: física / Prueba: lanzar) → `main.tscn` / `level_2.tscn` / `test_death.tscn` / `test_physics.tscn` / `test_throw.tscn` (gameplay) → (al ganar) → `ui/victory.tscn` → (Menú principal) → `main_menu`.
+`main_menu` → (Jugar) → `level_selector` → (un nivel de la grilla, o una prueba) → nivel (gameplay) → (al ganar) → `ui/victory.tscn` → (Menú principal) → `main_menu`.
 `main_menu` → (Ajustes) → `settings`. Selector y Ajustes tienen botón **Volver** al menú.
-Para agregar niveles: agregar el botón en `level_selector.tscn` (dentro de `Center/LevelsRow`) y una línea `"NombreDelBoton": "res://scenes/nivel.tscn"` en `LEVEL_BUTTONS` de `level_selector.gd` (conecta el botón solo, y lo pinta de verde si el nivel tiene lanzar). A futuro: disponer los botones como grafo con líneas de conexión.
+
+### Organización de niveles (selector en grilla)
+
+El selector es una grilla: cada **fila** es un tema y cada **columna** (A, B, C, D) el orden dentro de la fila (máximo 4 por fila).
+
+| Fila | Tema | Niveles |
+|---|---|---|
+| **1 · Ganchos** | Lo básico: moverse, cuerda, ganchos. | `level_1a.tscn` (Nivel 1-A), `level_1b.tscn` (Nivel 1-B) |
+| **2 · Cajas** | Cajas empujables (sigue habiendo ganchos). | `level_2a.tscn` (Nivel 2-A, intro de cajas) |
+| **3 · Lanzar** | Mecánica de lanzar (`LevelRules.throw_enabled`, botón en verde). | `level_3a.tscn` (Nivel 3-A) |
+| **Pruebas** (abajo) | Niveles de prueba de mecánicas. | `test_death.tscn` ("Prueba: muerte"), `test_physics.tscn` ("Prueba: Física") |
+
+Convención: el nivel de la fila *f*, columna *c* se llama **"Nivel f-C"**, su archivo es **`scenes/level_fc.tscn`** y su `level_id` (clave del récord) es **`"level_fc"`** (ej. Nivel 2-A → `level_2a.tscn`, `"level_2a"`).
+
+**Agregar un nivel:** 1) crear la escena siguiendo "Anatomía de un nivel"; 2) en su `WinManager` poner `level_id` y `level_name` — **el botón del selector muestra ese `level_name`** (lo lee de la escena con `LevelRules.scene_value`, sin instanciarla), así el nombre está en un solo lugar; 3) agregar la ruta a su fila en `ROWS` de `scripts/ui/level_selector.gd` (o a `TESTS` si es una prueba). Nada más: el botón se crea, se conecta y se pinta de verde solo si el nivel tiene lanzar. A futuro: disponer los botones como grafo con líneas de conexión.
 
 ### Capas de física (importante)
 
@@ -244,8 +265,9 @@ Al ganar, `WinManager` llama `ScoreBoard.report_win(level_id, level_name, score)
 ## Anatomía de un nivel (checklist antes de diseñar)
 
 Un nivel es una escena `.tscn` con raíz `Node2D`. Antes de ponerse a diseñar el
-trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
-`level_2.tscn` como plantilla y copiar/ajustar). El **orden en el árbol importa**
+trazado, todo nivel jugable necesita **estos nodos** (tomar `level_2a.tscn` o
+`level_3a.tscn` como plantilla — son los más simples y usan `ui/pause_menu.tscn`
+instanciado — y copiar/ajustar). El **orden en el árbol importa**
 (ver trampa más abajo): `WinManager` y `CloseupManager` van **antes** que los
 `Emboque`, y los `Emboque` **después** de los `Player`.
 
@@ -253,17 +275,17 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 
 1. **`Camera2D`** fija en `(640, 360)` — cámara del tamaño de la pantalla, sin scroll.
 2. **Geometría estática** (`StaticBody2D` en **capa 1**) con su `CollisionShape2D` y un `Polygon2D` visual: suelo + plataformas + muros. Es el trazado del puzzle.
-   - **Muros laterales `WallLeft`/`WallRight`** justo fuera de cámara: `position = Vector2(-20, 200)` / `Vector2(1300, 200)`, shape `RectangleShape2D` 40×1200 (cubre bien por arriba y por abajo). Evitan que alguien salga del nivel por los costados; son un `StaticBody2D` más, capa 1 por default. Todos los niveles reales los tienen (`main.tscn`, `level_2.tscn`, `test_death.tscn`, `test_physics.tscn`) — copiarlos igual en niveles nuevos.
+   - **Muros laterales `WallLeft`/`WallRight`** justo fuera de cámara: `position = Vector2(-20, 200)` / `Vector2(1300, 200)`, shape `RectangleShape2D` 40×1200 (cubre bien por arriba y por abajo). Evitan que alguien salga del nivel por los costados; son un `StaticBody2D` más, capa 1 por default. Todos los niveles los tienen (`level_1a`, `level_1b`, `level_2a`, `level_3a`, `test_death`, `test_physics`) — copiarlos igual en niveles nuevos.
 3. **2 × `Player`** (instancia de `player.tscn`):
    - `Player1`: `input_prefix = "p1"`, posición de inicio.
    - `Player2`: `input_prefix = "p2"`, `modulate` distinto (p. ej. `Color(1, 0.5, 0.4, 1)`) para diferenciarlos.
 4. **2 × `Emboque`** (instancia de `emboque.tscn`), **después** de los Player en el árbol:
    - `Emboque1`: `anchor_node = ../Player1/RopeAnchor`, `input_prefix = "p1"`, `end_scene = campana.tscn`, `end_kind = "campana"`.
    - `Emboque2`: `anchor_node = ../Player2/RopeAnchor`, `input_prefix = "p2"`, `end_scene = palito.tscn`, `end_kind = "palito"`.
-5. **`WinManager`** (`Node2D` + `win_manager.gd`), **antes** de los Emboque: `emboque_a`, `emboque_b`, `win_label`, y `level_id`/`level_name` (para el highscore y la pantalla de victoria — poner un id estable único por nivel, ej. `"level_3"` / `"Nivel 3"`).
+5. **`WinManager`** (`Node2D` + `win_manager.gd`), **antes** de los Emboque: `emboque_a`, `emboque_b`, `win_label`, y `level_id`/`level_name` (highscore, pantalla de victoria y **texto del botón en el selector** — según la convención de "Organización de niveles", ej. `"level_2b"` / `"Nivel 2-B"`).
 6. **`CloseupManager`** (instancia de `closeup_manager.tscn`): `camera_path = ../Camera2D`, `emboque_a`, `emboque_b`. Si el nivel NO es 1280×720, ajustar su `level_size` para el clamp de cámara.
 7. **`UI`** (`CanvasLayer` + `pause_menu.gd`) con:
-   - El `PausePanel` completo (estructura de `main.tscn`/`level_2.tscn`: VBox con Continuar/Reiniciar/Ajustes/MenúPrincipal + SettingsVBox). **La pausa no es global: cada nivel debe tener su propio nodo.** Copiar el panel tal cual — un panel desactualizado rompe `pause_menu.gd`.
+   - El `PausePanel` completo (estructura de `level_1a.tscn`/`level_1b.tscn`: VBox con Continuar/Reiniciar/Ajustes/MenúPrincipal + SettingsVBox). **La pausa no es global: cada nivel debe tener su propio nodo.** Copiar el panel tal cual — un panel desactualizado rompe `pause_menu.gd`.
    - `WinLabel` (`Label`, oculto; lo muestra el WinManager al ganar).
 
 **Opcional (según el diseño del nivel):**
@@ -287,6 +309,7 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **UIDs:** no inventar `uid://...` a mano (Godot los rechaza como inválidos). Dejar que el editor los genere; en referencias `ext_resource` basta el `path`.
 - **Inferencia de tipos:** acceder a propiedades de un nodo tipado genéricamente (`Node2D`) devuelve Variant y rompe `:=`. Tipar con el `class_name` real (p. ej. `var e: Emboque`).
 - **Tunneling entre cuerpos delgados y rápidos:** un extremo veloz puede atravesar al otro. Protección actual: `continuous_cd = 2` (CCD cast-shape) + **física a 120 Hz**. **El tope de velocidad (`max_speed`) se QUITÓ** por decisión de diseño (el closeup ya frena el juego al acercarse). Si reaparece tunneling a velocidades altas, reconsiderar (subir ticks, engrosar paredes, o reintroducir un tope alto). Nota: `Engine.time_scale` NO reduce el avance por *tick* de física (solo hay menos ticks por segundo real), así que el slowdown no elimina el tunneling por sí solo.
+- **La cuerda recorta los saltos (decisión: se deja así).** Si el extremo cuelga o descansa cerca, al saltar la cuerda se tensa y `_limit_player` baja al jugador antes de que el extremo alcance a seguirlo. Altura de salto medida según el largo de la cuerda: **60 → 139 px, 170 (default) → 190 px, 250 → 227 px, 320 (máx.) → 239 px** (sin cuerda: 236). Para diseñar niveles: "inalcanzable saltando" tiene que valer con la cuerda al **máximo** (subida 239); y si un salto necesita casi toda la altura (p. ej. caja → torre en el Nivel 2-A), el jugador tiene que **soltar cuerda** — avisarlo en el nivel. Con el extremo en la mano (lanzar) el salto es completo.
 - **Tamaños actuales (placeholders):** jugador 40×64; palito 22×6; campana ~18×24 (paredes 6px, hoyo ~12px). Las partes son ~1/3 del jugador. Magnetismo suave: `magnet_radius=70`, `linear_accel=900`, `angular_gain=2.5`. Todo es tuneable en el Inspector.
 - **Restricción de cuerda en RigidBody:** hacerla por **velocidad** en `_integrate_forces` (no fijando `transform.origin`), para no teletransportar a través de paredes. Definir `_integrate_forces` NO desactiva las colisiones (salvo `custom_integrator = true`).
 - **Formas cóncavas en 2D:** no existen como shape convexa única. La campana (C) se arma con **varios `CollisionShape2D` rectangulares** (convexos), no un polígono cóncavo.
@@ -324,21 +347,23 @@ Hecho (verificado con tests headless donde aplica):
 - **Menú de pausa** (`pause_menu.gd`, vía PR #1) — Esc pausa (`get_tree().paused`); botones Continuar / Reiniciar. El nodo usa `process_mode = ALWAYS` para seguir respondiendo con el juego pausado.
 - **Zonas de muerte** — `player_death_zone` / `emboque_death_zone` (scripts separados) + `both_death_zone`, cada una con visual distinta; reinician el nivel al contacto. Nivel `test_death.tscn` en el selector. Test headless: detección + aislamiento por máscara + zona "ambos" PASS.
 - **Closeup + slowdown estilo Peggle** (`closeup_manager.gd`, reutilizable) — al acercarse los extremos, la cámara hace zoom hacia el punto medio y `Engine.time_scale` baja; continuo y reversible; se reinicia el time_scale al salir. En `main` y `level_2`. Test headless: lejos→normal, cerca→zoom~2 + ts 0.35 + cámara al midpoint, revierte, y reset PASS. Se quitó el tope de velocidad del emboque.
-- **Nivel 2** (`level_2.tscn`) — segundo nivel de gameplay en el selector, con plataformas, muro central, 3 HookPoint, 2 zonas de muerte "ambos", WinManager y CloseupManager.
+- **Nivel 2** (`level_1b.tscn`) — segundo nivel de gameplay en el selector, con plataformas, muro central, 3 HookPoint, 2 zonas de muerte "ambos", WinManager y CloseupManager.
 - **Coleccionables + puntaje** (`collectible.gd` + `score_manager.gd`) — rombos que el jugador recoge para sumar puntos; `ScoreManager` (grupo `"score_manager"`) lleva el conteo y actualiza un `ScoreLabel`. Usado en `level_2`.
 - **Pantalla de victoria + highscore** (`ui/victory.tscn` + `score_board.gd` autoload) — al ganar se salta a una pantalla minimalista con puntaje, récord del nivel ("¡Nuevo récord!" si se batió) y botón al menú principal. `ScoreBoard` persiste el highscore por nivel en `user://scores.cfg`. Test headless del tablero (récord, no-récord, independencia entre niveles, persistencia) PASS.
 
 - **Balanceo estilo DKC** (`player.gd` + `emboque.gd`) — enganche instantáneo, péndulo propio del jugador con bombeo híbrido y tope de ángulo por energía, salto desde la cuerda con impulso, soltarse con abajo conservando velocidad, rapel sin perder rapidez, inclinación + squash/stretch. Test headless (radio exacto, período, bombeo ≤ ángulo máx, enganche instantáneo, lanzamiento sin tirón, rapel, enganche sobre el gancho, suelo atado, sin doble salto) PASS.
 - **Caja empujable** (`push_box.gd` + `push_box.tscn`, capa 6) — RigidBody que los jugadores empujan caminando contra ella (velocidad fija, sin tirones) y que los extremos golpean por física; se pisa, se apila, cae de bordes, el que va encima viaja con ella. Test headless (asentarse, empuje parejo, frenar al soltar, muro, pararse encima, pasajero, golpe de campana, empujes opuestos, caída de borde, pila) PASS.
 - **Nivel "Prueba: Física"** (`test_physics.tscn`) — Nivel 1 sin muro central, plataformas más afuera, muros laterales fuera de cámara, 3 ganchos y 2 cajas. En el selector.
-- **Muros laterales en todos los niveles** (`WallLeft`/`WallRight`, `x<0` y `x>1280`) — se agregaron también a `main.tscn`, `level_2.tscn` y `test_death.tscn` (antes solo los tenía `test_physics.tscn`); nadie puede salirse del nivel por los costados. Test headless por raycast: en los 4 niveles hay muro exactamente en `x=0` y `x=1280` PASS.
+- **Muros laterales en todos los niveles** (`WallLeft`/`WallRight`, `x<0` y `x>1280`) — se agregaron también a `level_1a.tscn`, `level_1b.tscn` y `test_death.tscn` (antes solo los tenía `test_physics.tscn`); nadie puede salirse del nivel por los costados. Test headless por raycast: en los 4 niveles hay muro exactamente en `x=0` y `x=1280` PASS.
 - **Mirada + espejo + sonidos** — ojo placeholder del lado hacia el que mira; `Visual/Art` se espeja según `facing`; hook de animaciones por nombre (`get_anim_state`) listo para el arte. Autoload `Sfx` + 6 efectos placeholder sintetizados (pasos, salto, muerte, enganche, whoosh del balanceo, arrastre de caja). Test headless (mirada/espejo/ojo, estados de animación, ~8 pasos/s, pasajero sin pasos, salto, enganche, whoosh por pasada, loop de la caja on/off, muerte sin duplicar) PASS.
 - **Volumen por categoría** (`SettingsManager` + buses Music/SFX) — sliders independientes de Master/Música/Efectos en Ajustes y en la pausa de cada nivel; los buses se crean por código, no con un `default_bus_layout.tres` a mano. Test headless (buses creados y enviando a Master, los tres volúmenes no se pisan entre sí, persisten en `user://settings.cfg`, Sfx y la caja usan el bus SFX) PASS.
 
-- **Tomar y lanzar el emboque** (`emboque.gd` + `rope_end.gd` + `level_rules.gd`, teclas G / L) — mecánica por nivel (nodo `LevelRules`): tirar otra vez con la cuerda al mínimo toma el extremo, lanzar apunta (mira punteada 0°↔60° en ping-pong, jugador quieto), lanzar otra vez lo lanza en línea recta con la cuerda al máximo; soltar lo deja. Sonidos `grab`/`throw`. Nivel **"Prueba: lanzar"** (`test_throw.tscn`, torre central + 2 ganchos). Test headless (no toma al acortar hasta el mínimo, toma con pulsación nueva, sin colisiones y pegado a la mano al caminar, apuntando no camina ni salta pero gira, mira 0..60 ida y vuelta, soltar restaura todo sin alargar, vuelo recto desvío 0 px hasta 320 px, choca con la torre sin atravesarla, el mejor salto queda 40 px bajo el techo de la torre, cada jugador lanza a su gancho → sube → queda arriba de la torre, extremo en la mano no emboca ni activa closeup (con control), sin `LevelRules` no hay mecánica) PASS 49/49. Desde el mejor lugar (~150–200 px del gancho) sirve una ventana de ~10° del barrido.
-- **Verde de lanzar en los menús** — el selector pinta solo (texto + borde verde lima) los niveles con `LevelRules.throw_enabled`, leyendo la escena sin instanciarla; en el menú principal solo la línea de lanzar va en verde ("Niveles verdes: …"). Un único color en `LevelRules.THROW_COLOR`. El selector pasó a un mapa `LEVEL_BUTTONS` (botón → escena).
+- **Tomar y lanzar el emboque** (`emboque.gd` + `rope_end.gd` + `level_rules.gd`, teclas G / L) — mecánica por nivel (nodo `LevelRules`): tirar otra vez con la cuerda al mínimo toma el extremo, lanzar apunta (mira punteada 0°↔60° en ping-pong, jugador quieto), lanzar otra vez lo lanza en línea recta con la cuerda al máximo; soltar lo deja. Sonidos `grab`/`throw`. Nivel **"Prueba: lanzar"** (`level_3a.tscn`, torre central + 2 ganchos). Test headless (no toma al acortar hasta el mínimo, toma con pulsación nueva, sin colisiones y pegado a la mano al caminar, apuntando no camina ni salta pero gira, mira 0..60 ida y vuelta, soltar restaura todo sin alargar, vuelo recto desvío 0 px hasta 320 px, choca con la torre sin atravesarla, el mejor salto queda 40 px bajo el techo de la torre, cada jugador lanza a su gancho → sube → queda arriba de la torre, extremo en la mano no emboca ni activa closeup (con control), sin `LevelRules` no hay mecánica) PASS 49/49. Desde el mejor lugar (~150–200 px del gancho) sirve una ventana de ~10° del barrido.
+- **Verde de lanzar en los menús** — el selector pinta solo (texto + borde verde lima) los niveles con `LevelRules.throw_enabled`, leyendo la escena sin instanciarla; en el menú principal solo la línea de lanzar va en verde ("Niveles verdes: …"). Un único color en `LevelRules.THROW_COLOR`. El selector pasó a un mapa `LEVEL_BUTTONS` (botón → escena; después reemplazado por la grilla `ROWS`).
 - **El emboque recoge coleccionables** (`collectible.gd`, mask 14) — palito y campana también los recogen (la cuerda no); guard contra doble suma.
-- **Nivel 2 según el boceto** (`level_2.tscn`) — plataformas, muro central que sigue sobre la pantalla, plataforma media con bloque rojo (solo jugador), T bajo el muro, bloque naranja flotante y piso naranja (ambos), 2 ganchos, 6 coleccionables; puntaje movido para no tapar a J1. Test headless 27/27 (colores = mismas zonas que "Prueba: muerte": rojo mata al jugador y no al emboque, naranja mata a ambos; el muro no se salta por arriba; extremos y jugadores recogen; rutas: J1 baja con cuidado a la izquierda del rojo, engancha el gancho de abajo — tirar al mínimo, soltar un poco y volver a tirar — y se balancea hasta la T en 10/12 combinaciones largo/ángulo; J2 acorta la cuerda, corre a la izquierda y el palito engancha el gancho derecho, y salta a la T en 4/4 ángulos; con la cuerda a 170 el palito roza el bloque naranja; desde la T los extremos cuelgan bajo el muro, se juntan a 5 px y recogen los 2 coleccionables de abajo).
+- **Nivel 2 según el boceto** (`level_1b.tscn`) — plataformas, muro central que sigue sobre la pantalla, plataforma media con bloque rojo (solo jugador), T bajo el muro, bloque naranja flotante y piso naranja (ambos), 2 ganchos, 6 coleccionables; puntaje movido para no tapar a J1. Test headless 27/27 (colores = mismas zonas que "Prueba: muerte": rojo mata al jugador y no al emboque, naranja mata a ambos; el muro no se salta por arriba; extremos y jugadores recogen; rutas: J1 baja con cuidado a la izquierda del rojo, engancha el gancho de abajo — tirar al mínimo, soltar un poco y volver a tirar — y se balancea hasta la T en 10/12 combinaciones largo/ángulo; J2 acorta la cuerda, corre a la izquierda y el palito engancha el gancho derecho, y salta a la T en 4/4 ángulos; con la cuerda a 170 el palito roza el bloque naranja; desde la T los extremos cuelgan bajo el muro, se juntan a 5 px y recogen los 2 coleccionables de abajo).
+- **Niveles en grilla** (rama `feature/levels`) — el selector pasa a filas por tema (1 Ganchos / 2 Cajas / 3 Lanzar) × columnas A–D, con las pruebas abajo; se arma solo desde `ROWS` / `TESTS` y cada botón muestra el `level_name` de su escena. Renombres (con `git mv`): Nivel 1 → **Nivel 1-A** (`main.tscn` → `level_1a.tscn`), Nivel 2 → **Nivel 1-B** (`level_2.tscn` → `level_1b.tscn`), Prueba: lanzar → **Nivel 3-A** (`test_throw.tscn` → `level_3a.tscn`), con sus `level_id` (`level_1a`, `level_1b`, `level_3a`); `test_death` recibió `level_id`/`level_name`.
+- **Nivel 2-A "Pasar la caja"** (`level_2a.tscn`) — intro de las cajas, cooperativo: J2 sube a la torre con su caja (soltando cuerda para el salto), empuja la caja de arriba hacia el lado de J1 y J1 sube con ella. Test headless 20/20 (grilla del selector: filas, nombres, pruebas abajo, solo 3-A en verde; ids/nombres de todas las escenas; los archivos viejos no existen; el reborde frena la caja; nadie llega arriba saltando ni con la cuerda al máximo; J2 sube con su caja; la caja de arriba cae del lado de J1 y J2 no se cae detrás; J1 sube con esa caja; arriba los extremos se juntan a 18 px). Regresión: lanzar, Nivel 1-B, balanceo, cajas, sensación, audio y muros (ahora en los 6 niveles) PASS.
 
 Pendiente:
 - **Fase 6** — Nivel de prueba definitivo a medida de cámara + pasada de tuning de la sensación (magnetismo, masas, largos, velocidades, radios del closeup).

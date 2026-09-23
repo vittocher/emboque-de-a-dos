@@ -30,10 +30,11 @@ class_name WinManager
 @export var restart_delay: float = 2.5
 
 @export_group("Resultado")
-## Id estable del nivel para el highscore (ej. "level_1"). Si queda vacío, se
+## Id estable del nivel para el highscore (ej. "level_1a"). Si queda vacío, se
 ## deriva del nombre de archivo de la escena.
 @export var level_id: String = ""
-## Nombre del nivel a mostrar en la pantalla de victoria (ej. "Nivel 1").
+## Nombre del nivel (ej. "Nivel 1-A"): lo muestran la pantalla de victoria y el
+## botón del nivel en el selector.
 @export var level_name: String = ""
 ## Escena de la pantalla de victoria a la que se salta al ganar.
 @export var victory_scene: String = "res://scenes/ui/victory.tscn"
@@ -135,7 +136,7 @@ func _current_score() -> int:
 	var sm := get_tree().get_first_node_in_group("score_manager") as ScoreManager
 	return sm.score if sm != null else 0
 
-## Id derivado del nombre de archivo de la escena (ej. "level_2"), como respaldo
+## Id derivado del nombre de archivo de la escena (ej. "level_1b"), como respaldo
 ## si no se configuró level_id en el Inspector.
 func _fallback_id() -> String:
 	var path := get_tree().current_scene.scene_file_path

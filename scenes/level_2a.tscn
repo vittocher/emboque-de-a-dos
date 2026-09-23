@@ -2,13 +2,12 @@
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/emboque.tscn" id="2_emboque"]
-[ext_resource type="PackedScene" path="res://scenes/hook_point.tscn" id="3_hook"]
+[ext_resource type="PackedScene" path="res://scenes/push_box.tscn" id="3_box"]
 [ext_resource type="Script" path="res://scripts/win_manager.gd" id="4_win"]
 [ext_resource type="PackedScene" path="res://scenes/campana.tscn" id="5_campana"]
 [ext_resource type="PackedScene" path="res://scenes/palito.tscn" id="6_palito"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="7_pause"]
 [ext_resource type="PackedScene" path="res://scenes/closeup_manager.tscn" id="8_closeup"]
-[ext_resource type="Script" path="res://scripts/level_rules.gd" id="9_rules"]
 
 [sub_resource type="RectangleShape2D" id="Shape_ground"]
 size = Vector2(1280, 40)
@@ -16,10 +15,13 @@ size = Vector2(1280, 40)
 [sub_resource type="RectangleShape2D" id="Shape_tower"]
 size = Vector2(240, 270)
 
+[sub_resource type="RectangleShape2D" id="Shape_lip"]
+size = Vector2(20, 8)
+
 [sub_resource type="RectangleShape2D" id="Shape_side_wall"]
 size = Vector2(40, 1200)
 
-[node name="TestThrow" type="Node2D"]
+[node name="Level2A" type="Node2D"]
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(640, 360)
@@ -44,6 +46,16 @@ shape = SubResource("Shape_tower")
 color = Color(0.4, 0.35, 0.3, 1)
 polygon = PackedVector2Array(-120, -135, 120, -135, 120, 135, -120, 135)
 
+[node name="Lip" type="StaticBody2D" parent="."]
+position = Vector2(750, 406)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Lip"]
+shape = SubResource("Shape_lip")
+
+[node name="Visual" type="Polygon2D" parent="Lip"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-10, -4, 10, -4, 10, 4, -10, 4)
+
 [node name="WallLeft" type="StaticBody2D" parent="."]
 position = Vector2(-20, 200)
 
@@ -64,23 +76,19 @@ shape = SubResource("Shape_side_wall")
 color = Color(0.4, 0.35, 0.3, 1)
 polygon = PackedVector2Array(-20, -600, 20, -600, 20, 600, -20, 600)
 
-[node name="HookLeft" parent="." instance=ExtResource("3_hook")]
-position = Vector2(495, 375)
+[node name="TopBox" parent="." instance=ExtResource("3_box")]
+position = Vector2(580, 378)
 
-[node name="HookRight" parent="." instance=ExtResource("3_hook")]
-position = Vector2(785, 375)
-
-[node name="LevelRules" type="Node" parent="."]
-script = ExtResource("9_rules")
-throw_enabled = true
+[node name="FloorBox" parent="." instance=ExtResource("3_box")]
+position = Vector2(1000, 648)
 
 [node name="Player1" parent="." instance=ExtResource("1_player")]
-position = Vector2(250, 460)
+position = Vector2(200, 460)
 input_prefix = "p1"
 
 [node name="Player2" parent="." instance=ExtResource("1_player")]
 modulate = Color(1, 0.5, 0.4, 1)
-position = Vector2(1030, 460)
+position = Vector2(1080, 460)
 input_prefix = "p2"
 
 [node name="WinManager" type="Node2D" parent="."]
@@ -88,8 +96,8 @@ script = ExtResource("4_win")
 emboque_a = NodePath("../Emboque1")
 emboque_b = NodePath("../Emboque2")
 win_label = NodePath("../UI/WinLabel")
-level_id = "test_throw"
-level_name = "Prueba: lanzar"
+level_id = "level_2a"
+level_name = "Nivel 2-A"
 
 [node name="CloseupManager" parent="." instance=ExtResource("8_closeup")]
 camera_path = NodePath("../Camera2D")
@@ -117,8 +125,8 @@ anchor_right = 1.0
 offset_top = 16.0
 offset_bottom = 70.0
 horizontal_alignment = 1
-text = "Con la cuerda al mínimo, tirar otra vez (T / .) toma el emboque en la mano
-G / L: apuntar  ·  G / L otra vez: lanzar  ·  R / , : soltarlo"
+text = "Camina contra una caja para empujarla  ·  Súbete a ella para llegar más alto
+Suelta cuerda (R / ,) para saltar más alto  ·  Las cajas se caen por los bordes"
 theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 1, 1, 0.7)
 
