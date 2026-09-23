@@ -39,7 +39,7 @@ Las acciones siguen el patrón `<prefix>_<accion>`: `_left`, `_right`, `_jump`, 
 
 **Esc** (`ui_cancel`) abre/cierra el **menú de pausa** en el nivel (ver `pause_menu.gd`).
 
-**Enganchado** (ver Fase 4.5): `soltar` baja al jugador (rapel), `tirar` lo sube, `abajo` (S / ↓) lo **desengancha** (por defecto solo se suelta y cae; `unhook_hop` permite un impulso).
+**Enganchado** (ver "Balanceo enganchado"): izquierda/derecha **bombean** el balanceo, `saltar` **se lanza** desde la cuerda (impulso del balanceo + salto), `abajo` (S / ↓) se **suelta** conservando la velocidad, `soltar` baja al jugador (rapel) y `tirar` lo sube.
 
 ## Arquitectura
 
@@ -66,7 +66,8 @@ scenes/
   ui/pause_menu.tscn     Menú de pausa reutilizable (Esc). Instanciar en cada nivel.
   ui/victory.tscn        Pantalla de victoria (minimalista): puntaje + récord del nivel + "Menú principal".
 scripts/
-  player.gd        Controlador de plataformas parametrizado por input_prefix.
+  player.gd        Controlador de plataformas parametrizado por input_prefix + estado de balanceo
+                   (péndulo θ/ω) cuando cuelga de un gancho; el Emboque lo maneja vía attach/detach_swing.
   emboque.gd       Coordina la media-cuerda: largo, enganche, límite del jugador, cuerda visual;
                    instancia el extremo (end_scene) y le pasa los parámetros de la cuerda.
   rope_end.gd      RigidBody2D del extremo (palito/campana): restricción de cuerda en _integrate_forces.
@@ -121,14 +122,30 @@ El **extremo** (palito/campana) es un `RigidBody2D` (`rope_end.gd`) con física 
 
 `emboque.gd` (coordinador) cada `_physics_process`:
 1. `_update_length` — `soltar`/`tirar` ajustan `rope_length` (clamp).
-2. Desenganche con `abajo` si está enganchado.
+2. Si está enganchado: desenganche con `abajo`, o le pasa al jugador el largo actual (`set_swing_length`).
 3. Pasa al extremo: `anchor_position`, `rope_length`, `hooked`, `hook_position` (los usa en su `_integrate_forces`, que corre después el mismo frame).
-4. `_limit_player` — si el extremo quedó a más de `rope_length` (trabado o colgando de un gancho), **tira del jugador** hacia el extremo con `_move_sliding`.
+4. `_limit_player` — si el extremo quedó a más de `rope_length` (trabado, o enganchado con el jugador en el suelo), **tira del jugador** hacia el extremo con `_move_sliding`. Se salta cuando el jugador cuelga tenso (el péndulo ya es exacto).
 5. `_update_rope_visual`.
 
 `rope_end.gd` en `_integrate_forces`: si `hooked`, fija el extremo al gancho; si no, aplica la **restricción de cuerda por velocidad** (quita la velocidad radial hacia afuera + corrige el exceso), sin fijar posición → el motor resuelve colisiones y el extremo **nunca atraviesa geometría**.
 
 API para el WinManager: `get_end()` (RigidBody), `get_end_position()`, `get_cavity_sensor()` (solo campana).
+
+### Balanceo enganchado (estilo Donkey Kong Country)
+
+Cuando el `HookSensor` del extremo toca un `HookPoint`, el `Emboque` se engancha **al instante**: `rope_length` pasa a ser la distancia actual mano–gancho y llama `player.attach_swing(gancho, largo)`. La velocidad que traía el jugador se convierte en balanceo en ese mismo tick (sin caída libre).
+
+El balanceo es un **estado propio del `Player`** (no fuerzas encima del controlador de plataformas). Sub-estados mientras está enganchado:
+
+| Estado | Cuándo | Qué pasa |
+|---|---|---|
+| Suelo | enganchado y pisando (o a ≤2px del piso) | Movimiento normal; `_limit_player` del Emboque lo ata al gancho. Saltar = salto normal. |
+| Holgura | en el aire, mano más cerca que el largo | Movimiento aéreo normal hasta que la cuerda se tensa. Saltar NO suelta (evita doble salto). |
+| **Tenso (péndulo)** | en el aire con la cuerda tensa | `_process_swing`: se integra el ángulo `θ` (0 = colgando abajo) y la velocidad angular `ω`, y se mueve con `move_and_slide` hacia el punto del círculo. |
+
+Péndulo: gravedad `g·swing_gravity_scale` (más ágil que la caída libre). **Bombeo híbrido**: empujar a favor del movimiento suma `swing_pump_accel`; en contra solo `swing_brake_factor` de eso. La energía se **limita a la de `swing_max_angle_deg`** (tope suave, sin frenazos), lo que también fija la velocidad máxima. El rapel conserva la **velocidad tangencial**. Si la cuerda quedaría empujando (sobre el gancho sin velocidad), se afloja y el jugador cae.
+
+Soltarse: **saltar** (solo tenso) → `v_balanceo·swing_launch_multiplier` + `swing_jump_velocity` y emite `swing_jumped` (el Emboque se desengancha). **Abajo** → `Emboque._unhook()` → `detach_swing()` conserva `v_balanceo`. En ambos casos el extremo sale con la velocidad del jugador y, hasta aterrizar, el aire frena suave (`launch_air_drag`) en vez de la fricción normal. Visual: el cuerpo se inclina con la cuerda pivotando en la mano (solo el `Visual`, la colisión no rota) y hay squash/stretch al engancharse y al lanzarse.
 
 ### Victoria y magnetismo (`win_manager.gd`)
 
@@ -185,6 +202,9 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **Al medir en tests una colisión con péndulo:** medir el **pico** (ej. máximo empuje), no el frame final — el péndulo/gravedad ya devolvió el cuerpo a su sitio y da un falso negativo.
 - **No liberar/recargar dentro de un callback de física** (`body_entered`, `area_entered`, etc.): Godot prohíbe destruir CollisionObjects a mitad del paso físico. Usar `call_deferred(...)`. (Pasó con `reload_current_scene` en las zonas de muerte.)
 - **En tests headless, simular input con `Input.parse_input_event(ev)`**, no `Input.action_press` — este último solo cambia el estado interno y no llega a `_input`/`_unhandled_input`.
+- **`Input.action_press` cuenta como `is_action_just_pressed` recién en el tick de física siguiente.** En tests, mantener la tecla al menos 2 ticks antes de soltarla, o el "just pressed" nunca se ve.
+- **No montar el balanceo como fuerzas encima del controlador de plataformas:** la fricción aérea (1300 px/s²) y el tope de 320 px/s de `player.gd` se comían el péndulo. El balanceo es un estado propio (θ, ω) que se salta el código de plataformas.
+- **Al soltarse de un gancho, darle al extremo la velocidad del jugador:** si queda quieto en el gancho, `_limit_player` frena el lanzamiento de golpe (se perdían ~80px de vuelo).
 - Godot re-guarda escenas/`project.godot` al abrirlos (puede cambiar `uid`/`load_steps` u omitir valores por default); es esperado.
 
 ## Estado de desarrollo (prototipo de la mecánica)
@@ -207,6 +227,8 @@ Hecho (verificado con tests headless donde aplica):
 - **Nivel 2** (`level_2.tscn`) — segundo nivel de gameplay en el selector, con plataformas, muro central, 3 HookPoint, 2 zonas de muerte "ambos", WinManager y CloseupManager.
 - **Coleccionables + puntaje** (`collectible.gd` + `score_manager.gd`) — rombos que el jugador recoge para sumar puntos; `ScoreManager` (grupo `"score_manager"`) lleva el conteo y actualiza un `ScoreLabel`. Usado en `level_2`.
 - **Pantalla de victoria + highscore** (`ui/victory.tscn` + `score_board.gd` autoload) — al ganar se salta a una pantalla minimalista con puntaje, récord del nivel ("¡Nuevo récord!" si se batió) y botón al menú principal. `ScoreBoard` persiste el highscore por nivel en `user://scores.cfg`. Test headless del tablero (récord, no-récord, independencia entre niveles, persistencia) PASS.
+
+- **Balanceo estilo DKC** (`player.gd` + `emboque.gd`) — enganche instantáneo, péndulo propio del jugador con bombeo híbrido y tope de ángulo por energía, salto desde la cuerda con impulso, soltarse con abajo conservando velocidad, rapel sin perder rapidez, inclinación + squash/stretch. Test headless (radio exacto, período, bombeo ≤ ángulo máx, enganche instantáneo, lanzamiento sin tirón, rapel, enganche sobre el gancho, suelo atado, sin doble salto) PASS.
 
 Pendiente:
 - **Fase 6** — Nivel de prueba definitivo a medida de cámara + pasada de tuning de la sensación (magnetismo, masas, largos, velocidades, radios del closeup).

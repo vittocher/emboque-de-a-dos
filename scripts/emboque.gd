@@ -26,12 +26,6 @@ class_name Emboque
 @export_group("Enganche")
 ## Tiempo tras desenganchar antes de poder volver a engancharse (s).
 @export var rehook_cooldown: float = 0.35
-## Aceleración tangencial que produce el movimiento mientras el jugador cuelga.
-@export var swing_acceleration: float = 1050.0
-## Velocidad tangencial máxima al balancearse.
-@export var swing_max_speed: float = 620.0
-## Distancia dentro de la cual la cuerda se considera tensa.
-@export var swing_taut_tolerance: float = 8.0
 
 @export_group("Visual")
 @export var rope_segments: int = 18
@@ -39,7 +33,7 @@ class_name Emboque
 @onready var _rope_line: Line2D = $Rope
 
 var _anchor: Node2D
-var _player: CharacterBody2D
+var _player: Player
 var _end: RopeEnd
 var _hook_sensor: Area2D
 var _hooked: bool = false
@@ -50,7 +44,10 @@ func _ready() -> void:
 	_anchor = get_node_or_null(anchor_node) as Node2D
 	_instance_end()
 	if _anchor != null and _end != null:
-		_player = _find_character_body(_anchor)
+		_player = _find_character_body(_anchor) as Player
+		if _player != null:
+			# Saltar desde la cuerda suelta el gancho (lo decide el jugador).
+			_player.swing_jumped.connect(_unhook)
 		_end.global_position = _anchor.global_position + Vector2(0, rope_length)
 		_end.rope_length = rope_length
 		_end.constrained = true
@@ -80,8 +77,11 @@ func _physics_process(delta: float) -> void:
 	_rehook_timer = maxf(0.0, _rehook_timer - delta)
 	_update_length(delta)
 
-	if _hooked and Input.is_action_just_pressed(input_prefix + "_down"):
-		_unhook()
+	if _hooked:
+		if Input.is_action_just_pressed(input_prefix + "_down"):
+			_unhook()
+		elif _player != null:
+			_player.set_swing_length(rope_length)
 
 	# Pasar los parámetros de la cuerda al extremo rígido (los usa en su
 	# _integrate_forces, que corre después en el mismo frame).
@@ -90,8 +90,6 @@ func _physics_process(delta: float) -> void:
 	_end.hooked = _hooked
 	_end.hook_position = _hook_position
 
-	if _hooked:
-		_apply_hook_swing(delta)
 	_limit_player()
 	_update_rope_visual()
 
@@ -105,11 +103,14 @@ func _update_length(delta: float) -> void:
 	if change != 0.0:
 		rope_length = clampf(rope_length + change, min_length, max_length)
 
-## Si el extremo está más lejos que rope_length (trabado, o el jugador colgando
-## de un gancho), tira del jugador hacia el extremo. Con deslizamiento para que
-## el piso no anule el tirón lateral.
+## Si el extremo está más lejos que rope_length (trabado, o el jugador enganchado
+## en el suelo), tira del jugador hacia el extremo. Con deslizamiento para que
+## el piso no anule el tirón lateral. Colgando tenso no hace falta: el péndulo
+## del jugador ya respeta el largo exacto.
 func _limit_player() -> void:
 	if not limit_player_movement or _player == null:
+		return
+	if _hooked and _player.is_swing_taut():
 		return
 	var anchor_pos := _anchor.global_position
 	var target := _hook_position if _hooked else _end.global_position
@@ -117,35 +118,6 @@ func _limit_player() -> void:
 	var dist := to_end.length()
 	if dist > rope_length + 1.0 and dist > 0.001:
 		_move_sliding(_player, (to_end / dist) * (dist - rope_length))
-
-## Convierte el movimiento horizontal en una aceleración tangencial cuando el
-## extremo está enganchado. La velocidad radial hacia afuera se elimina solo
-## cuando la cuerda está tensa, dejando que el jugador caiga con holgura.
-func _apply_hook_swing(delta: float) -> void:
-	if _player == null:
-		return
-
-	var anchor_pos := _anchor.global_position
-	var from_hook := anchor_pos - _hook_position
-	var distance := from_hook.length()
-	if distance <= 0.001 or distance < rope_length - swing_taut_tolerance:
-		return
-
-	var radial := from_hook / distance
-	var tangent := Vector2(radial.y, -radial.x)
-	var direction := Input.get_axis(input_prefix + "_left", input_prefix + "_right")
-
-	# El control se proyecta sobre la tangente para que izquierda/derecha
-	# impulsen el péndulo sin forzar al jugador a atravesar la cuerda.
-	_player.velocity += tangent * direction * swing_acceleration * delta
-
-	var radial_speed := _player.velocity.dot(radial)
-	if radial_speed > 0.0:
-		_player.velocity -= radial * radial_speed
-
-	var tangential_speed := _player.velocity.dot(tangent)
-	if absf(tangential_speed) > swing_max_speed:
-		_player.velocity += tangent * (signf(tangential_speed) * swing_max_speed - tangential_speed)
 
 ## Mueve un cuerpo por 'motion' deslizando sobre las superficies con las que
 ## choca (como move_and_slide, pero con un desplazamiento explícito).
@@ -164,11 +136,20 @@ func _on_hook_sensor_area_entered(area: Area2D) -> void:
 	if not _hooked and _rehook_timer <= 0.0:
 		_hooked = true
 		_hook_position = area.global_position
+		# Enganche instantáneo: la cuerda toma el largo actual y el balanceo parte ya.
+		rope_length = clampf(_anchor.global_position.distance_to(_hook_position), min_length, max_length)
+		if _player != null:
+			_player.attach_swing(_hook_position, rope_length)
 
-## Suelta el enganche (con el direccional abajo).
+## Suelta el enganche (abajo, o el jugador saltó desde la cuerda).
 func _unhook() -> void:
 	_hooked = false
 	_rehook_timer = rehook_cooldown
+	if _player != null:
+		_player.detach_swing()
+		# El extremo sale junto al jugador: si quedara quieto en el gancho, la
+		# cuerda frenaría de golpe el lanzamiento.
+		_end.linear_velocity = _player.velocity
 
 ## Redibuja la cuerda como una curva con soltura (catenaria aproximada).
 func _update_rope_visual() -> void:
