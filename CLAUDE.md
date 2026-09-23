@@ -1,164 +1,119 @@
 # CLAUDE.md — Emboque de a Dos
 
-Guía para trabajar en este repositorio. Léela antes de tocar código.
+## Qué es
 
-## Qué es el juego
+Puzzle **cooperativo local de 2 jugadores** (estilo *Fireboy & Watergirl*) en **Godot 4.7**, para **web (Newgrounds)**. Tema: amistad y tradición chilena. Concepto completo en `EmboqueDA2 Concepto.pdf`.
 
-**Emboque de a Dos**: puzzle **cooperativo local de 2 jugadores** (estilo *Fireboy & Watergirl*), en **Godot 4.6**, apuntado a **web (Newgrounds)**. Tema: amistad y tradición chilena.
+De cada jugador cuelga media mitad del emboque por una cuerda con física de péndulo: **J1 = campana**, **J2 = palito**. Objetivo de cada nivel: **embocar** (palito dentro de la campana).
 
-De cada personaje cuelga **media mitad del emboque** por una cuerda: J1 lleva la **campana**, J2 el **palito**. La física de la cuerda (balanceo tipo péndulo) es la mecánica central. El objetivo de cada nivel es **juntar palito + campana** (embocar). El concepto completo está en `EmboqueDA2 Concepto.pdf`.
+## Setup
 
-## Setup / cómo correr
+- **Godot 4.7.2**. Linux: `~/Godot/Godot_v4.7.2-stable_linux.x86_64`. Windows: `C:\Users\vitto\OneDrive\Desktop\Godot\Godot_v4.7.2-stable_win64(_console).exe`.
+- Escena de arranque: `scenes/ui/main_menu.tscn`. Para probar gameplay, abrir un nivel y usar **F6**.
+- Resolución base 1280×720, stretch `canvas_items` + `keep`. Física a **120 Hz**.
 
-- **Editor:** Godot **4.7.2** (ejecutable en `C:\Users\vitto\OneDrive\Desktop\Godot\Godot_v4.7.2-stable_win64.exe`; la variante `..._console.exe` sirve para CLI headless). En esa misma carpeta también está el 4.6 (versión previa). `config/features` en `project.godot` = `4.7`.
-- **Abrir:** importar el `project.godot` de esta carpeta desde el Project Manager, o **F5** para jugar.
-- **Escena de arranque:** `res://scenes/ui/main_menu.tscn` (menú). El **nivel de gameplay** es `res://scenes/main.tscn`. Durante el desarrollo del gameplay, abrir `main.tscn` y correr con **F6** (ejecutar escena actual) para saltarse el menú.
-- **Resolución base:** 1280×720 (16:9). Stretch `canvas_items` + aspect `keep` (default en Godot 4, por eso el editor lo omite del archivo). No pixel-art; se adapta a cualquier tamaño de embed sin deformar.
-
-### Validación headless (sin abrir el editor)
+### Validación headless
 
 ```bash
-GODOT="/c/Users/vitto/OneDrive/Desktop/Godot/Godot_v4.7.2-stable_win64_console.exe"
-# Importar recursos:
-"$GODOT" --headless --editor --quit-after 2 --path .
-# Correr N frames de la escena principal y filtrar errores:
-"$GODOT" --headless --path . --quit-after 150 2>&1 | grep -iE "error|warning|script err"
+GODOT=~/Godot/Godot_v4.7.2-stable_linux.x86_64
+"$GODOT" --headless --editor --quit-after 2 --path .          # importar recursos
+"$GODOT" --headless --path . --quit-after 150 > out.log 2>&1   # correr N frames
+grep -iE "error|warning|script err" out.log
+"$GODOT" --headless --path . res://scenes/level_2.tscn        # escena puntual
 ```
 
-Se puede correr una escena puntual pasándola como argumento posicional:
-`"$GODOT" --headless --path . res://ruta/escena.tscn`. Para tests que simulan input, usar `Input.action_press("accion")` / `Input.action_release(...)` y medir en un nodo que procese **último** en el árbol. Redirigir la salida a un archivo y filtrar aparte evita cuelgues del pipe.
+Redirigir a archivo y filtrar aparte (el pipe directo puede colgarse). Para simular input usar `Input.parse_input_event(ev)` (`action_press` no llega a `_input`); medir en un nodo que procese último en el árbol.
 
-## Controles (Input Map en `project.godot`)
+## Controles
 
-| | Mover | Saltar | Soltar cuerda | Tirar cuerda |
-|---|---|---|---|---|
-| **J1** (`input_prefix = "p1"`) | `A` / `D` | `W` | `R` | `T` |
-| **J2** (`input_prefix = "p2"`) | `←` / `→` | `↑` | `,` | `.` |
+| | Mover | Saltar | Abajo / desenganchar | Soltar cuerda | Tirar cuerda |
+|---|---|---|---|---|---|
+| **J1** (`p1`) | `A`/`D` | `W` | `S` | `R` | `T` |
+| **J2** (`p2`) | `←`/`→` | `↑` | `↓` | `,` | `.` |
 
-Las acciones siguen el patrón `<prefix>_<accion>`: `_left`, `_right`, `_jump`, `_down` (S / flecha abajo), `_release` (soltar = alargar), `_pull` (tirar = acortar). Usan `physical_keycode` (independiente del layout del teclado).
-
-**Esc** (`ui_cancel`) abre/cierra el **menú de pausa** en el nivel (ver `pause_menu.gd`).
-
-**Enganchado** (ver Fase 4.5): `soltar` baja al jugador (rapel), `tirar` lo sube, `abajo` (S / ↓) lo **desengancha** (por defecto solo se suelta y cae; `unhook_hop` permite un impulso).
+Acciones `<prefix>_{left,right,jump,down,release,pull}` con `physical_keycode`. Enganchado: soltar/tirar = rapel. **Esc** = pausa.
 
 ## Arquitectura
 
 ```
 scenes/
-  main.tscn            Nivel de gameplay: cámara fija (640,360), suelo, 2 plataformas,
-                       muro central, 2 HookPoint, WinManager, 2×(Player+Emboque), UI/WinLabel.
-  player.tscn          CharacterBody2D + colisión + Polygon2D placeholder + RopeAnchor (Marker2D, "la mano").
-  emboque.tscn         Node2D raíz: solo Rope (Line2D). El extremo se instancia en runtime.
-  palito.tscn          Extremo RigidBody2D: rectángulo largo y flaco + Tip + HookSensor. (J2)
-  campana.tscn         Extremo RigidBody2D: forma de C (3 rects) + CavitySensor + Mouth/Cavity + HookSensor. (J1)
-  hook_point.tscn      Area2D (punto de enganche del entorno) + rombo visual.
-  player_death_zone.tscn  Area2D que mata al JUGADOR al tocarlo (visual roja).
-  emboque_death_zone.tscn Area2D que mata al EMBOQUE al tocarlo (visual morada).
-  both_death_zone.tscn    Zona que mata a ambos (visual naranja); compone los dos scripts.
-  test_death.tscn      Nivel de prueba de las zonas de muerte (2 jugadores + 2 emboques + las 3 zonas).
-  ui/main_menu.tscn      Menú: Jugar, Ajustes, y texto de controles.
-  ui/level_selector.tscn Selector de niveles (Nivel 1 + "Prueba: muerte"; futuro: grafo conectado).
-  ui/settings.tscn       Ajustes: volumen maestro + pantalla completa.
-  ui/pause_menu.tscn     Menú de pausa reutilizable (Esc). Instanciar en cada nivel.
+  main.tscn / level_2.tscn   Niveles. level_2 agrega bloques rojos one-way, 3 ganchos y coleccionables.
+  test_death.tscn            Nivel de prueba de zonas de muerte.
+  player.tscn                CharacterBody2D + RopeAnchor (Marker2D, "la mano").
+  emboque.tscn               Rope (Line2D); el extremo se instancia en runtime (end_scene).
+  palito.tscn / campana.tscn Extremos RigidBody2D. Campana = C de 3 rects + CavitySensor + Mouth/Cavity.
+  hook_point.tscn            Area2D de enganche.
+  collectible.tscn           Area2D que suma puntos al tocarla un jugador.
+  *_death_zone.tscn          Zonas de muerte: player (roja), emboque (morada), both (naranja).
+  ui/                        main_menu, level_selector, settings, pause_menu.
 scripts/
-  player.gd        Controlador de plataformas parametrizado por input_prefix.
-  emboque.gd       Coordina la media-cuerda: largo, enganche, límite del jugador, cuerda visual;
-                   instancia el extremo (end_scene) y le pasa los parámetros de la cuerda.
-  rope_end.gd      RigidBody2D del extremo (palito/campana): restricción de cuerda en _integrate_forces.
-  win_manager.gd   Magnetismo distancia+ángulo entre extremos + victoria (palito dentro de campana).
-  player_death_zone.gd   Al entrar un jugador (mask=2) → reinicia el nivel. Señal triggered; export reload_on_death.
-  emboque_death_zone.gd  Al entrar un extremo (mask=12 = campana 4 + palito 8) → reinicia. (Scripts separados a propósito.)
-  pause_menu.gd    Menú de pausa del nivel (Esc): Continuar / Reiniciar. Es un CanvasLayer.
-                   La pausa NO es global: cada nivel debe TENER el nodo. Reutilizable vía ui/pause_menu.tscn
-                   (test_death lo instancia; main.tscn lo tiene inline en su CanvasLayer "UI").
-  ui/*.gd          Lógica de los menús (navegación con change_scene_to_file).
+  player.gd          Plataformero parametrizado por input_prefix.
+  emboque.gd         Coordina la cuerda: largo, enganche, límite del jugador, visual.
+  rope_end.gd        Restricción de cuerda del extremo en _integrate_forces.
+  win_manager.gd     Magnetismo (distancia + ángulo) y victoria.
+  score_manager.gd   Puntaje (grupo "score_manager") + ScoreLabel. Requerido si el nivel tiene coleccionables.
+  collectible.gd     Suma `points` al ScoreManager y se libera.
+  *_death_zone.gd    Recargan el nivel al contacto.
+  pause_menu.gd      CanvasLayer con process_mode ALWAYS; Continuar / Reiniciar.
 ```
+
+**Cada nivel debe incluir:** `WinManager`, `Player1/2`, `Emboque1/2` (con `end_scene` + `end_kind`), y el menú de pausa (`ui/pause_menu.tscn`, o inline como en `main`/`level_2`). Orden en el árbol: **Players → WinManager → Emboques**, para que fuerzas y correcciones se apliquen el mismo frame.
+
+**Flujo UI:** `main_menu` → `level_selector` (Nivel 1, Prueba: muerte, Nivel 2) → nivel. Niveles en `LEVELS` de `level_selector.gd` (a futuro: grafo conectado).
+
+### Capas de física
+
+| Capa (valor) | Qué | Mask |
+|---|---|---|
+| 1 (1) | Terreno | — |
+| 2 (2) | Jugadores | 1 |
+| 3 (4) | Campana | 9 (terreno + palito) |
+| 4 (8) | Palito | 5 (terreno + campana) |
+| 5 (16) | HookPoint | — (`HookSensor` de los extremos: mask 16) |
+
+`CavitySensor` mask 8. Zonas de muerte: jugador mask 2, emboque mask 12 (seteado en `_ready`). Collectible mask 2. Los extremos colisionan entre sí; los jugadores no colisionan con nada salvo terreno.
+
+### Cuerda
+
+`emboque.gd` en `_physics_process`: ajusta `rope_length` (soltar/tirar) → desengancha con `abajo` → pasa al extremo `anchor_position`, `rope_length`, `hooked`, `hook_position` → `_limit_player` (si el extremo está a más de `rope_length`, arrastra al jugador con `_move_sliding`) → actualiza la `Line2D`.
+
+`rope_end.gd` en `_integrate_forces`: si `hooked`, fija el extremo al gancho; si no, restricción **por velocidad** (quita la velocidad radial hacia afuera) y capa la rapidez a `max_speed` (300).
+
+API para `WinManager`: `get_end()`, `get_end_position()`, `get_cavity_sensor()`.
+
+### Victoria
+
+Si la punta del palito está a menos de `magnet_radius` (70) de la boca de la campana, `win_manager.gd` los atrae (`linear_accel` 900) y los alinea (`angular_gain` 2.5). Victoria = palito dentro del `CavitySensor` (respaldo: muy cerca y alineado). Muestra `WinLabel` y reinicia tras `restart_delay`.
 
 ### Zonas de muerte
 
-`Area2D` que al ser tocadas (`body_entered`) recargan el nivel. El **filtro por máscara** decide a quién matan: jugadores = `mask 2`; emboque = `mask 12`. Hay **dos scripts separados** (jugador / emboque) para poder darles mecánicas distintas a futuro; la zona "ambos" los **compone** (dos `Area2D` hijas, una con cada script) y tiene su propio visual. Cada script setea su `collision_mask` en `_ready`, expone `signal triggered(body)` y `@export reload_on_death` (ponerlo en `false` en tests para no recargar). Guard `_fired` evita disparos repetidos.
+Scripts separados jugador/emboque (para mecánicas distintas a futuro); la zona "ambos" compone dos `Area2D` hijas. Exponen `signal triggered(body)` y `@export reload_on_death` (`false` en tests). Recargan con `get_tree().call_deferred("reload_current_scene")`.
 
-La recarga se hace con `get_tree().call_deferred("reload_current_scene")`: **recargar dentro de `body_entered` (callback de física) está prohibido** en Godot (libera CollisionObjects a mitad del callback) — hay que diferirlo. Nota: los niveles reales instancian `WinManager` (victoria) y `ui/pause_menu.tscn` (pausa) además de las zonas; `test_death.tscn` los tiene los tres.
+## Trampas conocidas (NO repetir)
 
-J1 = **campana**, J2 = **palito** (asignados en `main.tscn` vía `end_scene` + `end_kind`).
+- **Nunca teletransportar** (`global_position = ...`) para corregir la cuerda: atraviesa paredes. Usar movimientos con barrido o restricción por velocidad.
+- **`move_and_collide` no desliza**: se detiene en el primer contacto y descarta el resto. Usar `_move_sliding()`.
+- **Medir el progreso de la restricción por reducción real de distancia**, no por cuánto se movió (deslizar por un muro no acorta la cuerda).
+- **Tunneling entre cuerpos delgados:** se evita con `continuous_cd = 2` + `max_speed` + física a 120 Hz. Mantener `max_speed / ticks` bastante menor que la pared más fina (6px).
+- **Formas cóncavas:** armarlas con varios `CollisionShape2D` convexos.
+- **Definir `_integrate_forces` no desactiva colisiones** (salvo `custom_integrator = true`).
+- **No liberar/recargar dentro de callbacks de física** (`body_entered`, etc.): usar `call_deferred`.
+- **Tipado:** propiedades de un nodo tipado como `Node2D` devuelven Variant y rompen `:=`; tipar con el `class_name` real.
+- **UIDs:** no inventar `uid://` a mano; en `ext_resource` basta el `path`. Que Godot re-guarde escenas al abrirlas es esperado.
+- **Tests de colisión con péndulo:** medir el pico, no el frame final.
 
-### Flujo de escenas (UI)
+Tamaños placeholder: jugador 40×64, palito 22×6, campana ~18×24 (paredes 6px, hoyo ~12px). Todo tuneable en el Inspector.
 
-`main_menu` → (Jugar) → `level_selector` → (Nivel 1) → `main.tscn` (gameplay).
-`main_menu` → (Ajustes) → `settings`. Selector y Ajustes tienen botón **Volver** al menú.
-Para agregar niveles: extender `LEVELS` en `level_selector.gd` y (a futuro) disponer los botones como grafo con líneas de conexión.
+## Estado
 
-### Capas de física (importante)
+**Hecho:** personaje, cuerda con largo variable, colisiones de extremos y límite del jugador, enganche/rapel, victoria con magnetismo, palito/campana como RigidBody que colisionan, menús (principal, selector, ajustes, pausa), zonas de muerte, **Nivel 2 con coleccionables y puntaje**, upgrade a 4.7.2.
 
-- **Capa 1:** terreno (StaticBody2D del nivel).
-- **Capa 2:** jugadores. `mask = 1` → chocan solo con el terreno (no entre sí, no con extremos).
-- **Capa 3 (valor 4):** campana. `mask = 9` (terreno 1 + palito 8).
-- **Capa 4 (valor 8):** palito. `mask = 5` (terreno 1 + campana 4).
-- **Capa 5 (valor 16):** puntos de enganche (`HookPoint`, `monitorable`). El `HookSensor` de cada extremo tiene `mask = 16`.
-- Sensores Area2D: `CavitySensor` de la campana `mask = 8` (solo palito); no detecta su propio cuerpo.
+**Pendiente:** Fase 6 — nivel de prueba definitivo + tuning de sensación (magnetismo, masas, largos, velocidades).
 
-Los **dos extremos colisionan entre sí por física real** (sus masks se incluyen mutuamente). Los jugadores no colisionan con los extremos.
-
-### Cómo funciona la cuerda (`emboque.gd` + `rope_end.gd`)
-
-El **extremo** (palito/campana) es un `RigidBody2D` (`rope_end.gd`) con física real: se balancea como péndulo, **rota sobre sí mismo** y **colisiona con el otro extremo** y el terreno. La cuerda es una `Line2D` visual.
-
-`emboque.gd` (coordinador) cada `_physics_process`:
-1. `_update_length` — `soltar`/`tirar` ajustan `rope_length` (clamp).
-2. Desenganche con `abajo` si está enganchado.
-3. Pasa al extremo: `anchor_position`, `rope_length`, `hooked`, `hook_position` (los usa en su `_integrate_forces`, que corre después el mismo frame).
-4. `_limit_player` — si el extremo quedó a más de `rope_length` (trabado o colgando de un gancho), **tira del jugador** hacia el extremo con `_move_sliding`.
-5. `_update_rope_visual`.
-
-`rope_end.gd` en `_integrate_forces`: si `hooked`, fija el extremo al gancho; si no, aplica la **restricción de cuerda por velocidad** (quita la velocidad radial hacia afuera + corrige el exceso), sin fijar posición → el motor resuelve colisiones y el extremo **nunca atraviesa geometría**. Además **capa la rapidez** (`max_speed`) para evitar tunneling con el otro extremo.
-
-API para el WinManager: `get_end()` (RigidBody), `get_end_position()`, `get_cavity_sensor()` (solo campana).
-
-### Victoria y magnetismo (`win_manager.gd`)
-
-Identifica palito y campana por `end_kind`. Cada frame, si la punta del palito está a menos de `magnet_radius` de la boca de la campana, aplica magnetismo de **distancia** (fuerza que atrae la punta hacia la cavidad, y la campana hacia la punta) **y de ángulo** (alinea el eje del palito para que apunte a la cavidad, y gira la boca de la campana hacia la punta). Con la física resolviendo la colisión, el palito **entra por la boca**. **Victoria** = el palito está dentro del `CavitySensor` de la campana (respaldo: muy cerca + bien alineado). Muestra `WinLabel` y reinicia tras `restart_delay`. **Va antes que los Emboque en el árbol** para que las fuerzas se integren el mismo frame.
-
-## Lecciones aprendidas / trampas (NO repetir)
-
-- **Nunca corregir la restricción con `global_position = ...` (teletransporte):** ignora colisiones y el extremo atraviesa paredes. Usar siempre movimientos con barrido de colisión.
-- **`move_and_collide` se detiene en el primer contacto y NO desliza.** Si el vector de corrección tiene componente contra una superficie (p. ej. hacia el piso), aborta *todo* el movimiento, incluida la parte útil. Por eso existe `_move_sliding()`, que proyecta el resto sobre la normal y continúa. Fue la causa de que la cuerda no limitara al jugador.
-- **Medir el progreso de la restricción por reducción real de distancia**, no por cuánto se movió el extremo: si resbala tangencialmente por un muro, esa distancia recorrida no acorta la cuerda.
-- **Orden en el árbol importa:** `WinManager` antes que los `Emboque`, y los `Emboque` después de los `Player` (para que las correcciones se apliquen el mismo frame).
-- **UIDs:** no inventar `uid://...` a mano (Godot los rechaza como inválidos). Dejar que el editor los genere; en referencias `ext_resource` basta el `path`.
-- **Inferencia de tipos:** acceder a propiedades de un nodo tipado genéricamente (`Node2D`) devuelve Variant y rompe `:=`. Tipar con el `class_name` real (p. ej. `var e: Emboque`).
-- **Tunneling entre cuerpos delgados y rápidos:** un extremo veloz atraviesa al otro. Mitigado con tres cosas juntas: `continuous_cd = 2` (CCD cast-shape), un tope de rapidez (`max_speed` en `rope_end.gd`, hoy 300), y **física a 120 Hz** (`physics/common/physics_ticks_per_second`) → menos avance por frame. Regla práctica: `max_speed / ticks` debe ser bastante menor que el grosor de pared más fino (hoy 6px). El CCD dinámico-vs-dinámico en 2D por sí solo no basta.
-- **Tamaños actuales (placeholders):** jugador 40×64; palito 22×6; campana ~18×24 (paredes 6px, hoyo ~12px). Las partes son ~1/3 del jugador. Magnetismo suave: `magnet_radius=70`, `linear_accel=900`, `angular_gain=2.5`. Todo es tuneable en el Inspector.
-- **Restricción de cuerda en RigidBody:** hacerla por **velocidad** en `_integrate_forces` (no fijando `transform.origin`), para no teletransportar a través de paredes. Definir `_integrate_forces` NO desactiva las colisiones (salvo `custom_integrator = true`).
-- **Formas cóncavas en 2D:** no existen como shape convexa única. La campana (C) se arma con **varios `CollisionShape2D` rectangulares** (convexos), no un polígono cóncavo.
-- **Al medir en tests una colisión con péndulo:** medir el **pico** (ej. máximo empuje), no el frame final — el péndulo/gravedad ya devolvió el cuerpo a su sitio y da un falso negativo.
-- **No liberar/recargar dentro de un callback de física** (`body_entered`, `area_entered`, etc.): Godot prohíbe destruir CollisionObjects a mitad del paso físico. Usar `call_deferred(...)`. (Pasó con `reload_current_scene` en las zonas de muerte.)
-- **En tests headless, simular input con `Input.parse_input_event(ev)`**, no `Input.action_press` — este último solo cambia el estado interno y no llega a `_input`/`_unhandled_input`.
-- Godot re-guarda escenas/`project.godot` al abrirlos (puede cambiar `uid`/`load_steps` u omitir valores por default); es esperado.
-
-## Estado de desarrollo (prototipo de la mecánica)
-
-Hecho (verificado con tests headless donde aplica):
-- **Fase 0** — Andamiaje: Input Map, capas de física, escena de prueba.
-- **Fase 1** — Personaje plataformero (`player.gd`).
-- **Fase 2** — Cuerda híbrida (extremo-péndulo + cuerda visual).
-- **Fase 3** — Control de largo continuo (soltar/tirar).
-- **Fase 4** — Colisiones del extremo + la cuerda limita al jugador (test: sobre-extensión 459px → 0.04px).
-- **Fase 4.5** — Enganche básico a `HookPoint`: engancha al tocar, rapel con soltar/tirar, salto desengancha (test PASS).
-- **Fase 5** — Victoria con magnetismo: atracción entre extremos + captura por dwell.
-- **Menú** — main_menu / level_selector / settings (navegación + ajustes funcionales).
-- **Extremos como emboque real** — palito (rectángulo) y campana (C), `RigidBody2D` que rotan y **colisionan entre sí** por física; magnetismo de **distancia + ángulo**; victoria = **palito dentro de la campana** (`CavitySensor`). Tests headless: colisión sin atravesar (incl. velocidad capada) PASS; emboque por magnetismo PASS; enganche PASS.
-- **Partes pequeñas + física 120 Hz** — palito/campana a ~1/3 del jugador; magnetismo más sutil; `physics_ticks_per_second=120` para evitar tunneling con paredes finas.
-- **Upgrade a Godot 4.7.2** (antes 4.6) — proyecto importa y corre limpio en 4.7.
-- **Menú de pausa** (`pause_menu.gd`, vía PR #1) — Esc pausa (`get_tree().paused`); botones Continuar / Reiniciar. El nodo usa `process_mode = ALWAYS` para seguir respondiendo con el juego pausado.
-- **Zonas de muerte** — `player_death_zone` / `emboque_death_zone` (scripts separados) + `both_death_zone`, cada una con visual distinta; reinician el nivel al contacto. Nivel `test_death.tscn` en el selector. Test headless: detección + aislamiento por máscara + zona "ambos" PASS.
-
-Pendiente:
-- **Fase 6** — Nivel de prueba definitivo a medida de cámara + pasada de tuning de la sensación (magnetismo, masas, largos, velocidades).
-
-Post-prototipo (del concepto): objetos empujables, mapa de progresión de niveles, celebración estilo Peggle (zoom + cámara lenta al acercarse los extremos), estética Tikitiklip (animación tradicional + imágenes reales chilenas), sonido, export a web.
+**Post-prototipo:** objetos empujables, mapa de progresión, celebración estilo Peggle (zoom + cámara lenta), estética Tikitiklip, sonido, export web.
 
 ## Convenciones
 
-- Comentarios y nombres de usuario en **español**; código en GDScript idiomático de Godot 4.
-- Placeholders geométricos (`Polygon2D`/formas) hasta que llegue el arte.
-- Cámara **fija** en los primeros niveles (del tamaño de la cámara, sin scroll).
+- Comentarios y textos de usuario en **español**; GDScript idiomático de Godot 4.
+- Placeholders geométricos (`Polygon2D`) hasta que llegue el arte.
+- Cámara **fija** del tamaño de la pantalla en los primeros niveles.
