@@ -11,8 +11,9 @@ extends Control
 ## botón en level_selector.tscn + una línea acá.
 const LEVEL_BUTTONS := {
 	"Level1Button": "res://scenes/main.tscn",
-	"TestDeathButton": "res://scenes/test_death.tscn",
 	"Level2Button": "res://scenes/level_2.tscn",
+	"Level3Button": "res://scenes/level_3.tscn",
+	"TestDeathButton": "res://scenes/test_death.tscn",
 	"TestPhysicsButton": "res://scenes/test_physics.tscn",
 	"TestThrowButton": "res://scenes/test_throw.tscn",
 }
