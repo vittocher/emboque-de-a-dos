@@ -12,7 +12,7 @@ class_name Player
 ## Arte: todo lo que está bajo Visual/Art se dibuja MIRANDO A LA DERECHA y el
 ## código lo espeja según [member facing]. Si Art tiene un AnimatedSprite2D
 ## llamado "Sprite", se reproducen solas sus animaciones con los nombres de
-## [method get_anim_state] ("idle", "walk", "jump", "fall", "swing", "push").
+## [method get_anim_state] ("idle", "walk", "jump", "fall", "swing", "push", "aim").
 
 ## Se emite cuando el jugador salta para soltarse del gancho (el Emboque lo desengancha).
 signal swing_jumped
@@ -80,6 +80,9 @@ const SWING_WHOOSH_MIN_SPEED := 150.0
 
 ## Hacia dónde mira: 1 = derecha, -1 = izquierda.
 var facing: int = 1
+## Apuntando un lanzamiento (lo activa el Emboque): no camina ni salta;
+## izquierda/derecha solo lo giran (cambian hacia dónde apunta).
+var aiming: bool = false
 
 var _gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var _pushing: bool = false
@@ -122,12 +125,12 @@ func _process_platformer(delta: float) -> void:
 		velocity.y += _gravity * delta
 
 	# Salto (solo desde el suelo).
-	if is_on_floor() and Input.is_action_just_pressed(input_prefix + "_jump"):
+	if not aiming and is_on_floor() and Input.is_action_just_pressed(input_prefix + "_jump"):
 		velocity.y = jump_velocity
 		Sfx.play(&"jump")
 
-	# Movimiento horizontal.
-	var direction := Input.get_axis(input_prefix + "_left", input_prefix + "_right")
+	# Movimiento horizontal (apuntando se queda quieto; el input solo lo gira).
+	var direction := 0.0 if aiming else Input.get_axis(input_prefix + "_left", input_prefix + "_right")
 	var control := 1.0 if is_on_floor() else air_control
 	if _launched and not is_on_floor() and _apply_launch_air_control(direction, delta):
 		pass
@@ -348,10 +351,13 @@ func _update_facing() -> void:
 		facing = 1 if velocity.x > 0.0 else -1
 	_art.scale.x = facing
 
-## Nombre del estado para animar el arte: "idle", "walk", "jump", "fall", "swing" o "push".
+## Nombre del estado para animar el arte: "idle", "walk", "jump", "fall", "swing",
+## "push" o "aim".
 func get_anim_state() -> String:
 	if _hooked and _taut:
 		return "swing"
+	if aiming:
+		return "aim"
 	if not is_on_floor():
 		return "jump" if velocity.y < 0.0 else "fall"
 	if _pushing:

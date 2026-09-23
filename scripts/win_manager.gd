@@ -65,6 +65,10 @@ func _physics_process(delta: float) -> void:
 	var camp := _campana.get_end()
 	if pal == null or camp == null:
 		return
+	# Con un extremo en la mano no vale: embocar es con la cuerda, no a mano.
+	if _palito.is_held() or _campana.is_held():
+		_hold = 0.0
+		return
 
 	# Geometría en mundo.
 	var tip: Vector2 = pal.get_node("Tip").global_position

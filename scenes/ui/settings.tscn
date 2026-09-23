@@ -45,10 +45,48 @@ theme_override_constants/separation = 20
 [node name="VolumeLabel" type="Label" parent="Center/VBox/VolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(220, 0)
-text = "Volumen"
+text = "General"
 theme_override_font_sizes/font_size = 26
 
 [node name="VolumeSlider" type="HSlider" parent="Center/VBox/VolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+size_flags_vertical = 4
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="MusicVolumeRow" type="HBoxContainer" parent="Center/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="MusicVolumeLabel" type="Label" parent="Center/VBox/MusicVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(220, 0)
+text = "Música"
+theme_override_font_sizes/font_size = 26
+
+[node name="MusicVolumeSlider" type="HSlider" parent="Center/VBox/MusicVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+size_flags_vertical = 4
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="SfxVolumeRow" type="HBoxContainer" parent="Center/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="SfxVolumeLabel" type="Label" parent="Center/VBox/SfxVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(220, 0)
+text = "Efectos"
+theme_override_font_sizes/font_size = 26
+
+[node name="SfxVolumeSlider" type="HSlider" parent="Center/VBox/SfxVolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(280, 0)
 size_flags_vertical = 4

@@ -137,6 +137,24 @@ def swing():
     return bandpass(rng.uniform(-1, 1, len(t)), center, q=1.5) * bell ** 2
 
 
+def grab():
+    # "Tomar": golpecito de madera en la mano (seno medio que cae rápido) + un click.
+    t = time(0.09)
+    knock = np.sin(sweep_phase(np.linspace(520, 330, len(t)))) * np.exp(-t / 0.02)
+    body = 0.5 * np.sin(2 * np.pi * 180 * t) * np.exp(-t / 0.03)
+    click = lowpass(rng.uniform(-1, 1, len(t)), 3000) * np.exp(-t / 0.003) * 0.7
+    return (knock + body + click) * attack(len(t), 0.001)
+
+
+def throw():
+    # "Lanzar": whoosh corto y ascendente (más agudo y rápido que el del balanceo).
+    t = time(0.2)
+    rise = (t / t[-1]) ** 0.7
+    center = 700 + 2600 * rise
+    env = np.sin(np.pi * np.minimum(t / (t[-1] * 0.6), 1.0) / 2) * (1 - t / t[-1]) ** 1.2
+    return bandpass(rng.uniform(-1, 1, len(t)), center, q=2.0) * env
+
+
 def box_push():
     # Arrastre en loop: ruido grave con "granos" a 14 Hz. Dura 0.5 s (7 ciclos
     # exactos de la modulación) y los extremos se funden para que el loop no se note.
@@ -155,5 +173,5 @@ def box_push():
 
 if __name__ == "__main__":
     print("Generando efectos en", os.path.normpath(OUT_DIR))
-    for fn in (step, jump, die, hook, swing, box_push):
+    for fn in (step, jump, die, hook, swing, box_push, grab, throw):
         write(fn.__name__, fn())

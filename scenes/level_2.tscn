@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/emboque.tscn" id="2_emboque"]
@@ -11,21 +11,25 @@
 [ext_resource type="Script" path="res://scripts/score_manager.gd" id="9_score"]
 [ext_resource type="PackedScene" path="res://scenes/both_death_zone.tscn" id="10_deathzone"]
 [ext_resource type="PackedScene" path="res://scenes/closeup_manager.tscn" id="11_closeup"]
+[ext_resource type="PackedScene" path="res://scenes/player_death_zone.tscn" id="12_player_deathzone"]
 
 [sub_resource type="RectangleShape2D" id="Shape_ground"]
 size = Vector2(1280, 40)
 
 [sub_resource type="RectangleShape2D" id="Shape_top_platform"]
-size = Vector2(280, 24)
+size = Vector2(285, 20)
 
-[sub_resource type="RectangleShape2D" id="Shape_platform"]
-size = Vector2(340, 20)
+[sub_resource type="RectangleShape2D" id="Shape_mid_platform"]
+size = Vector2(336, 20)
 
 [sub_resource type="RectangleShape2D" id="Shape_bridge"]
-size = Vector2(230, 20)
+size = Vector2(229, 20)
 
 [sub_resource type="RectangleShape2D" id="Shape_wall"]
-size = Vector2(26, 560)
+size = Vector2(22, 894)
+
+[sub_resource type="RectangleShape2D" id="Shape_side_wall"]
+size = Vector2(40, 1200)
 
 [node name="Level2" type="Node2D"]
 
@@ -43,79 +47,100 @@ color = Color(0.25, 0.22, 0.2, 1)
 polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
 
 [node name="TopPlatformLeft" type="StaticBody2D" parent="."]
-position = Vector2(150, 130)
+position = Vector2(142.5, 111)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="TopPlatformLeft"]
 shape = SubResource("Shape_top_platform")
 
 [node name="Visual" type="Polygon2D" parent="TopPlatformLeft"]
 color = Color(0.4, 0.35, 0.3, 1)
-polygon = PackedVector2Array(-140, -12, 140, -12, 140, 12, -140, 12)
+polygon = PackedVector2Array(-142.5, -10, 142.5, -10, 142.5, 10, -142.5, 10)
 
 [node name="TopPlatformRight" type="StaticBody2D" parent="."]
-position = Vector2(1130, 130)
+position = Vector2(1137.5, 111)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="TopPlatformRight"]
 shape = SubResource("Shape_top_platform")
 
 [node name="Visual" type="Polygon2D" parent="TopPlatformRight"]
 color = Color(0.4, 0.35, 0.3, 1)
-polygon = PackedVector2Array(-140, -12, 140, -12, 140, 12, -140, 12)
+polygon = PackedVector2Array(-142.5, -10, 142.5, -10, 142.5, 10, -142.5, 10)
 
-[node name="LeftPlatform" type="StaticBody2D" parent="."]
-position = Vector2(400, 300)
+[node name="MidPlatformLeft" type="StaticBody2D" parent="."]
+position = Vector2(453, 280)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftPlatform"]
-shape = SubResource("Shape_platform")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MidPlatformLeft"]
+shape = SubResource("Shape_mid_platform")
 
-[node name="Visual" type="Polygon2D" parent="LeftPlatform"]
+[node name="Visual" type="Polygon2D" parent="MidPlatformLeft"]
 color = Color(0.4, 0.35, 0.3, 1)
-polygon = PackedVector2Array(-170, -10, 170, -10, 170, 10, -170, 10)
+polygon = PackedVector2Array(-168, -10, 168, -10, 168, 10, -168, 10)
 
 [node name="CenterBridge" type="StaticBody2D" parent="."]
-position = Vector2(640, 455)
+position = Vector2(628.5, 433)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CenterBridge"]
 shape = SubResource("Shape_bridge")
 
 [node name="Visual" type="Polygon2D" parent="CenterBridge"]
 color = Color(0.4, 0.35, 0.3, 1)
-polygon = PackedVector2Array(-115, -10, 115, -10, 115, 10, -115, 10)
+polygon = PackedVector2Array(-114.5, -10, 114.5, -10, 114.5, 10, -114.5, 10)
 
 [node name="WallCenter" type="StaticBody2D" parent="."]
-position = Vector2(640, 280)
+position = Vector2(632, 47)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallCenter"]
 shape = SubResource("Shape_wall")
 
 [node name="Visual" type="Polygon2D" parent="WallCenter"]
 color = Color(0.4, 0.35, 0.3, 1)
-polygon = PackedVector2Array(-13, -280, 13, -280, 13, 280, -13, 280)
+polygon = PackedVector2Array(-11, -447, 11, -447, 11, 447, -11, 447)
 
-[node name="DeathZoneLeft" parent="." instance=ExtResource("10_deathzone")]
-position = Vector2(400, 270)
-scale = Vector2(1.65, 0.8)
+[node name="WallLeft" type="StaticBody2D" parent="."]
+position = Vector2(-20, 200)
 
-[node name="DeathZoneRight" parent="." instance=ExtResource("10_deathzone")]
-position = Vector2(900, 325)
-scale = Vector2(1.65, 0.8)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+shape = SubResource("Shape_side_wall")
+
+[node name="Visual" type="Polygon2D" parent="WallLeft"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-20, -600, 20, -600, 20, 600, -20, 600)
+
+[node name="WallRight" type="StaticBody2D" parent="."]
+position = Vector2(1300, 200)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+shape = SubResource("Shape_side_wall")
+
+[node name="Visual" type="Polygon2D" parent="WallRight"]
+color = Color(0.4, 0.35, 0.3, 1)
+polygon = PackedVector2Array(-20, -600, 20, -600, 20, 600, -20, 600)
+
+[node name="DeathZoneRed" parent="." instance=ExtResource("12_player_deathzone")]
+position = Vector2(435.5, 262)
+scale = Vector2(1.65, 0.6)
+
+[node name="DeathZoneBlock" parent="." instance=ExtResource("10_deathzone")]
+position = Vector2(949.5, 332)
+scale = Vector2(1.65, 0.6)
+
+[node name="DeathZoneFloor" parent="." instance=ExtResource("10_deathzone")]
+position = Vector2(640, 696)
+scale = Vector2(12.8, 1.6)
 
 [node name="HookPointLeft" parent="." instance=ExtResource("3_hook")]
-position = Vector2(340, 315)
+position = Vector2(320, 315)
 
-[node name="HookPointCenter" parent="." instance=ExtResource("3_hook")]
-position = Vector2(755, 505)
-
-[node name="HookPointTop" parent="." instance=ExtResource("3_hook")]
-position = Vector2(845, 155)
+[node name="HookPointRight" parent="." instance=ExtResource("3_hook")]
+position = Vector2(868, 175)
 
 [node name="Player1" parent="." instance=ExtResource("1_player")]
-position = Vector2(150, 70)
+position = Vector2(147, 69)
 input_prefix = "p1"
 
 [node name="Player2" parent="." instance=ExtResource("1_player")]
 modulate = Color(1, 0.5, 0.4, 1)
-position = Vector2(1130, 70)
+position = Vector2(1147, 69)
 input_prefix = "p2"
 
 [node name="WinManager" type="Node2D" parent="."]
@@ -148,24 +173,30 @@ script = ExtResource("9_score")
 score_label = NodePath("../UI/ScoreLabel")
 
 [node name="Collectible1" parent="." instance=ExtResource("8_collectible")]
-position = Vector2(570, 225)
+position = Vector2(570, 224)
 
 [node name="Collectible2" parent="." instance=ExtResource("8_collectible")]
-position = Vector2(555, 395)
+position = Vector2(1014, 220)
 
 [node name="Collectible3" parent="." instance=ExtResource("8_collectible")]
-position = Vector2(695, 395)
+position = Vector2(557, 394)
 
 [node name="Collectible4" parent="." instance=ExtResource("8_collectible")]
-position = Vector2(940, 650)
+position = Vector2(693, 394)
+
+[node name="Collectible5" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(504, 552)
+
+[node name="Collectible6" parent="." instance=ExtResource("8_collectible")]
+position = Vector2(753, 552)
 
 [node name="UI" type="CanvasLayer" parent="."]
 script = ExtResource("7_pause")
 
 [node name="ScoreLabel" type="Label" parent="UI"]
-offset_left = 30.0
+offset_left = 330.0
 offset_top = 20.0
-offset_right = 300.0
+offset_right = 600.0
 offset_bottom = 65.0
 text = "Puntos: 0"
 theme_override_colors/font_color = Color(0.1, 0.75, 0.62, 1)
@@ -264,9 +295,43 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="UI/PausePanel/Panel/SettingsVBox/VolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(125, 0)
-text = "Volumen"
+text = "General"
 
 [node name="VolumeSlider" type="HSlider" parent="UI/PausePanel/Panel/SettingsVBox/VolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(180, 0)
+size_flags_vertical = 4
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+
+[node name="MusicVolumeRow" type="HBoxContainer" parent="UI/PausePanel/Panel/SettingsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UI/PausePanel/Panel/SettingsVBox/MusicVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(125, 0)
+text = "Música"
+
+[node name="MusicVolumeSlider" type="HSlider" parent="UI/PausePanel/Panel/SettingsVBox/MusicVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(180, 0)
+size_flags_vertical = 4
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+
+[node name="SfxVolumeRow" type="HBoxContainer" parent="UI/PausePanel/Panel/SettingsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UI/PausePanel/Panel/SettingsVBox/SfxVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(125, 0)
+text = "Efectos"
+
+[node name="SfxVolumeSlider" type="HSlider" parent="UI/PausePanel/Panel/SettingsVBox/SfxVolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(180, 0)
 size_flags_vertical = 4

@@ -31,6 +31,7 @@ func _ready() -> void:
 		Sfx.make_looping(stream)
 		_scrape = AudioStreamPlayer.new()
 		_scrape.stream = stream
+		_scrape.bus = SettingsManager.SFX_BUS
 		add_child(_scrape)
 
 func _physics_process(delta: float) -> void:

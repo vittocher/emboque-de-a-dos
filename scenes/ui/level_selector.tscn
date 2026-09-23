@@ -75,3 +75,9 @@ layout_mode = 2
 custom_minimum_size = Vector2(170, 170)
 text = "Prueba:
 física"
+
+[node name="TestThrowButton" type="Button" parent="Center/LevelsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(170, 170)
+text = "Prueba:
+lanzar"

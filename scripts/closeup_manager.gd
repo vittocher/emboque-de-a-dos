@@ -50,8 +50,11 @@ func _process(delta: float) -> void:
 	var dist := pa.distance_to(pb)
 	var mid := (pa + pb) * 0.5
 
-	# Cercanía objetivo según la distancia (0 lejos → 1 muy juntos).
+	# Cercanía objetivo según la distancia (0 lejos → 1 muy juntos). Un extremo
+	# en la mano no cuenta (no es un intento de emboque).
 	var target_t := clampf(inverse_lerp(activation_radius, full_radius, dist), 0.0, 1.0)
+	if _a.is_held() or _b.is_held():
+		target_t = 0.0
 
 	# Suavizado con delta SIN escalar, para que la transición no se frene con el
 	# propio slowdown (y el zoom-out al separarse siga siendo ágil).

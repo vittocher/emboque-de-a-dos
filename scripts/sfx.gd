@@ -17,6 +17,8 @@ const SOUNDS := {
 	&"hook": ["res://audio/sfx/hook.wav", -6.0],
 	&"swing": ["res://audio/sfx/swing.wav", -6.0],
 	&"box_push": ["res://audio/sfx/box_push.wav", -8.0],
+	&"grab": ["res://audio/sfx/grab.wav", -8.0],
+	&"throw": ["res://audio/sfx/throw.wav", -6.0],
 }
 ## Cuántos efectos pueden sonar a la vez.
 const POOL_SIZE := 12
@@ -35,6 +37,7 @@ func _ready() -> void:
 		_streams[sound] = stream
 	for i in POOL_SIZE:
 		var player := AudioStreamPlayer.new()
+		player.bus = SettingsManager.SFX_BUS
 		add_child(player)
 		_pool.append(player)
 

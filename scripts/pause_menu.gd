@@ -6,7 +6,9 @@ extends CanvasLayer
 @onready var settings_button: Button = $PausePanel/Panel/VBox/SettingsButton
 @onready var main_menu_button: Button = $PausePanel/Panel/VBox/MainMenuButton
 @onready var settings_box: VBoxContainer = $PausePanel/Panel/SettingsVBox
-@onready var settings_volume: HSlider = $PausePanel/Panel/SettingsVBox/VolumeRow/VolumeSlider
+@onready var settings_master_volume: HSlider = $PausePanel/Panel/SettingsVBox/VolumeRow/VolumeSlider
+@onready var settings_music_volume: HSlider = $PausePanel/Panel/SettingsVBox/MusicVolumeRow/MusicVolumeSlider
+@onready var settings_sfx_volume: HSlider = $PausePanel/Panel/SettingsVBox/SfxVolumeRow/SfxVolumeSlider
 @onready var settings_fullscreen: CheckBox = $PausePanel/Panel/SettingsVBox/FullscreenRow/FullscreenCheck
 @onready var settings_back_button: Button = $PausePanel/Panel/SettingsVBox/BackButton
 
@@ -21,7 +23,9 @@ func _ready() -> void:
 	settings_button.pressed.connect(_show_settings)
 	main_menu_button.pressed.connect(_go_to_main_menu)
 	settings_back_button.pressed.connect(_show_pause_menu)
-	settings_volume.value_changed.connect(_on_volume_changed)
+	settings_master_volume.value_changed.connect(_on_master_volume_changed)
+	settings_music_volume.value_changed.connect(_on_music_volume_changed)
+	settings_sfx_volume.value_changed.connect(_on_sfx_volume_changed)
 	settings_fullscreen.toggled.connect(_on_fullscreen_toggled)
 	pause_panel.visible = false
 	_show_pause_menu()
@@ -56,12 +60,20 @@ func _show_pause_menu() -> void:
 func _show_settings() -> void:
 	$PausePanel/Panel/VBox.visible = false
 	settings_box.visible = true
-	settings_volume.value = _settings.master_volume
+	settings_master_volume.value = _settings.master_volume
+	settings_music_volume.value = _settings.music_volume
+	settings_sfx_volume.value = _settings.sfx_volume
 	settings_fullscreen.button_pressed = _settings.fullscreen
 	settings_back_button.grab_focus()
 
-func _on_volume_changed(value: float) -> void:
+func _on_master_volume_changed(value: float) -> void:
 	_settings.set_master_volume(value)
+
+func _on_music_volume_changed(value: float) -> void:
+	_settings.set_music_volume(value)
+
+func _on_sfx_volume_changed(value: float) -> void:
+	_settings.set_sfx_volume(value)
 
 func _on_fullscreen_toggled(enabled: bool) -> void:
 	_settings.set_fullscreen(enabled)
