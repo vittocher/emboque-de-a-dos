@@ -56,12 +56,16 @@ scenes/
   emboque_death_zone.tscn Area2D que mata al EMBOQUE al tocarlo (visual morada).
   both_death_zone.tscn    Zona que mata a ambos (visual naranja); compone los dos scripts.
   test_death.tscn      Nivel de prueba de las zonas de muerte (2 jugadores + 2 emboques + las 3 zonas).
+  test_physics.tscn    "Prueba: Física": copia del Nivel 1 SIN muro central (para probar el balanceo), plataformas
+                       más afuera (x=170 / x=1110), muros laterales justo fuera de cámara (x<0 y x>1280, no se
+                       puede salir del nivel), 3 HookPoint (izq/centro/der) y 2 cajas (PushBox) en el suelo.
+  push_box.tscn        Caja empujable (RigidBody2D 64×64, capa 6, rotación bloqueada). Reutilizable en cualquier nivel.
   closeup_manager.tscn Efecto reutilizable: closeup + cámara lenta al acercarse los extremos (instanciar por nivel).
   collectible.tscn     Area2D recolectable (rombo turquesa): el JUGADOR lo toca (mask 2) → suma puntos y se destruye.
   level_2.tscn         Segundo nivel de gameplay: plataformas, muro central, 3 HookPoint, 2 zonas de muerte "ambos",
                        4 coleccionables + ScoreManager/ScoreLabel, WinManager, CloseupManager, pausa inline.
   ui/main_menu.tscn      Menú: Jugar, Ajustes, y texto de controles.
-  ui/level_selector.tscn Selector de niveles (Nivel 1 + Nivel 2; futuro: grafo conectado).
+  ui/level_selector.tscn Selector de niveles (Nivel 1, Prueba: muerte, Nivel 2, Prueba: física; futuro: grafo conectado).
   ui/settings.tscn       Ajustes: volumen maestro + pantalla completa.
   ui/pause_menu.tscn     Menú de pausa reutilizable (Esc). Instanciar en cada nivel.
   ui/victory.tscn        Pantalla de victoria (minimalista): puntaje + récord del nivel + "Menú principal".
@@ -76,6 +80,12 @@ scripts/
   player_death_zone.gd   Al entrar un jugador (mask=2) → reinicia el nivel. Señal triggered; export reload_on_death.
   emboque_death_zone.gd  Al entrar un extremo (mask=12 = campana 4 + palito 8) → reinicia. (Scripts separados a propósito.)
   collectible.gd   Area2D: al tocarlo un Player, busca el ScoreManager (grupo "score_manager"), suma `points` y queue_free.
+  push_box.gd      Caja empujable (class_name PushBox): el Player la empuja con push(); los extremos la golpean por física.
+                   Suena un loop de arrastre mientras se desliza por el piso.
+  sfx.gd           AUTOLOAD (Sfx): registro único de efectos de sonido (SOUNDS: nombre → ruta + volumen base),
+                   pool de AudioStreamPlayer, play(nombre, pitch, volumen). Sobrevive a la recarga del nivel.
+audio/sfx/         Efectos placeholder (WAV 22 kHz mono): step, jump, die, hook, swing, box_push (loop).
+tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python tools/generate_sfx.py`.
   score_manager.gd Lleva el puntaje del nivel y actualiza un Label. Está en el grupo "score_manager" (lo encuentra collectible).
   score_board.gd   AUTOLOAD (ScoreBoard): lleva los datos de la última victoria entre escenas + guarda el highscore
                    por nivel en user://scores.cfg. WinManager lo usa al ganar; victory.gd lo lee.
@@ -85,7 +95,31 @@ scripts/
   ui/*.gd          Lógica de los menús (navegación con change_scene_to_file); victory.gd muestra puntaje + récord.
 ```
 
-Autoloads (en `project.godot`): **`SettingsManager`** (audio/volumen/pantalla completa, persistencia) y **`ScoreBoard`** (puntaje entre escenas + highscore por nivel).
+Autoloads (en `project.godot`): **`SettingsManager`** (audio/volumen/pantalla completa, persistencia), **`ScoreBoard`** (puntaje entre escenas + highscore por nivel) y **`Sfx`** (efectos de sonido).
+
+### Arte y sonido (para diseño)
+
+**Arte del jugador** (`player.tscn`):
+```
+Visual (Node2D)      ← el código lo inclina (balanceo) y aplasta/estira (squash). No tocar.
+  Art (Node2D)       ← el código lo ESPEJA: scale.x = facing (1 = derecha, -1 = izquierda).
+    Body (Polygon2D) ← placeholder: rectángulo 40×64
+    Eye (Polygon2D)  ← placeholder: ojo negro 8×8, del lado hacia el que mira
+```
+Para poner el arte definitivo: reemplazar los hijos de `Visual/Art` por el dibujo **mirando a la derecha** (el código lo da vuelta). Si se usa un `AnimatedSprite2D` llamado **`Sprite`** dentro de `Art`, el jugador reproduce solo las animaciones cuyos nombres coincidan con `get_anim_state()`: **`idle`, `walk`, `jump`, `fall`, `swing`, `push`** (las que falten se ignoran). `Player2` tiene `modulate` en la raíz para diferenciarse; con arte propio se puede quitar. `facing` es público por si otro script lo necesita. Al empezar, cada jugador mira hacia el centro de la pantalla.
+
+**Sonidos**: todos pasan por el autoload `Sfx` (`scripts/sfx.gd`). Para cambiar uno, **reemplazar el archivo con el mismo nombre** en `audio/sfx/` (o cambiar su ruta/volumen en `Sfx.SOUNDS`); WAV u OGG sirven (el loop de la caja se activa por código para ambos). Dónde suena cada uno:
+
+| Sonido | Dónde | Cuándo |
+|---|---|---|
+| `step` | `player.gd` `_update_footsteps` | Cada 40 px caminados de verdad sobre el piso (no si lo lleva una caja ni si empuja contra un muro). Tono aleatorio 0.9–1.1. |
+| `jump` | `player.gd` | Salto desde el piso; al lanzarse desde la cuerda con tono 1.2. |
+| `die` | `player_death_zone.gd` / `emboque_death_zone.gd` | Al tocar una zona de muerte (antes de recargar). |
+| `hook` | `emboque.gd` | Al engancharse a un HookPoint. |
+| `swing` | `player.gd` `_play_swing_whoosh` | Cada vez que el péndulo pasa por abajo a más de 150 px/s; volumen y tono suben con la velocidad. |
+| `box_push` | `push_box.gd` | Loop mientras la caja se desliza por el piso (empujada o golpeada); volumen según velocidad. |
+
+`Sfx.play` ignora el mismo sonido repetido en el mismo tick de física (p. ej. las dos partes de una zona "ambos"). Emite `played(nombre)` (útil para tests).
 
 ### Zonas de muerte
 
@@ -99,19 +133,28 @@ J1 = **campana**, J2 = **palito** (asignados en `main.tscn` vía `end_scene` + `
 
 Opcional por nivel. El **coleccionable** es un `Area2D` (`collision_layer = 0`, `mask = 2`, `monitorable = false`) que al ser tocado por un `Player` busca el `ScoreManager` por el **grupo `"score_manager"`**, le suma `points` (export, default 100) y se autodestruye (`queue_free`). El **ScoreManager** (`Node`) guarda `score` y refresca un `Label` (`ScoreLabel`) vía su export `score_label`. Si hay coleccionables en un nivel, **tiene que haber un `ScoreManager`** (si no, el coleccionable hace `push_warning` y no suma). Solo detecta jugadores, no los extremos del emboque.
 
+### Caja empujable (`push_box.gd`)
+
+Según el concepto, los objetos dinámicos se empujan "por los jugadores o por los extremos de sus cuerdas", por eso la caja es un **`RigidBody2D`** (capa 6): los extremos la golpean y mueven por física real (masa 2 vs campana 1 / palito 0.6), se puede pisar (el jugador viaja con ella), apilar y cae de los bordes. `lock_rotation` (no se vuelca) y `can_sleep = false` (dormida no corre `_integrate_forces` y no se podría empujar).
+
+Un `CharacterBody2D` no empuja cuerpos rígidos por sí solo, así que el empuje es explícito: en `_process_platformer`, si el jugador está en el suelo con input, `_try_push_box` busca una caja justo delante con `test_move` (contacto lateral) → limita su velocidad a `push_speed` y llama `box.push(velocity.x)`; tras `move_and_slide` **restaura esa velocidad** (el deslizamiento la anula al tocar la caja y el empuje daría tirones). La caja, en `_integrate_forces`, **fija** `linear_velocity.x` a la suma de empujes del tick (dos jugadores en contra se anulan) y **compensa el roce** del paso anterior con una fuerza de un paso: así avanza exactamente a la velocidad que informa, que es la que usa quien va parado encima.
+
 ### Flujo de escenas (UI)
 
-`main_menu` → (Jugar) → `level_selector` → (Nivel 1 / Nivel 2) → `main.tscn` / `level_2.tscn` (gameplay) → (al ganar) → `ui/victory.tscn` → (Menú principal) → `main_menu`.
+`main_menu` → (Jugar) → `level_selector` → (Nivel 1 / Nivel 2 / Prueba: muerte / Prueba: física) → `main.tscn` / `level_2.tscn` / `test_death.tscn` / `test_physics.tscn` (gameplay) → (al ganar) → `ui/victory.tscn` → (Menú principal) → `main_menu`.
 `main_menu` → (Ajustes) → `settings`. Selector y Ajustes tienen botón **Volver** al menú.
 Para agregar niveles: agregar la ruta a `LEVELS` en `level_selector.gd`, el botón correspondiente en `level_selector.tscn`, y conectar su `pressed` (a futuro: disponer los botones como grafo con líneas de conexión).
 
 ### Capas de física (importante)
 
 - **Capa 1:** terreno (StaticBody2D del nivel).
-- **Capa 2:** jugadores. `mask = 1` → chocan solo con el terreno (no entre sí, no con extremos).
-- **Capa 3 (valor 4):** campana. `mask = 9` (terreno 1 + palito 8).
-- **Capa 4 (valor 8):** palito. `mask = 5` (terreno 1 + campana 4).
+- **Capa 2:** jugadores. `mask = 33` (terreno 1 + cajas 32) → chocan con terreno y cajas (no entre sí, no con extremos).
+- **Capa 3 (valor 4):** campana. `mask = 41` (terreno 1 + palito 8 + cajas 32).
+- **Capa 4 (valor 8):** palito. `mask = 37` (terreno 1 + campana 4 + cajas 32).
 - **Capa 5 (valor 16):** puntos de enganche (`HookPoint`, `monitorable`). El `HookSensor` de cada extremo tiene `mask = 16`.
+- **Capa 6 (valor 32):** cajas (`PushBox`). `mask = 47` (terreno 1 + jugadores 2 + campana 4 + palito 8 + cajas 32).
+
+En Godot 4 un cuerpo solo **es afectado** por otro si su mask incluye la capa del otro: por eso la caja tiene a los extremos en su mask (para que la empujen) y los extremos a la caja (para chocar con ella).
 - Sensores Area2D: `CavitySensor` de la campana `mask = 8` (solo palito); no detecta su propio cuerpo.
 
 Los **dos extremos colisionan entre sí por física real** (sus masks se incluyen mutuamente). Los jugadores no colisionan con los extremos.
@@ -184,6 +227,7 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **`HookPoint`** (instancia de `hook_point.tscn`): puntos de enganche del entorno para rapel. Poner los que pida el puzzle.
 - **Zonas de muerte**: `player_death_zone` / `emboque_death_zone` / `both_death_zone`, escaladas/posicionadas. Reinician el nivel al contacto.
 - **Coleccionables + puntaje**: si se ponen `collectible.tscn`, agregar **también** un `ScoreManager` (con `score_label → ScoreLabel`) y un `ScoreLabel` en la UI. Van juntos o no van.
+- **Cajas** (`push_box.tscn`): instanciar y ubicar apoyada en el piso (centro = techo del piso − 32). No necesita nada más. Para ajustar el peso ante los extremos, cambiar `mass`; para la rapidez de empuje, `push_speed`.
 
 **Antes de diseñar el trazado conviene tener decidido:** dónde arrancan los dos jugadores, por dónde va el muro/separación que obliga a cooperar, dónde se juntan los emboques (el punto de "embocar"), qué HookPoints hacen falta para llegar, y dónde están los peligros (zonas de muerte) y recompensas (coleccionables). Recordar que la cámara es **fija 1280×720**: todo el nivel cabe en una pantalla.
 
@@ -204,6 +248,9 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **En tests headless, simular input con `Input.parse_input_event(ev)`**, no `Input.action_press` — este último solo cambia el estado interno y no llega a `_input`/`_unhandled_input`.
 - **`Input.action_press` cuenta como `is_action_just_pressed` recién en el tick de física siguiente.** En tests, mantener la tecla al menos 2 ticks antes de soltarla, o el "just pressed" nunca se ve.
 - **No montar el balanceo como fuerzas encima del controlador de plataformas:** la fricción aérea (1300 px/s²) y el tope de 320 px/s de `player.gd` se comían el péndulo. El balanceo es un estado propio (θ, ω) que se salta el código de plataformas.
+- **Un jugador parado sobre un RigidBody se mueve con la velocidad *informada* del cuerpo, no con la real:** si en `_integrate_forces` se fija la velocidad, el roce del paso la reduce después y el jugador de encima se adelanta (~8 px/s, se caía de la caja). Compensar el roce con una fuerza de un paso (`apply_central_force`), que no cambia la velocidad informada.
+- **Assets nuevos (WAV, PNG…) se importan con `"$GODOT" --headless --import --path .`**: `--editor --quit-after 2` cierra antes de escanear archivos nuevos y luego `load()` falla con "No loader found".
+- **Para saber si un RigidBody *realmente* se mueve, medir el desplazamiento**, no `linear_velocity`: leída en `_physics_process` es la que fijó `_integrate_forces` (antes del solver), aunque el cuerpo esté trabado contra un muro.
 - **Al soltarse de un gancho, darle al extremo la velocidad del jugador:** si queda quieto en el gancho, `_limit_player` frena el lanzamiento de golpe (se perdían ~80px de vuelo).
 - Godot re-guarda escenas/`project.godot` al abrirlos (puede cambiar `uid`/`load_steps` u omitir valores por default); es esperado.
 
@@ -229,11 +276,14 @@ Hecho (verificado con tests headless donde aplica):
 - **Pantalla de victoria + highscore** (`ui/victory.tscn` + `score_board.gd` autoload) — al ganar se salta a una pantalla minimalista con puntaje, récord del nivel ("¡Nuevo récord!" si se batió) y botón al menú principal. `ScoreBoard` persiste el highscore por nivel en `user://scores.cfg`. Test headless del tablero (récord, no-récord, independencia entre niveles, persistencia) PASS.
 
 - **Balanceo estilo DKC** (`player.gd` + `emboque.gd`) — enganche instantáneo, péndulo propio del jugador con bombeo híbrido y tope de ángulo por energía, salto desde la cuerda con impulso, soltarse con abajo conservando velocidad, rapel sin perder rapidez, inclinación + squash/stretch. Test headless (radio exacto, período, bombeo ≤ ángulo máx, enganche instantáneo, lanzamiento sin tirón, rapel, enganche sobre el gancho, suelo atado, sin doble salto) PASS.
+- **Caja empujable** (`push_box.gd` + `push_box.tscn`, capa 6) — RigidBody que los jugadores empujan caminando contra ella (velocidad fija, sin tirones) y que los extremos golpean por física; se pisa, se apila, cae de bordes, el que va encima viaja con ella. Test headless (asentarse, empuje parejo, frenar al soltar, muro, pararse encima, pasajero, golpe de campana, empujes opuestos, caída de borde, pila) PASS.
+- **Nivel "Prueba: Física"** (`test_physics.tscn`) — Nivel 1 sin muro central, plataformas más afuera, muros laterales fuera de cámara, 3 ganchos y 2 cajas. En el selector.
+- **Mirada + espejo + sonidos** — ojo placeholder del lado hacia el que mira; `Visual/Art` se espeja según `facing`; hook de animaciones por nombre (`get_anim_state`) listo para el arte. Autoload `Sfx` + 6 efectos placeholder sintetizados (pasos, salto, muerte, enganche, whoosh del balanceo, arrastre de caja). Test headless (mirada/espejo/ojo, estados de animación, ~8 pasos/s, pasajero sin pasos, salto, enganche, whoosh por pasada, loop de la caja on/off, muerte sin duplicar) PASS.
 
 Pendiente:
 - **Fase 6** — Nivel de prueba definitivo a medida de cámara + pasada de tuning de la sensación (magnetismo, masas, largos, velocidades, radios del closeup).
 
-Post-prototipo (del concepto): objetos empujables, mapa de progresión de niveles, estética Tikitiklip (animación tradicional + imágenes reales chilenas), sonido, export a web.
+Post-prototipo (del concepto): más objetos dinámicos (la caja ya existe), mapa de progresión de niveles, estética Tikitiklip (animación tradicional + imágenes reales chilenas), sonido, export a web.
 
 ## Convenciones
 

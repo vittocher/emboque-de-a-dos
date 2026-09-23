@@ -19,6 +19,7 @@ config/features=PackedStringArray("4.7")
 
 SettingsManager="*res://scripts/settings_manager.gd"
 ScoreBoard="*res://scripts/score_board.gd"
+Sfx="*res://scripts/sfx.gd"
 
 [display]
 

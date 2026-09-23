@@ -136,6 +136,7 @@ func _on_hook_sensor_area_entered(area: Area2D) -> void:
 	if not _hooked and _rehook_timer <= 0.0:
 		_hooked = true
 		_hook_position = area.global_position
+		Sfx.play(&"hook")
 		# Enganche instantáneo: la cuerda toma el largo actual y el balanceo parte ya.
 		rope_length = clampf(_anchor.global_position.distance_to(_hook_position), min_length, max_length)
 		if _player != null:

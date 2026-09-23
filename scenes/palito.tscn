@@ -13,7 +13,7 @@ friction = 0.05
 
 [node name="Palito" type="RigidBody2D"]
 collision_layer = 8
-collision_mask = 5
+collision_mask = 37
 physics_material_override = SubResource("PhysMat_end")
 mass = 0.6
 gravity_scale = 1.0

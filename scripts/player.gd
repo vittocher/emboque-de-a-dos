@@ -8,6 +8,11 @@ class_name Player
 ## Cuando el Emboque se engancha a un HookPoint, el jugador pasa a un estado de
 ## balanceo propio (péndulo con ángulo + velocidad angular, estilo Donkey Kong
 ## Country) en vez de mezclar fuerzas con el controlador de plataformas.
+##
+## Arte: todo lo que está bajo Visual/Art se dibuja MIRANDO A LA DERECHA y el
+## código lo espeja según [member facing]. Si Art tiene un AnimatedSprite2D
+## llamado "Sprite", se reproducen solas sus animaciones con los nombres de
+## [method get_anim_state] ("idle", "walk", "jump", "fall", "swing", "push").
 
 ## Se emite cuando el jugador salta para soltarse del gancho (el Emboque lo desengancha).
 signal swing_jumped
@@ -56,14 +61,29 @@ signal swing_jumped
 const TAUT_TOLERANCE := 2.0
 ## Distancia al piso bajo la cual el balanceo cuenta como "pisando" (px).
 const GROUND_PROBE := 2.0
+## Distancia a la que el jugador detecta una caja delante para empujarla (px).
+const PUSH_PROBE := 2.0
 ## Bajo esta velocidad tangencial (px/s) el empuje siempre cuenta como "a favor".
 const SWING_REST_SPEED := 40.0
 ## Qué tan rápido se disipa la energía sobre el tope del ángulo máximo (1/s).
 const SWING_CAP_SHARPNESS := 12.0
 ## Qué tan rápido el cuerpo se inclina hacia la cuerda (1/s).
 const TILT_SHARPNESS := 14.0
+## Sin input, colgando o lanzado, mira hacia donde se mueve si va más rápido que esto (px/s).
+const FACE_MIN_SPEED := 60.0
+## Distancia caminada entre dos sonidos de paso (px).
+const STEP_LENGTH := 40.0
+## Bajo esta velocidad (px/s) no cuenta como caminar.
+const STEP_MIN_SPEED := 30.0
+## Velocidad mínima al pasar por abajo del péndulo para que suene el "whoosh" (px/s).
+const SWING_WHOOSH_MIN_SPEED := 150.0
+
+## Hacia dónde mira: 1 = derecha, -1 = izquierda.
+var facing: int = 1
 
 var _gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
+var _pushing: bool = false
+var _step_distance: float = STEP_LENGTH
 
 # Estado de enganche (lo controla el Emboque con attach_swing / detach_swing).
 var _hooked: bool = false
@@ -76,15 +96,25 @@ var _launched: bool = false     # conserva el impulso tras soltarse de la cuerda
 var _squash_tween: Tween
 
 @onready var _visual: Node2D = $Visual
+@onready var _art: Node2D = $Visual/Art
+@onready var _sprite: AnimatedSprite2D = $Visual/Art.get_node_or_null("Sprite") as AnimatedSprite2D
 @onready var _anchor_offset: Vector2 = ($RopeAnchor as Node2D).position
+
+func _ready() -> void:
+	# Al empezar mira hacia el centro de la pantalla (hacia su compañero).
+	facing = 1 if global_position.x < get_viewport_rect().get_center().x else -1
+	_art.scale.x = facing
 
 func _physics_process(delta: float) -> void:
 	if _hooked and _taut:
+		_pushing = false
 		_process_swing(delta)
 	else:
 		_process_platformer(delta)
 		_check_rope_taut()
+	_update_facing()
 	_update_visual(delta)
+	_update_animation()
 
 func _process_platformer(delta: float) -> void:
 	# Gravedad.
@@ -94,6 +124,7 @@ func _process_platformer(delta: float) -> void:
 	# Salto (solo desde el suelo).
 	if is_on_floor() and Input.is_action_just_pressed(input_prefix + "_jump"):
 		velocity.y = jump_velocity
+		Sfx.play(&"jump")
 
 	# Movimiento horizontal.
 	var direction := Input.get_axis(input_prefix + "_left", input_prefix + "_right")
@@ -105,9 +136,41 @@ func _process_platformer(delta: float) -> void:
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, friction * control * delta)
 
+	_pushing = direction != 0.0 and is_on_floor() and _try_push_box(direction)
+	var push_velocity := velocity.x
 	move_and_slide()
+	if _pushing:
+		# Al chocar con la caja el deslizamiento anula la velocidad; se restaura
+		# para seguir empujando parejo el próximo tick (sin tirones).
+		velocity.x = push_velocity
 	if _launched and (is_on_floor() or is_on_wall()):
 		_launched = false
+	_update_footsteps(delta)
+
+## Pasos: un sonido cada STEP_LENGTH px caminados de verdad sobre el piso (sin
+## contar lo que lo mueve una caja de abajo, ni empujar contra un muro).
+func _update_footsteps(delta: float) -> void:
+	var walk_speed := absf(get_real_velocity().x - get_platform_velocity().x)
+	if not is_on_floor() or walk_speed < STEP_MIN_SPEED:
+		_step_distance = STEP_LENGTH  # el primer paso suena apenas empieza a caminar
+		return
+	_step_distance += walk_speed * delta
+	if _step_distance >= STEP_LENGTH:
+		_step_distance -= STEP_LENGTH
+		Sfx.play(&"step", randf_range(0.9, 1.1))
+
+## Si hay una caja justo delante (contacto lateral), la empuja a la velocidad del
+## jugador, que a su vez queda limitada a la velocidad de empuje de la caja.
+func _try_push_box(direction: float) -> bool:
+	var col := KinematicCollision2D.new()
+	if not test_move(global_transform, Vector2(direction * PUSH_PROBE, 0.0), col):
+		return false
+	var box := col.get_collider() as PushBox
+	if box == null or col.get_normal().x * direction > -0.7:
+		return false
+	velocity.x = clampf(velocity.x, -box.push_speed, box.push_speed)
+	box.push(velocity.x)
+	return true
 
 ## Tras soltarse de la cuerda, el impulso se conserva: sin input o empujando a
 ## favor solo frena suave. Empujar en contra (o ir lento) usa el control normal.
@@ -219,6 +282,8 @@ func _process_swing(delta: float) -> void:
 
 	# Mover hacia el punto del círculo con barrido de colisión (sin teletransporte).
 	var new_theta := theta + _swing_omega * delta
+	if signf(new_theta) != signf(theta):
+		_play_swing_whoosh(absf(_swing_omega) * r)
 	var target := _swing_pivot + Vector2(sin(new_theta), cos(new_theta)) * r
 	velocity = (target - hand) / delta
 	move_and_slide()
@@ -244,6 +309,13 @@ func _cap_swing_energy(theta: float, g_over_r: float, delta: float) -> void:
 		var weight := 1.0 - exp(-SWING_CAP_SHARPNESS * delta)
 		_swing_omega = lerpf(_swing_omega, signf(_swing_omega) * cap, weight)
 
+## "Whoosh" al pasar por el punto más bajo: más fuerte y agudo cuanto más rápido.
+func _play_swing_whoosh(speed_px: float) -> void:
+	if speed_px < SWING_WHOOSH_MIN_SPEED:
+		return
+	var t := clampf((speed_px - SWING_WHOOSH_MIN_SPEED) / 500.0, 0.0, 1.0)
+	Sfx.play(&"swing", lerpf(0.85, 1.15, t), lerpf(-8.0, 0.0, t))
+
 func _jump_off_swing() -> void:
 	var launch := _swing_velocity() * swing_launch_multiplier
 	launch.y = minf(launch.y, 0.0) + swing_jump_velocity
@@ -252,6 +324,7 @@ func _jump_off_swing() -> void:
 	_taut = false
 	_launched = true
 	_squash(Vector2(0.85, 1.2))
+	Sfx.play(&"jump", 1.2)
 	swing_jumped.emit()
 
 ## Dirección en que avanza el péndulo cuando el ángulo crece.
@@ -264,6 +337,37 @@ func _swing_velocity() -> Vector2:
 	return _swing_tangent(atan2(offset.x, offset.y)) * _swing_omega * _swing_radius
 
 # --- Visual ---
+
+## Hacia dónde mira: la dirección del input; sin input, colgando o lanzado, hacia
+## donde se mueve. El arte (Visual/Art) se espeja según esto.
+func _update_facing() -> void:
+	var direction := Input.get_axis(input_prefix + "_left", input_prefix + "_right")
+	if direction != 0.0:
+		facing = 1 if direction > 0.0 else -1
+	elif ((_hooked and _taut) or _launched) and absf(velocity.x) > FACE_MIN_SPEED:
+		facing = 1 if velocity.x > 0.0 else -1
+	_art.scale.x = facing
+
+## Nombre del estado para animar el arte: "idle", "walk", "jump", "fall", "swing" o "push".
+func get_anim_state() -> String:
+	if _hooked and _taut:
+		return "swing"
+	if not is_on_floor():
+		return "jump" if velocity.y < 0.0 else "fall"
+	if _pushing:
+		return "push"
+	if absf(get_real_velocity().x - get_platform_velocity().x) > STEP_MIN_SPEED:
+		return "walk"
+	return "idle"
+
+## Si el arte trae un AnimatedSprite2D "Sprite", reproduce la animación del estado
+## (solo las que existan en sus SpriteFrames).
+func _update_animation() -> void:
+	if _sprite == null or _sprite.sprite_frames == null:
+		return
+	var anim := get_anim_state()
+	if _sprite.animation != anim and _sprite.sprite_frames.has_animation(anim):
+		_sprite.play(anim)
 
 ## Inclina el cuerpo siguiendo la cuerda, pivotando en la mano (RopeAnchor).
 ## Solo rota el visual; la colisión se queda recta.
