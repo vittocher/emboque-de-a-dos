@@ -16,6 +16,49 @@ var constrained: bool = false  # el Emboque lo activa tras posicionar el extremo
 ## Fracción del exceso de largo que se corrige por frame (estabilización).
 @export var stiffness: float = 0.5
 
+var _held: bool = false
+var _saved_layer: int = 0
+var _saved_mask: int = 0
+var _base_gravity_scale: float = 1.0
+
+func _ready() -> void:
+	_base_gravity_scale = gravity_scale
+
+## En la mano del jugador (mecánica de lanzar): congelado y SIN colisiones, así
+## no empuja al otro extremo, no entra en la cavidad de la campana ni activa
+## zonas de muerte. El Emboque lo mueve a la mano cada frame.
+func set_held(value: bool) -> void:
+	if value == _held:
+		return
+	_held = value
+	if _held:
+		_saved_layer = collision_layer
+		_saved_mask = collision_mask
+		collision_layer = 0
+		collision_mask = 0
+		freeze_mode = RigidBody2D.FREEZE_MODE_KINEMATIC
+		freeze = true
+		linear_velocity = Vector2.ZERO
+		angular_velocity = 0.0
+		constrained = false
+	else:
+		collision_layer = _saved_layer
+		collision_mask = _saved_mask
+		freeze = false
+		constrained = true
+
+func is_held() -> bool:
+	return _held
+
+## Lanzado: sin gravedad para que viaje en línea recta por donde se apuntó.
+func start_flight(velocity: Vector2) -> void:
+	gravity_scale = 0.0
+	linear_velocity = velocity
+	angular_velocity = 0.0
+
+func end_flight() -> void:
+	gravity_scale = _base_gravity_scale
+
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	if not constrained:
 		return

@@ -63,3 +63,9 @@ Jugador 1:   A / D mover   ·   W saltar   ·   R / T soltar / tirar cuerda   ·
 Jugador 2:   ← / → mover   ·   ↑ saltar   ·   , / . soltar / tirar cuerda   ·   ↓ desenganchar"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 20
+
+[node name="ThrowControls" type="Label" parent="Center/VBox"]
+layout_mode = 2
+text = "Niveles verdes:   tirar con la cuerda al mínimo toma el emboque   ·   G / L apuntar y lanzar"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 20

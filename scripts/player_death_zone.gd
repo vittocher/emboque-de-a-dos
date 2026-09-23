@@ -22,6 +22,7 @@ func _on_body_entered(body: Node) -> void:
 		return
 	_fired = true
 	triggered.emit(body)
+	Sfx.play(&"die")
 	if reload_on_death:
 		# Diferido: body_entered es un callback de física; recargar (liberar
 		# CollisionObjects) en medio de él está prohibido en Godot.
