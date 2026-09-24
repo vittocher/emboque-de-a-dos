@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/rope_end.gd" id="1_end"]
+[ext_resource type="Texture2D" path="res://assets/emboque/palito.png" id="2_tex"]
 
 [sub_resource type="RectangleShape2D" id="Rect_palito"]
 size = Vector2(22, 6)
@@ -27,8 +28,15 @@ script = ExtResource("1_end")
 shape = SubResource("Rect_palito")
 
 [node name="Visual" type="Polygon2D" parent="."]
+visible = false
 color = Color(0.62, 0.42, 0.24, 1)
 polygon = PackedVector2Array(-11, -3, 11, -3, 11, 3, -11, 3)
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture_filter = 4
+rotation = 2.35619
+scale = Vector2(0.034, 0.034)
+texture = ExtResource("2_tex")
 
 [node name="Tip" type="Marker2D" parent="."]
 position = Vector2(11, 0)
