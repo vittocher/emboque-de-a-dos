@@ -76,6 +76,12 @@ custom_minimum_size = Vector2(170, 170)
 text = "Nivel 3"
 theme_override_font_sizes/font_size = 28
 
+[node name="Level4Button" type="Button" parent="Center/LevelsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(170, 170)
+text = "Nivel 4"
+theme_override_font_sizes/font_size = 28
+
 [node name="TestPhysicsButton" type="Button" parent="Center/LevelsRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(170, 170)
