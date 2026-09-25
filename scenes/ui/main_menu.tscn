@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" uid="uid://b3om0k3bvxk3c" path="res://art/portada.png" id="2_portada"]
+[ext_resource type="PackedScene" path="res://scenes/ui/boton_madera.tscn" id="3_boton"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -11,14 +13,16 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.12, 0.1, 0.14, 1)
+texture = ExtResource("2_portada")
+expand_mode = 1
+stretch_mode = 6
 
 [node name="Center" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -30,49 +34,16 @@ grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="Center"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 18
 
-[node name="Title" type="Label" parent="Center/VBox"]
+[node name="PlayButton" parent="Center/VBox" instance=ExtResource("3_boton")]
 layout_mode = 2
-text = "Emboque de a Dos"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 64
-
-[node name="PlayButton" type="Button" parent="Center/VBox"]
-layout_mode = 2
-size_flags_horizontal = 4
-custom_minimum_size = Vector2(260, 56)
 text = "Jugar"
-theme_override_font_sizes/font_size = 30
 
-[node name="SettingsButton" type="Button" parent="Center/VBox"]
+[node name="SettingsButton" parent="Center/VBox" instance=ExtResource("3_boton")]
 layout_mode = 2
-size_flags_horizontal = 4
-custom_minimum_size = Vector2(260, 56)
 text = "Ajustes"
-theme_override_font_sizes/font_size = 30
 
-[node name="QuitButton" type="Button" parent="Center/VBox"]
+[node name="QuitButton" parent="Center/VBox" instance=ExtResource("3_boton")]
 layout_mode = 2
-size_flags_horizontal = 4
-custom_minimum_size = Vector2(260, 56)
 text = "Salir"
-theme_override_font_sizes/font_size = 30
-
-[node name="Spacer" type="Control" parent="Center/VBox"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 20)
-
-[node name="Controls" type="Label" parent="Center/VBox"]
-layout_mode = 2
-text = "Controles
-Jugador 1:   A / D mover   ·   W saltar   ·   R / T soltar / tirar cuerda   ·   S desenganchar
-Jugador 2:   ← / → mover   ·   ↑ saltar   ·   , / . soltar / tirar cuerda   ·   ↓ desenganchar"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 20
-
-[node name="ThrowControls" type="Label" parent="Center/VBox"]
-layout_mode = 2
-text = "Niveles verdes:   tirar con la cuerda al mínimo toma el emboque   ·   G / L apuntar y lanzar"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 20
