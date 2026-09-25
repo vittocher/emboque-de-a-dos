@@ -72,6 +72,10 @@ scenes/
                        torre al centro (240×270, techo y=410) que no se alcanza saltando; un HookPoint afuera de
                        cada esquina de arriba. Cada jugador lanza al gancho de su lado, sube tirando la cuerda y
                        salta arriba de la torre, donde se juntan para embocar. Label de ayuda arriba.
+  terrain_art.tscn     Arte del terreno (TerrainArt, scripts/terrain_art.gd, @tool): instanciado una vez por nivel,
+                       cubre cada StaticBody2D con assets/entorno/colision/: rectángulos horizontales = piso armado
+                       con piso_left + piso_neutral (repetido) + piso_right, o piso.png si cabe una sola tabla;
+                       verticales = pared.png. Sin deformarse. En juego oculta los Polygon2D "Visual".
   push_box.tscn        Caja empujable (RigidBody2D 64×64, capa 6, rotación bloqueada). Reutilizable en cualquier nivel.
                        Arte: Sprite con assets/props/caja/caja.png (320×320 a escala 0.2); placeholders ocultos.
   closeup_manager.tscn Efecto reutilizable: closeup + cámara lenta al acercarse los extremos (instanciar por nivel).
@@ -261,6 +265,7 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 
 1. **`Camera2D`** fija en `(640, 360)` — cámara del tamaño de la pantalla, sin scroll.
 2. **Geometría estática** (`StaticBody2D` en **capa 1**) con su `CollisionShape2D` y un `Polygon2D` visual: suelo + plataformas + muros. Es el trazado del puzzle.
+   - **Arte del terreno:** instanciar `terrain_art.tscn` (nodo `TerrainArt`) en la raíz del nivel. Viste solo todos los `StaticBody2D` con forma rectangular (piso/plataformas o muro según sean más anchos o más altos); no hay que dibujar nada por cuerpo.
    - **Muros laterales `WallLeft`/`WallRight`** justo fuera de cámara: `position = Vector2(-20, 200)` / `Vector2(1300, 200)`, shape `RectangleShape2D` 40×1200 (cubre bien por arriba y por abajo). Evitan que alguien salga del nivel por los costados; son un `StaticBody2D` más, capa 1 por default. Todos los niveles reales los tienen (`main.tscn`, `level_2.tscn`, `test_death.tscn`, `test_physics.tscn`) — copiarlos igual en niveles nuevos.
 3. **2 × `Player`** (instancia de `player.tscn`):
    - `Player1`: `input_prefix = "p1"`, posición de inicio.

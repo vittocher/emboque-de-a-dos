@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="7_pause"]
 [ext_resource type="PackedScene" path="res://scenes/closeup_manager.tscn" id="8_closeup"]
 [ext_resource type="Script" path="res://scripts/level_rules.gd" id="9_rules"]
+[ext_resource type="PackedScene" path="res://scenes/terrain_art.tscn" id="90_terrain"]
 
 [sub_resource type="RectangleShape2D" id="Shape_ground"]
 size = Vector2(1280, 40)
@@ -129,3 +130,5 @@ vertical_alignment = 1
 text = "¡Emboque logrado!"
 theme_override_font_sizes/font_size = 72
 theme_override_colors/font_color = Color(1, 0.95, 0.4, 1)
+
+[node name="TerrainArt" parent="." instance=ExtResource("90_terrain")]
