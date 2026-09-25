@@ -1,0 +1,22 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/hazards/jugadores/spikes_1.png" id="1_k1"]
+[ext_resource type="Texture2D" path="res://assets/hazards/jugadores/spikes_2.png" id="2_k2"]
+[ext_resource type="Texture2D" path="res://assets/hazards/jugadores/spikes_3.png" id="3_k3"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_k1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_k2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_k3")
+}],
+"loop": true,
+"name": &"default",
+"speed": 9.0
+}]

@@ -58,9 +58,11 @@ scenes/
   hook_point.tscn      Area2D (punto de enganche del entorno) + rombo visual.
   player_death_zone.tscn  Area2D que mata al JUGADOR al tocarlo (visual roja).
   emboque_death_zone.tscn Area2D que mata al EMBOQUE al tocarlo (visual morada).
-  both_death_zone.tscn    Zona que mata a ambos; compone los dos scripts. Arte: fuego animado (assets/hazards/ambos,
-                          9 FPS) que both_death_zone.gd (@tool) repite a lo ancho en cuadros tan altos como la zona,
-                          sin deformarse con la escala de la instancia. El Polygon2D naranja quedó oculto.
+  both_death_zone.tscn    Zona que mata a ambos; compone los dos scripts. Arte: fuego (assets/hazards/ambos, 9 FPS).
+                          player_death_zone.tscn tiene púas (assets/hazards/jugadores, 9 FPS). En ambas el arte lo
+                          pone un hijo `Art` con hazard_art.gd (@tool, class HazardArt): repite la animación a lo
+                          ancho en cuadros tan altos como la zona, sin deformarse con la escala de la instancia.
+                          Los Polygon2D de color quedaron ocultos.
   test_death.tscn      Nivel de prueba de las zonas de muerte (2 jugadores + 2 emboques + las 3 zonas).
   test_physics.tscn    "Prueba: Física": copia del Nivel 1 SIN muro central (para probar el balanceo), plataformas
                        más afuera (x=170 / x=1110), muros laterales justo fuera de cámara (x<0 y x>1280, no se
@@ -100,6 +102,7 @@ scripts/
                    THROW_COLOR (verde de la mecánica en los menús) y scene_throw_enabled(escena).
   closeup_manager.gd Closeup de cámara + slowdown (Engine.time_scale) al acercarse los extremos; reutilizable; reinicia time_scale en _exit_tree.
   win_manager.gd   Magnetismo distancia+ángulo entre extremos + victoria (palito dentro de campana).
+  hazard_art.gd    Arte animado de una zona de peligro (ver both_death_zone.tscn); reutilizable en cualquier zona.
   player_death_zone.gd   Al entrar un jugador (mask=2) → reinicia el nivel. Señal triggered; export reload_on_death.
   emboque_death_zone.gd  Al entrar un extremo (mask=12 = campana 4 + palito 8) → reinicia. (Scripts separados a propósito.)
   collectible.gd   Area2D: al tocarlo un Player, busca el ScoreManager (grupo "score_manager"), suma `points` y queue_free.

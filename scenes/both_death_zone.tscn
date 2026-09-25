@@ -2,15 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/player_death_zone.gd" id="1_pdz"]
 [ext_resource type="Script" path="res://scripts/emboque_death_zone.gd" id="2_edz"]
-[ext_resource type="Script" path="res://scripts/both_death_zone.gd" id="3_bdz"]
+[ext_resource type="Script" path="res://scripts/hazard_art.gd" id="3_art"]
 [ext_resource type="SpriteFrames" path="res://assets/hazards/ambos/fuego_frames.tres" id="4_fuego"]
 
 [sub_resource type="RectangleShape2D" id="Rect_zone"]
 size = Vector2(100, 30)
 
 [node name="BothDeathZone" type="Node2D"]
-script = ExtResource("3_bdz")
-frames = ExtResource("4_fuego")
 
 [node name="Visual" type="Polygon2D" parent="."]
 visible = false
@@ -34,3 +32,8 @@ script = ExtResource("2_edz")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EmboqueKill"]
 shape = SubResource("Rect_zone")
+
+[node name="Art" type="Node2D" parent="."]
+script = ExtResource("3_art")
+frames = ExtResource("4_fuego")
+shape_path = NodePath("../PlayerKill/CollisionShape2D")
