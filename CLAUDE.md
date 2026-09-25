@@ -55,10 +55,16 @@ scenes/
   emboque.tscn         Node2D raíz: solo Rope (Line2D). El extremo se instancia en runtime.
   palito.tscn          Extremo RigidBody2D: rectángulo largo y flaco + Tip + HookSensor. (J2)
   campana.tscn         Extremo RigidBody2D: forma de C (3 rects) + CavitySensor + Mouth/Cavity + HookSensor. (J1)
-  hook_point.tscn      Area2D (punto de enganche del entorno) + rombo visual.
+  hook_point.tscn      Area2D (punto de enganche del entorno, radio 18) + Sprite hoyo.png (assets/props/enganche,
+                       ~36 px = el círculo de enganche). Rombo placeholder oculto.
   player_death_zone.tscn  Area2D que mata al JUGADOR al tocarlo (visual roja).
   emboque_death_zone.tscn Area2D que mata al EMBOQUE al tocarlo (visual morada).
-  both_death_zone.tscn    Zona que mata a ambos (visual naranja); compone los dos scripts.
+  both_death_zone.tscn    Zona que mata a ambos; compone los dos scripts. Arte: fuego (assets/hazards/ambos, 9 FPS).
+                          player_death_zone.tscn tiene púas (assets/hazards/jugadores, 9 FPS) y emboque_death_zone.tscn
+                          caca (assets/hazards/emboques, 9 FPS). En las tres el arte lo
+                          pone un hijo `Art` con hazard_art.gd (@tool, class HazardArt): repite la animación a lo
+                          ancho en cuadros tan altos como la zona, sin deformarse con la escala de la instancia.
+                          Los Polygon2D de color quedaron ocultos.
   test_death.tscn      Nivel de prueba de las zonas de muerte (2 jugadores + 2 emboques + las 3 zonas).
   test_physics.tscn    "Prueba: Física": copia del Nivel 1 SIN muro central (para probar el balanceo), plataformas
                        más afuera (x=170 / x=1110), muros laterales justo fuera de cámara (x<0 y x>1280, no se
@@ -67,9 +73,16 @@ scenes/
                        torre al centro (240×270, techo y=410) que no se alcanza saltando; un HookPoint afuera de
                        cada esquina de arriba. Cada jugador lanza al gancho de su lado, sube tirando la cuerda y
                        salta arriba de la torre, donde se juntan para embocar. Label de ayuda arriba.
+  background.tscn      Fondo del nivel: Sprite2D con assets/entorno/fondo/paredazul.png (1280×720 a escala 1,
+                       centrado en (640,360), z_index -100). En el mundo, así acompaña el zoom del closeup.
+  terrain_art.tscn     Arte del terreno (TerrainArt, scripts/terrain_art.gd, @tool): instanciado una vez por nivel,
+                       cubre cada StaticBody2D con assets/entorno/colision/: rectángulos horizontales = piso armado
+                       con piso_left + piso_neutral (repetido) + piso_right, o piso.png si cabe una sola tabla;
+                       verticales = pared.png. Sin deformarse. En juego oculta los Polygon2D "Visual".
   push_box.tscn        Caja empujable (RigidBody2D 64×64, capa 6, rotación bloqueada). Reutilizable en cualquier nivel.
+                       Arte: Sprite con assets/props/caja/caja.png (320×320 a escala 0.2); placeholders ocultos.
   closeup_manager.tscn Efecto reutilizable: closeup + cámara lenta al acercarse los extremos (instanciar por nivel).
-  collectible.tscn     Area2D recolectable (rombo turquesa): lo toca un jugador o un extremo del emboque (mask 14)
+  collectible.tscn     Area2D recolectable (sopaipilla animada, assets/props/puntos, 2 frames a 6 FPS; rombo oculto): lo toca un jugador o un extremo del emboque (mask 14)
                        → suma puntos y se destruye. La cuerda no recoge (es solo una Line2D).
   level_2.tscn         Segundo nivel, hecho según un boceto del equipo (escala x·0.64, y·0.473): J1 arriba a la
                        izquierda, J2 arriba a la derecha, muro central (hasta y=-400: no se salta por arriba) con
@@ -98,6 +111,7 @@ scripts/
                    THROW_COLOR (verde de la mecánica en los menús) y scene_throw_enabled(escena).
   closeup_manager.gd Closeup de cámara + slowdown (Engine.time_scale) al acercarse los extremos; reutilizable; reinicia time_scale en _exit_tree.
   win_manager.gd   Magnetismo distancia+ángulo entre extremos + victoria (palito dentro de campana).
+  hazard_art.gd    Arte animado de una zona de peligro (ver both_death_zone.tscn); reutilizable en cualquier zona.
   player_death_zone.gd   Al entrar un jugador (mask=2) → reinicia el nivel. Señal triggered; export reload_on_death.
   emboque_death_zone.gd  Al entrar un extremo (mask=12 = campana 4 + palito 8) → reinicia. (Scripts separados a propósito.)
   collectible.gd   Area2D: al tocarlo un Player, busca el ScoreManager (grupo "score_manager"), suma `points` y queue_free.
@@ -128,10 +142,11 @@ Autoloads (en `project.godot`): **`SettingsManager`** (volumen Master/Música/Ef
 ```
 Visual (Node2D)      ← el código lo inclina (balanceo) y aplasta/estira (squash). No tocar.
   Art (Node2D)       ← el código lo ESPEJA: scale.x = facing (1 = derecha, -1 = izquierda).
-    Body (Polygon2D) ← placeholder: rectángulo 40×64
-    Eye (Polygon2D)  ← placeholder: ojo negro 8×8, del lado hacia el que mira
+    Body, Eye        ← placeholders (ocultos, visible = false)
+    Sprite (AnimatedSprite2D) ← arte real: escala 0.21, pies en y = +32, flip_h (los PNG miran a la izquierda)
 ```
-Para poner el arte definitivo: reemplazar los hijos de `Visual/Art` por el dibujo **mirando a la derecha** (el código lo da vuelta). Si se usa un `AnimatedSprite2D` llamado **`Sprite`** dentro de `Art`, el jugador reproduce solo las animaciones cuyos nombres coincidan con `get_anim_state()`: **`idle`, `walk`, `jump`, `fall`, `swing`, `push`, `aim`** (las que falten se ignoran; `aim` = apuntando un lanzamiento). `Player2` tiene `modulate` en la raíz para diferenciarse; con arte propio se puede quitar. `facing` es público por si otro script lo necesita. Al empezar, cada jugador mira hacia el centro de la pantalla.
+**Arte actual:** `assets/jugadores/p1|p2/` con un `SpriteFrames` por jugador (`p1_frames.tres` / `p2_frames.tres`). `player.gd` le pone al `Sprite` el de su `input_prefix` (exports `frames_p1` / `frames_p2` en `player.tscn`). Animaciones: `idle` (WALK_01 quieto), `walk` (WALK_02 → WALK_01 en loop a **10 FPS**, empieza con el paso abierto para que se note al instante) y `aim` (THROW, al apuntar). Si falta la animación del estado se usa `ANIM_FALLBACK` (`push` → `walk`) o `idle` (así no camina en el aire).
+Para poner el arte definitivo: reemplazar los hijos de `Visual/Art` por el dibujo **mirando a la derecha** (el código lo da vuelta). Si se usa un `AnimatedSprite2D` llamado **`Sprite`** dentro de `Art`, el jugador reproduce solo las animaciones cuyos nombres coincidan con `get_anim_state()`: **`idle`, `walk`, `jump`, `fall`, `swing`, `push`, `aim`** (las que falten se ignoran; `aim` = apuntando un lanzamiento). Ya no hay `modulate` en `Player2`: cada jugador tiene su arte. `facing` es público por si otro script lo necesita. Al empezar, cada jugador mira hacia el centro de la pantalla.
 
 **Sonidos**: todos pasan por el autoload `Sfx` (`scripts/sfx.gd`). Para cambiar uno, **reemplazar el archivo con el mismo nombre** en `audio/sfx/` (o cambiar su ruta/volumen en `Sfx.SOUNDS`); WAV u OGG sirven (el loop de la caja se activa por código para ambos). Dónde suena cada uno:
 
@@ -274,6 +289,8 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 
 1. **`Camera2D`** fija en `(640, 360)` — cámara del tamaño de la pantalla, sin scroll.
 2. **Geometría estática** (`StaticBody2D` en **capa 1**) con su `CollisionShape2D` y un `Polygon2D` visual: suelo + plataformas + muros. Es el trazado del puzzle.
+   - **Fondo:** instanciar `background.tscn` como **primer** hijo de la raíz del nivel.
+   - **Arte del terreno:** instanciar `terrain_art.tscn` (nodo `TerrainArt`) en la raíz del nivel. Viste solo todos los `StaticBody2D` con forma rectangular (piso/plataformas o muro según sean más anchos o más altos); no hay que dibujar nada por cuerpo.
    - **Muros laterales `WallLeft`/`WallRight`** justo fuera de cámara: `position = Vector2(-20, 200)` / `Vector2(1300, 200)`, shape `RectangleShape2D` 40×1200 (cubre bien por arriba y por abajo). Evitan que alguien salga del nivel por los costados; son un `StaticBody2D` más, capa 1 por default. Todos los niveles reales los tienen (`main.tscn`, `level_2.tscn`, `test_death.tscn`, `test_physics.tscn`) — copiarlos igual en niveles nuevos.
 3. **2 × `Player`** (instancia de `player.tscn`):
    - `Player1`: `input_prefix = "p1"`, posición de inicio.

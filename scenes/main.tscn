@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://cmain00000001"]
+[gd_scene load_steps=14 format=3 uid="uid://cmain00000001"]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/emboque.tscn" id="2_emboque"]
@@ -8,6 +8,8 @@
 [ext_resource type="PackedScene" path="res://scenes/palito.tscn" id="6_palito"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="7_pause"]
 [ext_resource type="PackedScene" path="res://scenes/closeup_manager.tscn" id="8_closeup"]
+[ext_resource type="PackedScene" path="res://scenes/terrain_art.tscn" id="90_terrain"]
+[ext_resource type="PackedScene" path="res://scenes/background.tscn" id="91_background"]
 
 [sub_resource type="RectangleShape2D" id="Shape_ground"]
 size = Vector2(1280, 40)
@@ -22,6 +24,8 @@ size = Vector2(30, 260)
 size = Vector2(40, 1200)
 
 [node name="Main" type="Node2D"]
+
+[node name="Background" parent="." instance=ExtResource("91_background")]
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(640, 360)
@@ -97,7 +101,6 @@ position = Vector2(300, 460)
 input_prefix = "p1"
 
 [node name="Player2" parent="." instance=ExtResource("1_player")]
-modulate = Color(1, 0.5, 0.4, 1)
 position = Vector2(980, 410)
 input_prefix = "p2"
 
@@ -137,4 +140,5 @@ text = "¡Emboque logrado!"
 theme_override_font_sizes/font_size = 72
 theme_override_colors/font_color = Color(1, 0.95, 0.4, 1)
 
+[node name="TerrainArt" parent="." instance=ExtResource("90_terrain")]
 [node name="PauseMenu" parent="." instance=ExtResource("7_pause")]

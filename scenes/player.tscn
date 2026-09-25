@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://doif25xbg1jsq"]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
+[ext_resource type="SpriteFrames" path="res://assets/jugadores/p1/p1_frames.tres" id="2_frames_p1"]
+[ext_resource type="SpriteFrames" path="res://assets/jugadores/p2/p2_frames.tres" id="3_frames_p2"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(40, 64)
@@ -9,6 +11,8 @@ size = Vector2(40, 64)
 collision_layer = 2
 collision_mask = 33
 script = ExtResource("1_player")
+frames_p1 = ExtResource("2_frames_p1")
+frames_p2 = ExtResource("3_frames_p2")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_player")
@@ -17,6 +21,15 @@ shape = SubResource("RectangleShape2D_player")
 
 [node name="Art" type="Node2D" parent="Visual"]
 
+[node name="Body" type="Polygon2D" parent="Visual/Art"]
+visible = false
+color = Color(0.2, 0.6, 1, 1)
+polygon = PackedVector2Array(-20, -32, 20, -32, 20, 32, -20, 32)
+
+[node name="Eye" type="Polygon2D" parent="Visual/Art"]
+visible = false
+color = Color(0, 0, 0, 1)
+polygon = PackedVector2Array(4, -20, 12, -20, 12, -12, 4, -12)
 [node name="Abierto" type="Sprite2D" parent="Visual/Art"]
 position = Vector2(0, -10)
 scale = Vector2(0.3, 0.3)
@@ -25,6 +38,15 @@ scale = Vector2(0.3, 0.3)
 visible = false
 position = Vector2(0, -10)
 scale = Vector2(0.3, 0.3)
+
+[node name="Sprite" type="AnimatedSprite2D" parent="Visual/Art"]
+texture_filter = 4
+position = Vector2(0, -1.6)
+scale = Vector2(0.21, 0.21)
+sprite_frames = ExtResource("2_frames_p1")
+animation = &"idle"
+autoplay = "idle"
+flip_h = true
 
 [node name="RopeAnchor" type="Marker2D" parent="."]
 position = Vector2(0, -18)
