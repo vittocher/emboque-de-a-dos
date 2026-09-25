@@ -76,13 +76,14 @@ scenes/
                        una plataforma media a la izquierda (con bloque ROJO encima: mata solo al jugador) y una
                        "T" abajo que lo cruza; bloque NARANJA flotante a la derecha y PISO NARANJA (matan a ambos);
                        2 HookPoint (bajo la plataforma media y a la izquierda de la plataforma de J2),
-                       6 coleccionables + ScoreManager/ScoreLabel, WinManager, CloseupManager, pausa inline.
+                       6 coleccionables + ScoreManager/ScoreLabel, WinManager, CloseupManager, PauseMenu.
                        Se emboca con los extremos colgando bajo el muro, parados cada uno en su mitad de la T.
   ui/main_menu.tscn      Menú: Jugar, Ajustes, y texto de controles (la línea de lanzar, ThrowControls, en verde).
   ui/level_selector.tscn Selector de niveles (Nivel 1, Prueba: muerte, Nivel 2, Prueba: física, Prueba: lanzar;
                          futuro: grafo conectado).
   ui/settings.tscn       Ajustes: volumen general / música / efectos + pantalla completa.
-  ui/pause_menu.tscn     Menú de pausa reutilizable (Esc). Instanciar en cada nivel.
+  ui/pause_menu.tscn     Menú de pausa (Esc), ÚNICO para todos los niveles: instanciarlo en cada nivel.
+                         Diseño = imagen art/ui/pause_menu.webp con botones invisibles encima (ver "Menú de pausa").
   ui/victory.tscn        Pantalla de victoria (minimalista): puntaje + récord del nivel + "Menú principal".
 scripts/
   player.gd        Controlador de plataformas parametrizado por input_prefix + estado de balanceo
@@ -104,14 +105,14 @@ scripts/
                    Suena un loop de arrastre mientras se desliza por el piso.
   sfx.gd           AUTOLOAD (Sfx): registro único de efectos de sonido (SOUNDS: nombre → ruta + volumen base),
                    pool de AudioStreamPlayer, play(nombre, pitch, volumen). Sobrevive a la recarga del nivel.
+art/ui/pause_menu.webp  Diseño del menú de pausa (imagen del equipo; ver "Menú de pausa").
 audio/sfx/         Efectos placeholder (WAV 22 kHz mono): step, jump, die, hook, swing, box_push (loop), grab, throw.
 tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python tools/generate_sfx.py`.
   score_manager.gd Lleva el puntaje del nivel y actualiza un Label. Está en el grupo "score_manager" (lo encuentra collectible).
   score_board.gd   AUTOLOAD (ScoreBoard): lleva los datos de la última victoria entre escenas + guarda el highscore
                    por nivel en user://scores.cfg. WinManager lo usa al ganar; victory.gd lo lee.
-  pause_menu.gd    Menú de pausa del nivel (Esc): Continuar / Reiniciar. Es un CanvasLayer.
-                   La pausa NO es global: cada nivel debe TENER el nodo. Reutilizable vía ui/pause_menu.tscn
-                   (test_death lo instancia; main.tscn lo tiene inline en su CanvasLayer "UI").
+  pause_menu.gd    Menú de pausa del nivel (Esc): Continuar / Reiniciar / Ajustes / Menú principal. Es el
+                   script de ui/pause_menu.tscn. La pausa NO es global: cada nivel debe instanciar esa escena.
   ui/*.gd          Lógica de los menús (navegación con change_scene_to_file); victory.gd muestra puntaje + récord.
 ```
 
@@ -164,6 +165,26 @@ Opcional por nivel. El **coleccionable** es un `Area2D` (`collision_layer = 0`, 
 Según el concepto, los objetos dinámicos se empujan "por los jugadores o por los extremos de sus cuerdas", por eso la caja es un **`RigidBody2D`** (capa 6): los extremos la golpean y mueven por física real (masa 2 vs campana 1 / palito 0.6), se puede pisar (el jugador viaja con ella), apilar y cae de los bordes. `lock_rotation` (no se vuelca) y `can_sleep = false` (dormida no corre `_integrate_forces` y no se podría empujar).
 
 Un `CharacterBody2D` no empuja cuerpos rígidos por sí solo, así que el empuje es explícito: en `_process_platformer`, si el jugador está en el suelo con input, `_try_push_box` busca una caja justo delante con `test_move` (contacto lateral) → limita su velocidad a `push_speed` y llama `box.push(velocity.x)`; tras `move_and_slide` **restaura esa velocidad** (el deslizamiento la anula al tocar la caja y el empuje daría tirones). La caja, en `_integrate_forces`, **fija** `linear_velocity.x` a la suma de empujes del tick (dos jugadores en contra se anulan) y **compensa el roce** del paso anterior con una fuerza de un paso: así avanza exactamente a la velocidad que informa, que es la que usa quien va parado encima.
+
+### Menú de pausa (`ui/pause_menu.tscn` + `pause_menu.gd`)
+
+El diseño es una **imagen** hecha por el equipo, `art/ui/pause_menu.webp` (1015×1024: título "PAUSA", tablero de madera con 4 botones pintados y los dos personajes con el emboque). Estructura:
+
+```
+PauseMenu (CanvasLayer, pause_menu.gd, process_mode ALWAYS)
+  PausePanel (Control, pantalla completa; visible solo en pausa)
+    Background   ColorRect opaco del azul de la imagen (0.039, 0.059, 0.149): tapa el nivel.
+    Board        Control del tamaño de la imagen en px, en (283, 0) con scale 0.703125 (= 720/1024):
+                 TODO lo de adentro usa coordenadas en PÍXELES DE LA IMAGEN.
+      Art        TextureRect con la imagen.
+      FadeLeft/FadeRight  Degradados de 64 px del azul de fondo: esconden la costura con los costados.
+      Buttons    ContinueButton / RestartButton / SettingsButton / MainMenuButton: botones SIN texto
+                 encima de los pintados. Normal = invisible; foco/hover = borde dorado (Style_glow).
+    SettingsPanel  Panel de madera (tema "Theme_wood") que tapa los 4 botones pintados al abrir Ajustes:
+                   sliders General/Música/Efectos + pantalla completa + "Volver a pausa".
+```
+
+El borde dorado lo dibuja el botón **con foco**; el mouse le pasa el foco (`mouse_entered → grab_focus`), así brilla uno solo. Al pausar el foco va a Continuar; al volver de Ajustes, a Ajustes. **Cambiar el arte:** reemplazar `art/ui/pause_menu.webp` por otra con el mismo encuadre. Si los botones pintados se mueven, ajustar los `offset_*` de cada botón en píxeles de la imagen (se leen directo en un editor de imágenes); si cambia el tamaño de la imagen, ajustar el tamaño del `Board` y su `scale` (= 720 / alto) y centrarlo (x = (1280 − ancho·scale) / 2). La imagen **no debe traer un botón ya iluminado** (el brillo es del código).
 
 ### Flujo de escenas (UI)
 
@@ -262,9 +283,8 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
    - `Emboque2`: `anchor_node = ../Player2/RopeAnchor`, `input_prefix = "p2"`, `end_scene = palito.tscn`, `end_kind = "palito"`.
 5. **`WinManager`** (`Node2D` + `win_manager.gd`), **antes** de los Emboque: `emboque_a`, `emboque_b`, `win_label`, y `level_id`/`level_name` (para el highscore y la pantalla de victoria — poner un id estable único por nivel, ej. `"level_3"` / `"Nivel 3"`).
 6. **`CloseupManager`** (instancia de `closeup_manager.tscn`): `camera_path = ../Camera2D`, `emboque_a`, `emboque_b`. Si el nivel NO es 1280×720, ajustar su `level_size` para el clamp de cámara.
-7. **`UI`** (`CanvasLayer` + `pause_menu.gd`) con:
-   - El `PausePanel` completo (estructura de `main.tscn`/`level_2.tscn`: VBox con Continuar/Reiniciar/Ajustes/MenúPrincipal + SettingsVBox). **La pausa no es global: cada nivel debe tener su propio nodo.** Copiar el panel tal cual — un panel desactualizado rompe `pause_menu.gd`.
-   - `WinLabel` (`Label`, oculto; lo muestra el WinManager al ganar).
+7. **`PauseMenu`**: instancia de `ui/pause_menu.tscn` (*Instantiate Child Scene*), al final del árbol para que se dibuje encima. **La pausa no es global: cada nivel debe tenerla.** No copiar el panel a mano: todos los niveles comparten esa escena, así un cambio de diseño llega a todos.
+8. **`UI`** (`CanvasLayer`, sin script) con `WinLabel` (`Label`, oculto; lo muestra el WinManager al ganar) y, si hay puntaje, `ScoreLabel`.
 
 **Opcional (según el diseño del nivel):**
 
@@ -339,6 +359,8 @@ Hecho (verificado con tests headless donde aplica):
 - **Verde de lanzar en los menús** — el selector pinta solo (texto + borde verde lima) los niveles con `LevelRules.throw_enabled`, leyendo la escena sin instanciarla; en el menú principal solo la línea de lanzar va en verde ("Niveles verdes: …"). Un único color en `LevelRules.THROW_COLOR`. El selector pasó a un mapa `LEVEL_BUTTONS` (botón → escena).
 - **El emboque recoge coleccionables** (`collectible.gd`, mask 14) — palito y campana también los recogen (la cuerda no); guard contra doble suma.
 - **Nivel 2 según el boceto** (`level_2.tscn`) — plataformas, muro central que sigue sobre la pantalla, plataforma media con bloque rojo (solo jugador), T bajo el muro, bloque naranja flotante y piso naranja (ambos), 2 ganchos, 6 coleccionables; puntaje movido para no tapar a J1. Test headless 27/27 (colores = mismas zonas que "Prueba: muerte": rojo mata al jugador y no al emboque, naranja mata a ambos; el muro no se salta por arriba; extremos y jugadores recogen; rutas: J1 baja con cuidado a la izquierda del rojo, engancha el gancho de abajo — tirar al mínimo, soltar un poco y volver a tirar — y se balancea hasta la T en 10/12 combinaciones largo/ángulo; J2 acorta la cuerda, corre a la izquierda y el palito engancha el gancho derecho, y salta a la T en 4/4 ángulos; con la cuerda a 170 el palito roza el bloque naranja; desde la T los extremos cuelgan bajo el muro, se juntan a 5 px y recogen los 2 coleccionables de abajo).
+
+- **Menú de pausa con el diseño del equipo** (`ui/pause_menu.tscn` + `art/ui/pause_menu.webp`) — la pausa pasa a ser una imagen con botones invisibles encima y brillo dorado en el botón con foco; Ajustes se abre en un panel de madera sobre el tablero. Los 5 niveles que tenían el panel copiado inline (`main`, `level_2`, `level_3`, `level_4`, `test_physics`) ahora instancian la escena, como `test_death`/`test_throw`: un solo menú para todos. Test headless (cada uno de los 7 niveles tiene exactamente un PauseMenu, Esc pausa/reanuda, foco en Continuar, los 4 botones calzan con los pintados, hover mueve el foco, Ajustes muestra sliders y oculta botones, el slider cambia SettingsManager, Volver devuelve el foco a Ajustes, Continuar reanuda) PASS 43/43.
 
 Pendiente:
 - **Fase 6** — Nivel de prueba definitivo a medida de cámara + pasada de tuning de la sensación (magnetismo, masas, largos, velocidades, radios del closeup).
