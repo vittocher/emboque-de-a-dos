@@ -1,8 +1,8 @@
 extends Node
 
 ## AUTOLOAD (SettingsManager). Volumen (general/música/efectos), pantalla completa
-## y persistencia. Primer autoload declarado en project.godot: crea los buses
-## "Music" y "SFX" antes de que Sfx (y cualquier PushBox) los necesiten.
+## y persistencia. Los buses "Music" y "SFX" vienen en res://default_bus_layout.tres
+## (Godot lo carga al arrancar); _ensure_buses() solo es un respaldo.
 
 const SETTINGS_PATH := "user://settings.cfg"
 const MUSIC_PATH := "res://audio/cueca.ogg"
@@ -10,9 +10,9 @@ const DEFAULT_MASTER_VOLUME := 1.0
 const DEFAULT_MUSIC_VOLUME := 1.0
 const DEFAULT_SFX_VOLUME := 1.0
 const DEFAULT_FULLSCREEN := false
-## Nombres de los buses de audio. Master ya existe siempre (bus 0 del motor);
-## estos dos se crean en _ensure_buses() si todavía no existen, ambos enviando
-## a Master (así Master queda como fader general y Music/SFX se balancean aparte).
+## Nombres de los buses de audio (Master es el bus 0 del motor). Music y SFX
+## envían a Master: así Master queda como fader general y Music/SFX se balancean
+## aparte.
 const MUSIC_BUS := "Music"
 const SFX_BUS := "SFX"
 
@@ -33,9 +33,10 @@ func _exit_tree() -> void:
 	if _music_player != null:
 		_music_player.stop()
 
-## Crea los buses Music y SFX (enviando a Master) si todavía no existen. Por
-## código en vez de un default_bus_layout.tres editado a mano (no hay uno en
-## el proyecto), para no repetir el error de inventar recursos de Godot a mano.
+## Respaldo: crea los buses Music y SFX si faltaran (p. ej. si alguien borra
+## default_bus_layout.tres). OJO: en web, un bus creado en runtime deja el audio
+## mudo (el motor web los desordena), así que el layout tiene que existir; esto
+## solo evita errores en escritorio.
 func _ensure_buses() -> void:
 	for bus_name in [MUSIC_BUS, SFX_BUS]:
 		if AudioServer.get_bus_index(bus_name) != -1:

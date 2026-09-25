@@ -156,16 +156,17 @@ assets/            TODO el arte (sprites, fondos, UI), por tema: jugadores/, emb
 shaders/           madera_boton.gdshader (madera procedural de los botones del menú principal).
 audio/             cueca.ogg (música, la pone SettingsManager) y sfx/: efectos placeholder (WAV 22 kHz mono):
                    step, jump, die, hook, swing, box_push (loop), grab, throw.
+default_bus_layout.tres  Buses de audio Master / Music / SFX (ver "Volumen y buses de audio"). Obligatorio para web.
 tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python tools/generate_sfx.py`.
 GUIA_ASSETS.md     Guía para el equipo de arte: cómo reemplazar placeholders por arte en Godot.
 EmboqueDA2 Concepto.pdf  Documento de concepto del juego.
 ```
 
-Autoloads (en `project.godot`): **`SettingsManager`** (volumen Master/Música/Efectos, pantalla completa, persistencia — **primero** en la lista: crea los buses de audio antes que nadie los necesite), **`ScoreBoard`** (puntaje entre escenas + highscore por nivel) y **`Sfx`** (efectos de sonido, usa el bus SFX).
+Autoloads (en `project.godot`): **`SettingsManager`** (volumen Master/Música/Efectos, pantalla completa, persistencia; va **primero** en la lista), **`ScoreBoard`** (puntaje entre escenas + highscore por nivel) y **`Sfx`** (efectos de sonido, usa el bus SFX).
 
 ### Volumen y buses de audio
 
-`SettingsManager` crea por código dos buses además de "Master" (que ya trae el motor): **`"Music"`** y **`"SFX"`** (`_ensure_buses()`, idempotente), ambos con `send` hacia `"Master"`. Así Master es un fader general (afecta a los dos) y Música/Efectos se balancean aparte. `SettingsManager._start_music()` pone la cueca en el bus Music; `Sfx.gd` pone todo su pool de `AudioStreamPlayer` en el bus SFX; `push_box.gd` hace lo mismo con su sonido de arrastre. Tres sliders independientes ("General" / "Música" / "Efectos") en `ui/settings.tscn` y en el panel de pausa de cada nivel, guardados en `user://settings.cfg` (`audio/master_volume`, `audio/music_volume`, `audio/sfx_volume`).
+Los buses están en **`default_bus_layout.tres`** (raíz del proyecto; Godot lo carga solo al arrancar): "Master" + **`"Music"`** y **`"SFX"`**, ambos con `send` hacia `"Master"`. `SettingsManager._ensure_buses()` queda solo como respaldo si faltara el archivo. Así Master es un fader general (afecta a los dos) y Música/Efectos se balancean aparte. `SettingsManager._start_music()` pone la cueca en el bus Music; `Sfx.gd` pone todo su pool de `AudioStreamPlayer` en el bus SFX; `push_box.gd` hace lo mismo con su sonido de arrastre. Tres sliders independientes ("General" / "Música" / "Efectos") en `ui/settings.tscn` y en el panel de pausa de cada nivel, guardados en `user://settings.cfg` (`audio/master_volume`, `audio/music_volume`, `audio/sfx_volume`).
 
 ### Arte y sonido (para diseño)
 
@@ -374,7 +375,8 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **`Input.action_press` cuenta como `is_action_just_pressed` recién en el tick de física siguiente.** En tests, mantener la tecla al menos 2 ticks antes de soltarla, o el "just pressed" nunca se ve.
 - **No montar el balanceo como fuerzas encima del controlador de plataformas:** la fricción aérea (1300 px/s²) y el tope de 320 px/s de `player.gd` se comían el péndulo. El balanceo es un estado propio (θ, ω) que se salta el código de plataformas.
 - **Un jugador parado sobre un RigidBody se mueve con la velocidad *informada* del cuerpo, no con la real:** si en `_integrate_forces` se fija la velocidad, el roce del paso la reduce después y el jugador de encima se adelanta (~8 px/s, se caía de la caja). Compensar el roce con una fuerza de un paso (`apply_central_force`), que no cambia la velocidad informada.
-- **Buses de audio nuevos, por código, no con un `default_bus_layout.tres` a mano** (`AudioServer.add_bus()` + `set_bus_name` + `set_bus_send`, idempotente por nombre): el proyecto no tenía ese recurso y escribirlo a mano es el mismo tipo de error que inventar un `uid://`. Como `Sfx` y cualquier `PushBox` necesitan el bus "SFX" al crear sus `AudioStreamPlayer`, `SettingsManager` (que lo crea) tiene que ser el **primer** autoload en `project.godot` — los autoloads listados antes inicializan primero.
+- **Los buses de audio van en `default_bus_layout.tres`, NO creados en runtime con `AudioServer.add_bus()`:** en el export web (reproducción por "samples") el motor JavaScript desordena los buses agregados en runtime y todo el audio sale **mudo**, aunque en escritorio funcione perfecto (pasó en Newgrounds: sin música ni efectos). Para agregar o cambiar un bus: en el editor, pestaña **Audio** (abajo) → editar y guardar el layout; o generarlo por script con `ResourceSaver.save(AudioServer.generate_bus_layout(), "res://default_bus_layout.tres")`. Nunca escribirlo a mano (mismo error que inventar un `uid://`).
+- **El audio web solo arranca tras un gesto del usuario** (clic o tecla): antes, el navegador tiene el `AudioContext` suspendido; la música que ya "sonaba" empieza a escucharse en ese momento. Es normal.
 - **Assets nuevos (WAV, PNG…) se importan con `"$GODOT" --headless --import --path .`**: `--editor --quit-after 2` cierra antes de escanear archivos nuevos y luego `load()` falla con "No loader found".
 - **Para saber si un RigidBody *realmente* se mueve, medir el desplazamiento**, no `linear_velocity`: leída en `_physics_process` es la que fijó `_integrate_forces` (antes del solver), aunque el cuerpo esté trabado contra un muro.
 - **Al soltarse de un gancho, darle al extremo la velocidad del jugador:** si queda quieto en el gancho, `_limit_player` frena el lanzamiento de golpe (se perdían ~80px de vuelo).
@@ -461,6 +463,7 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 
 - **Mirada + espejo + sonidos:** mirada/espejo, estados de animación, ~8 pasos/s, pasajero sin pasos, salto, enganche, whoosh por pasada, loop de la caja on/off, muerte sin sonido duplicado. PASS.
 - **Volumen por categoría:** buses creados y enviando a Master, los tres volúmenes no se pisan, persisten en `user://settings.cfg`, Sfx y la caja usan el bus SFX. PASS.
+- **Audio en el export web** (build exportado, navegador Edge headless controlado por DevTools, midiendo la señal que llega a la salida con un AnalyserNode; control: un tono de prueba da RMS 0,71): con los buses creados en runtime la salida era **0,0000** aun con el AudioContext activo tras el clic (mudo, igual que en Newgrounds); con `default_bus_layout.tres` la música da RMS ~0,1–0,2 tras el primer clic y 3 saltos en el Nivel 1 disparan 3 efectos. PASS.
 - **Menú de pausa (diseño del equipo):** cada uno de los 7 niveles tiene exactamente un PauseMenu; Esc pausa/reanuda; foco en Continuar; los 4 botones calzan con los pintados; hover mueve el foco; Ajustes muestra sliders y oculta botones; el slider cambia SettingsManager; Volver devuelve el foco a Ajustes; Continuar reanuda. PASS 43/43. Luego se agregó P como segunda tecla (acción `pause`): P pausa y reanuda, Esc también (en `level_3`). PASS.
 - **Arte (jugadores, cajas, zonas, sopaipillas, terreno, fondo, ganchos):** cada nivel cargado y capturado sin errores de script; animación de caminata a la frecuencia pedida (cambio de frame cada 12 ticks a 10 FPS con física a 120 Hz).
 
