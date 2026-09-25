@@ -1,40 +1,8 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_menu"]
 [ext_resource type="Texture2D" uid="uid://b3om0k3bvxk3c" path="res://art/portada.png" id="2_portada"]
-
-[sub_resource type="StyleBoxFlat" id="Box_normal"]
-content_margin_left = 24.0
-content_margin_top = 12.0
-content_margin_right = 24.0
-content_margin_bottom = 12.0
-bg_color = Color(0.949, 0.918, 0.839, 1)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-
-[sub_resource type="StyleBoxFlat" id="Box_hover"]
-content_margin_left = 24.0
-content_margin_top = 12.0
-content_margin_right = 24.0
-content_margin_bottom = 12.0
-bg_color = Color(1, 1, 1, 1)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-
-[sub_resource type="StyleBoxFlat" id="Box_pressed"]
-content_margin_left = 24.0
-content_margin_top = 12.0
-content_margin_right = 24.0
-content_margin_bottom = 12.0
-bg_color = Color(0.878, 0.839, 0.737, 1)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
+[ext_resource type="PackedScene" path="res://scenes/ui/boton_madera.tscn" id="3_boton"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -66,49 +34,16 @@ grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="Center"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 18
 
-[node name="PlayButton" type="Button" parent="Center/VBox"]
+[node name="PlayButton" parent="Center/VBox" instance=ExtResource("3_boton")]
 layout_mode = 2
-size_flags_horizontal = 4
-custom_minimum_size = Vector2(260, 56)
-theme_override_colors/font_color = Color(0.078, 0.129, 0.227, 1)
-theme_override_colors/font_hover_color = Color(0.078, 0.129, 0.227, 1)
-theme_override_colors/font_pressed_color = Color(0.078, 0.129, 0.227, 1)
-theme_override_colors/font_focus_color = Color(0.078, 0.129, 0.227, 1)
-theme_override_font_sizes/font_size = 30
-theme_override_styles/normal = SubResource("Box_normal")
-theme_override_styles/hover = SubResource("Box_hover")
-theme_override_styles/pressed = SubResource("Box_pressed")
-theme_override_styles/focus = SubResource("Box_normal")
 text = "Jugar"
 
-[node name="SettingsButton" type="Button" parent="Center/VBox"]
+[node name="SettingsButton" parent="Center/VBox" instance=ExtResource("3_boton")]
 layout_mode = 2
-size_flags_horizontal = 4
-custom_minimum_size = Vector2(260, 56)
-theme_override_colors/font_color = Color(0.078, 0.129, 0.227, 1)
-theme_override_colors/font_hover_color = Color(0.078, 0.129, 0.227, 1)
-theme_override_colors/font_pressed_color = Color(0.078, 0.129, 0.227, 1)
-theme_override_colors/font_focus_color = Color(0.078, 0.129, 0.227, 1)
-theme_override_font_sizes/font_size = 30
-theme_override_styles/normal = SubResource("Box_normal")
-theme_override_styles/hover = SubResource("Box_hover")
-theme_override_styles/pressed = SubResource("Box_pressed")
-theme_override_styles/focus = SubResource("Box_normal")
 text = "Ajustes"
 
-[node name="QuitButton" type="Button" parent="Center/VBox"]
+[node name="QuitButton" parent="Center/VBox" instance=ExtResource("3_boton")]
 layout_mode = 2
-size_flags_horizontal = 4
-custom_minimum_size = Vector2(260, 56)
-theme_override_colors/font_color = Color(0.078, 0.129, 0.227, 1)
-theme_override_colors/font_hover_color = Color(0.078, 0.129, 0.227, 1)
-theme_override_colors/font_pressed_color = Color(0.078, 0.129, 0.227, 1)
-theme_override_colors/font_focus_color = Color(0.078, 0.129, 0.227, 1)
-theme_override_font_sizes/font_size = 30
-theme_override_styles/normal = SubResource("Box_normal")
-theme_override_styles/hover = SubResource("Box_hover")
-theme_override_styles/pressed = SubResource("Box_pressed")
-theme_override_styles/focus = SubResource("Box_normal")
 text = "Salir"
