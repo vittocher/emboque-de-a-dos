@@ -59,7 +59,8 @@ scenes/
   player_death_zone.tscn  Area2D que mata al JUGADOR al tocarlo (visual roja).
   emboque_death_zone.tscn Area2D que mata al EMBOQUE al tocarlo (visual morada).
   both_death_zone.tscn    Zona que mata a ambos; compone los dos scripts. Arte: fuego (assets/hazards/ambos, 9 FPS).
-                          player_death_zone.tscn tiene púas (assets/hazards/jugadores, 9 FPS). En ambas el arte lo
+                          player_death_zone.tscn tiene púas (assets/hazards/jugadores, 9 FPS) y emboque_death_zone.tscn
+                          caca (assets/hazards/emboques, 9 FPS). En las tres el arte lo
                           pone un hijo `Art` con hazard_art.gd (@tool, class HazardArt): repite la animación a lo
                           ancho en cuadros tan altos como la zona, sin deformarse con la escala de la instancia.
                           Los Polygon2D de color quedaron ocultos.
