@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/push_box.gd" id="1_box"]
+[ext_resource type="Texture2D" path="res://assets/props/caja/caja.png" id="2_tex"]
 
 [sub_resource type="RectangleShape2D" id="Shape_box"]
 size = Vector2(64, 64)
@@ -17,16 +18,24 @@ script = ExtResource("1_box")
 shape = SubResource("Shape_box")
 
 [node name="Visual" type="Polygon2D" parent="."]
+visible = false
 color = Color(0.62, 0.42, 0.22, 1)
 polygon = PackedVector2Array(-32, -32, 32, -32, 32, 32, -32, 32)
 
 [node name="Outline" type="Line2D" parent="."]
+visible = false
 points = PackedVector2Array(-29, -29, 29, -29, 29, 29, -29, 29)
 closed = true
 width = 6.0
 default_color = Color(0.4, 0.26, 0.12, 1)
 
 [node name="Cross" type="Line2D" parent="."]
+visible = false
 points = PackedVector2Array(-29, -29, 29, 29, 0, 0, 29, -29, -29, 29)
 width = 5.0
 default_color = Color(0.4, 0.26, 0.12, 1)
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture_filter = 4
+scale = Vector2(0.2, 0.2)
+texture = ExtResource("2_tex")
