@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b3om0k3bvxk3c"
-path="res://.godot/imported/portada.png-e5bf9be2302d33bb79efba2e9e52cb7b.ctex"
+uid="uid://bftlqw7xhtua5"
+path="res://.godot/imported/jugador_azul_abierto.png-a8752b47cfe8f59b4f9a9eba768c5805.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/portada.png"
-dest_files=["res://.godot/imported/portada.png-e5bf9be2302d33bb79efba2e9e52cb7b.ctex"]
+source_file="res://assets/jugadores/p1/alternativos/jugador_azul_abierto.png"
+dest_files=["res://.godot/imported/jugador_azul_abierto.png-a8752b47cfe8f59b4f9a9eba768c5805.ctex"]
 
 [params]
 

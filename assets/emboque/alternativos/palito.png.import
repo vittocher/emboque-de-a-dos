@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cblmb0t4e00no"
-path="res://.godot/imported/campana.png-f0c8343972617e576234489d13553deb.ctex"
+uid="uid://2diwvp31aypr"
+path="res://.godot/imported/palito.png-63b8b59eff011ab464c5c3a40ac563a7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/campana.png"
-dest_files=["res://.godot/imported/campana.png-f0c8343972617e576234489d13553deb.ctex"]
+source_file="res://assets/emboque/alternativos/palito.png"
+dest_files=["res://.godot/imported/palito.png-63b8b59eff011ab464c5c3a40ac563a7.ctex"]
 
 [params]
 

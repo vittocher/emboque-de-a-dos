@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c3dyua0c7f6pe"
-path="res://.godot/imported/jugador_naranja_abierto.png-7bc5508ab25142956cac1541bc99d219.ctex"
+uid="uid://b3om0k3bvxk3c"
+path="res://.godot/imported/portada.png-ba31e911c3ae90f2c4117711036f8625.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/jugador_naranja_abierto.png"
-dest_files=["res://.godot/imported/jugador_naranja_abierto.png-7bc5508ab25142956cac1541bc99d219.ctex"]
+source_file="res://assets/ui/portada.png"
+dest_files=["res://.godot/imported/portada.png-ba31e911c3ae90f2c4117711036f8625.ctex"]
 
 [params]
 

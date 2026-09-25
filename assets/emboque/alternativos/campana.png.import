@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://clybpabpste2l"
-path="res://.godot/imported/pause_menu.webp-c0e6af91914d89bbdea80aefd19606fc.ctex"
+uid="uid://cblmb0t4e00no"
+path="res://.godot/imported/campana.png-6aa1fbe1083485569cd4baf793e4a771.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/ui/pause_menu.webp"
-dest_files=["res://.godot/imported/pause_menu.webp-c0e6af91914d89bbdea80aefd19606fc.ctex"]
+source_file="res://assets/emboque/alternativos/campana.png"
+dest_files=["res://.godot/imported/campana.png-6aa1fbe1083485569cd4baf793e4a771.ctex"]
 
 [params]
 

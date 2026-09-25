@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bftlqw7xhtua5"
-path="res://.godot/imported/jugador_azul_abierto.png-bd921799a3ba93c9ead874b867234fd0.ctex"
+uid="uid://clybpabpste2l"
+path="res://.godot/imported/pause_menu.webp-e1418eb47c8783c0eb096c197807e4c4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/jugador_azul_abierto.png"
-dest_files=["res://.godot/imported/jugador_azul_abierto.png-bd921799a3ba93c9ead874b867234fd0.ctex"]
+source_file="res://assets/ui/pause_menu.webp"
+dest_files=["res://.godot/imported/pause_menu.webp-e1418eb47c8783c0eb096c197807e4c4.ctex"]
 
 [params]
 

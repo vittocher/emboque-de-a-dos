@@ -11,6 +11,8 @@
 [ext_resource type="Script" path="res://scripts/score_manager.gd" id="9_score"]
 [ext_resource type="PackedScene" path="res://scenes/both_death_zone.tscn" id="10_deathzone"]
 [ext_resource type="PackedScene" path="res://scenes/closeup_manager.tscn" id="11_closeup"]
+[ext_resource type="PackedScene" path="res://scenes/terrain_art.tscn" id="90_terrain"]
+[ext_resource type="PackedScene" path="res://scenes/background.tscn" id="91_background"]
 
 [sub_resource type="RectangleShape2D" id="Shape_sidefloor"]
 size = Vector2(360, 24)
@@ -22,6 +24,8 @@ size = Vector2(160, 24)
 size = Vector2(220, 24)
 
 [node name="Level4" type="Node2D"]
+
+[node name="Background" parent="." instance=ExtResource("91_background")]
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(640, 360)
@@ -111,7 +115,6 @@ position = Vector2(120, 468)
 input_prefix = "p1"
 
 [node name="Player2" parent="." instance=ExtResource("1_player")]
-modulate = Color(1, 0.5, 0.4, 1)
 position = Vector2(1160, 468)
 input_prefix = "p2"
 
@@ -168,6 +171,8 @@ offset_right = 600.0
 offset_bottom = 65.0
 text = "Puntos: 0"
 theme_override_colors/font_color = Color(0.1, 0.75, 0.62, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.1, 0.12, 1)
+theme_override_constants/outline_size = 10
 theme_override_font_sizes/font_size = 30
 
 [node name="WinLabel" type="Label" parent="UI"]
@@ -178,5 +183,7 @@ vertical_alignment = 1
 text = "¡Emboque logrado!"
 theme_override_font_sizes/font_size = 72
 theme_override_colors/font_color = Color(1, 0.95, 0.4, 1)
+
+[node name="TerrainArt" parent="." instance=ExtResource("90_terrain")]
 
 [node name="PauseMenu" parent="." instance=ExtResource("7_pause")]

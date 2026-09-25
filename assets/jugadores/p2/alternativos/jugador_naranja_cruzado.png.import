@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ni624bfy4een"
-path="res://.godot/imported/jugador_azul_cruzado.png-ee532ebd73cc7acb12f491b2e9b781bf.ctex"
+uid="uid://dnpvtxy6sttp3"
+path="res://.godot/imported/jugador_naranja_cruzado.png-2ed4cffad9aa686b23626728fe2c448b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/jugador_azul_cruzado.png"
-dest_files=["res://.godot/imported/jugador_azul_cruzado.png-ee532ebd73cc7acb12f491b2e9b781bf.ctex"]
+source_file="res://assets/jugadores/p2/alternativos/jugador_naranja_cruzado.png"
+dest_files=["res://.godot/imported/jugador_naranja_cruzado.png-2ed4cffad9aa686b23626728fe2c448b.ctex"]
 
 [params]
 
