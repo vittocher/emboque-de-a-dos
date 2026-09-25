@@ -20,6 +20,12 @@ signal swing_jumped
 ## Prefijo de las acciones del Input Map: "p1" o "p2".
 @export var input_prefix: String = "p1"
 
+@export_group("Arte")
+## Animaciones del Sprite de J1 (input_prefix "p1").
+@export var frames_p1: SpriteFrames
+## Animaciones del Sprite de J2 (input_prefix "p2").
+@export var frames_p2: SpriteFrames
+
 @export_group("Movimiento")
 ## Velocidad horizontal máxima (px/s).
 @export var speed: float = 320.0
@@ -77,6 +83,8 @@ const STEP_LENGTH := 40.0
 const STEP_MIN_SPEED := 30.0
 ## Velocidad mínima al pasar por abajo del péndulo para que suene el "whoosh" (px/s).
 const SWING_WHOOSH_MIN_SPEED := 150.0
+## Animación de reemplazo cuando el arte no trae la del estado (si no está acá, "idle").
+const ANIM_FALLBACK := {"push": "walk"}
 
 ## Hacia dónde mira: 1 = derecha, -1 = izquierda.
 var facing: int = 1
@@ -107,6 +115,11 @@ func _ready() -> void:
 	# Al empezar mira hacia el centro de la pantalla (hacia su compañero).
 	facing = 1 if global_position.x < get_viewport_rect().get_center().x else -1
 	_art.scale.x = facing
+	# Cada jugador usa su propio arte según su prefijo.
+	var frames := frames_p2 if input_prefix == "p2" else frames_p1
+	if _sprite != null and frames != null:
+		_sprite.sprite_frames = frames
+		_sprite.play("idle")
 
 func _physics_process(delta: float) -> void:
 	if _hooked and _taut:
@@ -366,12 +379,15 @@ func get_anim_state() -> String:
 		return "walk"
 	return "idle"
 
-## Si el arte trae un AnimatedSprite2D "Sprite", reproduce la animación del estado
-## (solo las que existan en sus SpriteFrames).
+## Si el arte trae un AnimatedSprite2D "Sprite", reproduce la animación del estado.
+## Si sus SpriteFrames no la tienen, usa la de [constant ANIM_FALLBACK] o "idle"
+## (así no se queda caminando en el aire).
 func _update_animation() -> void:
 	if _sprite == null or _sprite.sprite_frames == null:
 		return
 	var anim := get_anim_state()
+	if not _sprite.sprite_frames.has_animation(anim):
+		anim = ANIM_FALLBACK.get(anim, "idle")
 	if _sprite.animation != anim and _sprite.sprite_frames.has_animation(anim):
 		_sprite.play(anim)
 

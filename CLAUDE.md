@@ -127,10 +127,11 @@ Autoloads (en `project.godot`): **`SettingsManager`** (volumen Master/Música/Ef
 ```
 Visual (Node2D)      ← el código lo inclina (balanceo) y aplasta/estira (squash). No tocar.
   Art (Node2D)       ← el código lo ESPEJA: scale.x = facing (1 = derecha, -1 = izquierda).
-    Body (Polygon2D) ← placeholder: rectángulo 40×64
-    Eye (Polygon2D)  ← placeholder: ojo negro 8×8, del lado hacia el que mira
+    Body, Eye        ← placeholders (ocultos, visible = false)
+    Sprite (AnimatedSprite2D) ← arte real: escala 0.21, pies en y = +32
 ```
-Para poner el arte definitivo: reemplazar los hijos de `Visual/Art` por el dibujo **mirando a la derecha** (el código lo da vuelta). Si se usa un `AnimatedSprite2D` llamado **`Sprite`** dentro de `Art`, el jugador reproduce solo las animaciones cuyos nombres coincidan con `get_anim_state()`: **`idle`, `walk`, `jump`, `fall`, `swing`, `push`, `aim`** (las que falten se ignoran; `aim` = apuntando un lanzamiento). `Player2` tiene `modulate` en la raíz para diferenciarse; con arte propio se puede quitar. `facing` es público por si otro script lo necesita. Al empezar, cada jugador mira hacia el centro de la pantalla.
+**Arte actual:** `assets/jugadores/p1|p2/` con un `SpriteFrames` por jugador (`p1_frames.tres` / `p2_frames.tres`). `player.gd` le pone al `Sprite` el de su `input_prefix` (exports `frames_p1` / `frames_p2` en `player.tscn`). Animaciones: `idle` (WALK_01 quieto), `walk` (WALK_02 → WALK_01 en loop a **1.5 FPS**, empieza con el paso abierto para que se note al instante) y `aim` (THROW, al apuntar). Si falta la animación del estado se usa `ANIM_FALLBACK` (`push` → `walk`) o `idle` (así no camina en el aire).
+Para poner el arte definitivo: reemplazar los hijos de `Visual/Art` por el dibujo **mirando a la derecha** (el código lo da vuelta). Si se usa un `AnimatedSprite2D` llamado **`Sprite`** dentro de `Art`, el jugador reproduce solo las animaciones cuyos nombres coincidan con `get_anim_state()`: **`idle`, `walk`, `jump`, `fall`, `swing`, `push`, `aim`** (las que falten se ignoran; `aim` = apuntando un lanzamiento). Ya no hay `modulate` en `Player2`: cada jugador tiene su arte. `facing` es público por si otro script lo necesita. Al empezar, cada jugador mira hacia el centro de la pantalla.
 
 **Sonidos**: todos pasan por el autoload `Sfx` (`scripts/sfx.gd`). Para cambiar uno, **reemplazar el archivo con el mismo nombre** en `audio/sfx/` (o cambiar su ruta/volumen en `Sfx.SOUNDS`); WAV u OGG sirven (el loop de la caja se activa por código para ambos). Dónde suena cada uno:
 
