@@ -43,7 +43,3 @@ text = "Jugar"
 [node name="SettingsButton" parent="Center/VBox" instance=ExtResource("3_boton")]
 layout_mode = 2
 text = "Ajustes"
-
-[node name="QuitButton" parent="Center/VBox" instance=ExtResource("3_boton")]
-layout_mode = 2
-text = "Salir"

@@ -105,8 +105,8 @@ scenes/
                        piso_neutral (repetido) + piso_right, o piso.png si cabe una sola tabla; verticales =
                        pared.png. Sin deformarse. En juego oculta los Polygon2D "Visual".
 
-  ui/main_menu.tscn      Menú: portada (assets/ui/portada.png) de fondo, botones Jugar / Ajustes / Salir y texto de
-                         controles (la línea de lanzar, ThrowControls, en verde).
+  ui/main_menu.tscn      Menú: portada (assets/ui/portada.png, con el título y los controles ya dibujados) de fondo
+                         + botones Jugar / Ajustes (sin Salir: el juego es para web).
   ui/boton_madera.tscn   Botón de madera reutilizable del menú principal (boton_madera.gd + shader procedural
                          shaders/madera_boton.gdshader).
   ui/level_selector.tscn Selector de niveles en grilla (Center/LevelsRow: Nivel 1–4, Prueba: muerte, Prueba: física,
@@ -236,7 +236,7 @@ El borde dorado lo dibuja el botón **con foco**; el mouse le pasa el foco (`mou
 ### Flujo de escenas (UI)
 
 `main_menu` → (Jugar) → `level_selector` → (Nivel 1–4 / Prueba: muerte / Prueba: física / Prueba: lanzar) → `main.tscn` / `level_2.tscn` / `level_3.tscn` / `level_4.tscn` / `test_death.tscn` / `test_physics.tscn` / `test_throw.tscn` (gameplay) → (al ganar) → `ui/victory.tscn` → (Menú principal) → `main_menu`.
-`main_menu` → (Ajustes) → `settings`; (Salir) cierra el juego. Selector y Ajustes tienen botón **Volver** al menú.
+`main_menu` → (Ajustes) → `settings`. No hay botón Salir: el juego es para web, donde `quit()` no cierra la pestaña (solo congela el juego). Selector y Ajustes tienen botón **Volver** al menú.
 Para agregar niveles: agregar el botón en `level_selector.tscn` (dentro de `Center/LevelsRow`, una `GridContainer`) y una línea `"NombreDelBoton": "res://scenes/nivel.tscn"` en `LEVEL_BUTTONS` de `level_selector.gd` (conecta el botón solo, y lo pinta de verde si el nivel tiene lanzar). A futuro: disponer los botones como grafo con líneas de conexión.
 
 ### Capas de física (importante)
@@ -288,7 +288,7 @@ Soltarse: **saltar** (solo tenso) → `v_balanceo·swing_launch_multiplier` + `s
 
 **Activarla en un nivel:** agregar un nodo **`LevelRules`** (*Add Child Node → LevelRules*) y marcar **`throw_enabled`** en el Inspector. Sin ese nodo (o con la casilla apagada) el nivel no tiene la mecánica: todos los niveles viejos quedan igual. `LevelRules` se mete al grupo `"level_rules"` en `_enter_tree` (antes que cualquier `_ready`, así el orden en el árbol no importa) y `Emboque._ready` lo lee con `LevelRules.of(get_tree())`. Futuras mecánicas opcionales por nivel van como otra casilla en este mismo nodo.
 
-**Color de la mecánica (verde lima, `LevelRules.THROW_COLOR`):** el selector de niveles pinta solo (texto + borde) el botón de cada nivel que la tiene: `LevelRules.scene_throw_enabled(escena)` lee el `SceneState` de la escena sin instanciarla, así que basta marcar la casilla en el nivel. En el menú principal, solo la línea de controles de lanzar (`ThrowControls`, "Niveles verdes: …") va en ese color, puesto por `main_menu.gd` desde la misma constante. Para que el selector lo detecte, `LevelRules` tiene que estar **directo en la escena del nivel** (no dentro de una sub-escena instanciada).
+**Color de la mecánica (verde lima, `LevelRules.THROW_COLOR`):** el selector de niveles pinta solo (texto + borde) el botón de cada nivel que la tiene: `LevelRules.scene_throw_enabled(escena)` lee el `SceneState` de la escena sin instanciarla, así que basta marcar la casilla en el nivel. En el menú principal la línea "Niveles verdes: …" viene dibujada en la portada (si cambia el color, hay que cambiarlo también en la imagen). Para que el selector lo detecte, `LevelRules` tiene que estar **directo en la escena del nivel** (no dentro de una sub-escena instanciada).
 
 Estados en `emboque.gd` (`ThrowState`), sin tocar nada si la mecánica está apagada:
 
@@ -408,7 +408,7 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 - **Niveles:** 1 (`main`), 2 (según boceto del equipo), 3 (subir, caer y engancharse), 4 (cajas y plataformas) y las pruebas de muerte, física y lanzar. Todos con muros laterales, pausa, fondo y arte del terreno.
 
 **Menús y presentación**
-- **Menús:** principal (portada, botones de madera, Salir), selector en grilla, ajustes, pausa con el diseño del equipo, pantalla de victoria con highscore por nivel (`user://scores.cfg`).
+- **Menús:** principal (portada, botones de madera; sin Salir), selector en grilla, ajustes, pausa con el diseño del equipo, pantalla de victoria con highscore por nivel (`user://scores.cfg`).
 - **Audio:** autoload `Sfx` con 8 efectos placeholder, música (cueca) y volumen por categoría (General / Música / Efectos).
 - **Arte (`assets/`):** jugadores animados (idle / caminata a 10 FPS / THROW al apuntar), palito, campana y cuerda, cajas, zonas de muerte animadas (fuego / púas / caca), sopaipillas, ganchos, terreno (piso por piezas + pared) y fondo.
 
@@ -463,7 +463,7 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 
 - **Mirada + espejo + sonidos:** mirada/espejo, estados de animación, ~8 pasos/s, pasajero sin pasos, salto, enganche, whoosh por pasada, loop de la caja on/off, muerte sin sonido duplicado. PASS.
 - **Volumen por categoría:** buses creados y enviando a Master, los tres volúmenes no se pisan, persisten en `user://settings.cfg`, Sfx y la caja usan el bus SFX. PASS.
-- **Audio en el export web** (build exportado, navegador Edge headless controlado por DevTools, midiendo la señal que llega a la salida con un AnalyserNode; control: un tono de prueba da RMS 0,71): con los buses creados en runtime la salida era **0,0000** aun con el AudioContext activo tras el clic (mudo, igual que en Newgrounds); con `default_bus_layout.tres` la música da RMS ~0,1–0,2 tras el primer clic y 3 saltos en el Nivel 1 disparan 3 efectos. PASS.
+- **Audio en el export web** (build exportado, navegador Edge headless controlado por DevTools, midiendo la señal que llega a la salida con un AnalyserNode; control: un tono de prueba da RMS 0,71): con los buses creados en runtime la salida era **0,0000** aun con el AudioContext activo tras el clic (mudo, igual que en Newgrounds); con `default_bus_layout.tres` la música da RMS ~0,1–0,2 tras el primer clic y 3 saltos en el Nivel 1 disparan 3 efectos. PASS. En el mismo build web, el menú principal sin Salir deja Jugar/Ajustes centrados.
 - **Menú de pausa (diseño del equipo):** cada uno de los 7 niveles tiene exactamente un PauseMenu; Esc pausa/reanuda; foco en Continuar; los 4 botones calzan con los pintados; hover mueve el foco; Ajustes muestra sliders y oculta botones; el slider cambia SettingsManager; Volver devuelve el foco a Ajustes; Continuar reanuda. PASS 43/43. Luego se agregó P como segunda tecla (acción `pause`): P pausa y reanuda, Esc también (en `level_3`). PASS.
 - **Arte (jugadores, cajas, zonas, sopaipillas, terreno, fondo, ganchos):** cada nivel cargado y capturado sin errores de script; animación de caminata a la frecuencia pedida (cambio de frame cada 12 ticks a 10 FPS con física a 120 Hz).
 
