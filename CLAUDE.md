@@ -413,7 +413,7 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 Pendiente:
 - **Fase 6** — Pasada de tuning de la sensación (magnetismo, masas, largos, velocidades, radios del closeup) jugando los niveles reales.
 - **Arte que falta o hay que pulir:** animaciones `jump` / `fall` / `swing` / `push` del jugador (hoy caen a `idle`/`walk`); costuras entre tablas de `piso_neutral` (vienen del dibujo); alinear bien el arte del palito y la campana con su colisión; la mano (`RopeAnchor`) no coincide exactamente con la mano del dibujo.
-- **Web:** el fondo `paredazul.png` pesa ~4 MB (comprimir para Newgrounds); export y prueba en navegador.
+- **Web:** falta el preset de export, las plantillas de 4.7.2 y probar en navegador (renderer Compatibility ya probado en escritorio: se ve igual).
 - **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos.
 
 Post-prototipo (del concepto): más objetos dinámicos, mapa de progresión de niveles (el selector como grafo conectado), más niveles.
