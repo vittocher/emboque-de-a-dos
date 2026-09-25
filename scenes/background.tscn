@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/entorno/fondo/paredazul.png" id="1_fondo"]
+
+[node name="Background" type="Sprite2D"]
+z_index = -100
+position = Vector2(640, 360)
+texture = ExtResource("1_fondo")
