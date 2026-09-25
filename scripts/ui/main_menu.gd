@@ -1,15 +1,18 @@
 extends Control
 
-## Menú principal: Jugar (→ selector de niveles), Ajustes, y los controles.
+## Menú principal: portada de fondo + Jugar (→ selector de niveles), Ajustes, Salir.
+## El título y los controles están dibujados en la portada (art/portada.png).
 
 func _ready() -> void:
 	$Center/VBox/PlayButton.pressed.connect(_on_play_pressed)
 	$Center/VBox/SettingsButton.pressed.connect(_on_settings_pressed)
-	# La línea de lanzar va del mismo color que los niveles que lo tienen en el selector.
-	$Center/VBox/ThrowControls.add_theme_color_override(&"font_color", LevelRules.THROW_COLOR)
+	$Center/VBox/QuitButton.pressed.connect(_on_quit_pressed)
 
 func _on_play_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/ui/level_selector.tscn")
 
 func _on_settings_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/ui/settings.tscn")
+
+func _on_quit_pressed() -> void:
+	get_tree().quit()

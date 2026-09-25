@@ -109,7 +109,15 @@ var _squash_tween: Tween
 @onready var _visual: Node2D = $Visual
 @onready var _art: Node2D = $Visual/Art
 @onready var _sprite: AnimatedSprite2D = $Visual/Art.get_node_or_null("Sprite") as AnimatedSprite2D
+@onready var _pose_abierta: Sprite2D = $Visual/Art.get_node_or_null("Abierto") as Sprite2D
+@onready var _pose_cruzada: Sprite2D = $Visual/Art.get_node_or_null("Cruzado") as Sprite2D
 @onready var _anchor_offset: Vector2 = ($RopeAnchor as Node2D).position
+
+## Texturas por jugador: [pose abierta, pose cruzada]. J1 (campana) azul, J2 (palito) naranja.
+const _SPRITES := {
+	"p1": ["res://art/jugador_azul_abierto.png", "res://art/jugador_azul_cruzado.png"],
+	"p2": ["res://art/jugador_naranja_abierto.png", "res://art/jugador_naranja_cruzado.png"],
+}
 
 func _ready() -> void:
 	# Al empezar mira hacia el centro de la pantalla (hacia su compañero).
@@ -120,6 +128,13 @@ func _ready() -> void:
 	if _sprite != null and frames != null:
 		_sprite.sprite_frames = frames
 		_sprite.play("idle")
+	# El tinte placeholder de los niveles no debe teñir el sprite real.
+	modulate = Color.WHITE
+	var set: Array = _SPRITES.get(input_prefix, _SPRITES["p1"])
+	if _pose_abierta != null:
+		_pose_abierta.texture = load(set[0])
+	if _pose_cruzada != null:
+		_pose_cruzada.texture = load(set[1])
 
 func _physics_process(delta: float) -> void:
 	if _hooked and _taut:
@@ -130,6 +145,7 @@ func _physics_process(delta: float) -> void:
 		_check_rope_taut()
 	_update_facing()
 	_update_visual(delta)
+	_update_pose()
 	_update_animation()
 
 func _process_platformer(delta: float) -> void:
@@ -363,6 +379,14 @@ func _update_facing() -> void:
 	elif ((_hooked and _taut) or _launched) and absf(velocity.x) > FACE_MIN_SPEED:
 		facing = 1 if velocity.x > 0.0 else -1
 	_art.scale.x = facing
+
+## Pose del personaje: brazos abiertos normal; brazo cruzado mientras tira el emboque.
+func _update_pose() -> void:
+	if _pose_abierta == null or _pose_cruzada == null:
+		return
+	var tirando := Input.is_action_pressed(input_prefix + "_pull")
+	_pose_abierta.visible = not tirando
+	_pose_cruzada.visible = tirando
 
 ## Nombre del estado para animar el arte: "idle", "walk", "jump", "fall", "swing",
 ## "push" o "aim".

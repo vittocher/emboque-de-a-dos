@@ -1,6 +1,130 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/pause_menu.gd" id="1_pause"]
+[ext_resource type="Texture2D" path="res://art/ui/pause_menu.webp" id="2_art"]
+
+[sub_resource type="StyleBoxEmpty" id="Style_none"]
+
+[sub_resource type="StyleBoxFlat" id="Style_glow"]
+draw_center = false
+border_width_left = 8
+border_width_top = 8
+border_width_right = 8
+border_width_bottom = 8
+border_color = Color(1, 0.84, 0.35, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+expand_margin_left = 6.0
+expand_margin_top = 6.0
+expand_margin_right = 6.0
+expand_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="Style_glow_pressed"]
+bg_color = Color(1, 0.9, 0.5, 0.12)
+border_width_left = 8
+border_width_top = 8
+border_width_right = 8
+border_width_bottom = 8
+border_color = Color(1, 0.93, 0.6, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+expand_margin_left = 6.0
+expand_margin_top = 6.0
+expand_margin_right = 6.0
+expand_margin_bottom = 6.0
+
+[sub_resource type="Gradient" id="Gradient_edge"]
+colors = PackedColorArray(0.039, 0.059, 0.149, 1, 0.039, 0.059, 0.149, 0)
+
+[sub_resource type="GradientTexture2D" id="Texture_edge"]
+gradient = SubResource("Gradient_edge")
+width = 64
+height = 4
+fill_to = Vector2(1, 0)
+
+[sub_resource type="StyleBoxFlat" id="Style_wood_panel"]
+bg_color = Color(0.3, 0.17, 0.09, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.82, 0.64, 0.28, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_plank"]
+bg_color = Color(0.4, 0.23, 0.12, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.11, 0.05, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_plank_focus"]
+bg_color = Color(0.45, 0.27, 0.14, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.84, 0.35, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(1, 0.78, 0.25, 0.45)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_slider"]
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.16, 0.09, 0.04, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="Style_slider_fill"]
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.85, 0.65, 0.28, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="Theme" id="Theme_wood"]
+Button/colors/font_color = Color(0.97, 0.93, 0.82, 1)
+Button/colors/font_focus_color = Color(1, 0.95, 0.75, 1)
+Button/colors/font_hover_color = Color(1, 0.95, 0.75, 1)
+Button/colors/font_pressed_color = Color(1, 0.95, 0.75, 1)
+Button/styles/focus = SubResource("Style_plank_focus")
+Button/styles/hover = SubResource("Style_plank_focus")
+Button/styles/normal = SubResource("Style_plank")
+Button/styles/pressed = SubResource("Style_plank_focus")
+CheckBox/colors/font_color = Color(0.97, 0.93, 0.82, 1)
+CheckBox/colors/font_focus_color = Color(1, 0.95, 0.75, 1)
+CheckBox/colors/font_hover_color = Color(1, 0.95, 0.75, 1)
+CheckBox/colors/font_pressed_color = Color(1, 0.95, 0.75, 1)
+CheckBox/styles/focus = SubResource("Style_none")
+CheckBox/styles/hover = SubResource("Style_none")
+CheckBox/styles/normal = SubResource("Style_none")
+CheckBox/styles/pressed = SubResource("Style_none")
+HSlider/styles/grabber_area = SubResource("Style_slider_fill")
+HSlider/styles/grabber_area_highlight = SubResource("Style_slider_fill")
+HSlider/styles/slider = SubResource("Style_slider")
+Label/colors/font_color = Color(0.97, 0.93, 0.82, 1)
 
 [node name="PauseMenu" type="CanvasLayer"]
 script = ExtResource("1_pause")
@@ -13,149 +137,199 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Dimmer" type="ColorRect" parent="PausePanel"]
+[node name="Background" type="ColorRect" parent="PausePanel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.48)
+color = Color(0.039, 0.059, 0.149, 1)
 
-[node name="Panel" type="Panel" parent="PausePanel"]
+[node name="Board" type="Control" parent="PausePanel"]
 layout_mode = 0
-offset_left = 460.0
-offset_top = 150.0
-offset_right = 820.0
-offset_bottom = 570.0
+offset_left = 283.0
+offset_right = 1298.0
+offset_bottom = 1024.0
+scale = Vector2(0.703125, 0.703125)
 
-[node name="VBox" type="VBoxContainer" parent="PausePanel/Panel"]
+[node name="Art" type="TextureRect" parent="PausePanel/Board"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 36.0
-offset_top = 28.0
-offset_right = -36.0
-offset_bottom = -28.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 18
+mouse_filter = 2
+texture = ExtResource("2_art")
+expand_mode = 1
 
-[node name="Title" type="Label" parent="PausePanel/Panel/VBox"]
-layout_mode = 2
-text = "Pausa"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 36
+[node name="FadeLeft" type="TextureRect" parent="PausePanel/Board"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 1024.0
+mouse_filter = 2
+texture = SubResource("Texture_edge")
+expand_mode = 1
 
-[node name="ContinueButton" type="Button" parent="PausePanel/Panel/VBox"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 52)
-text = "Continuar"
-theme_override_font_sizes/font_size = 24
+[node name="FadeRight" type="TextureRect" parent="PausePanel/Board"]
+layout_mode = 0
+offset_left = 951.0
+offset_right = 1015.0
+offset_bottom = 1024.0
+mouse_filter = 2
+texture = SubResource("Texture_edge")
+expand_mode = 1
+flip_h = true
 
-[node name="RestartButton" type="Button" parent="PausePanel/Panel/VBox"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 52)
-text = "Reiniciar nivel"
-theme_override_font_sizes/font_size = 24
-
-[node name="SettingsButton" type="Button" parent="PausePanel/Panel/VBox"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 52)
-text = "Ajustes"
-theme_override_font_sizes/font_size = 24
-
-[node name="MainMenuButton" type="Button" parent="PausePanel/Panel/VBox"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 52)
-text = "Menú principal"
-theme_override_font_sizes/font_size = 24
-
-[node name="SettingsVBox" type="VBoxContainer" parent="PausePanel/Panel"]
+[node name="Buttons" type="Control" parent="PausePanel/Board"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 36.0
-offset_top = 28.0
-offset_right = -36.0
-offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ContinueButton" type="Button" parent="PausePanel/Board/Buttons"]
+layout_mode = 0
+offset_left = 229.0
+offset_top = 294.0
+offset_right = 792.0
+offset_bottom = 392.0
+tooltip_text = "Continuar"
+theme_override_styles/normal = SubResource("Style_none")
+theme_override_styles/hover = SubResource("Style_glow")
+theme_override_styles/pressed = SubResource("Style_glow_pressed")
+theme_override_styles/focus = SubResource("Style_glow")
+
+[node name="RestartButton" type="Button" parent="PausePanel/Board/Buttons"]
+layout_mode = 0
+offset_left = 229.0
+offset_top = 432.0
+offset_right = 792.0
+offset_bottom = 528.0
+tooltip_text = "Reiniciar nivel"
+theme_override_styles/normal = SubResource("Style_none")
+theme_override_styles/hover = SubResource("Style_glow")
+theme_override_styles/pressed = SubResource("Style_glow_pressed")
+theme_override_styles/focus = SubResource("Style_glow")
+
+[node name="SettingsButton" type="Button" parent="PausePanel/Board/Buttons"]
+layout_mode = 0
+offset_left = 229.0
+offset_top = 570.0
+offset_right = 792.0
+offset_bottom = 666.0
+tooltip_text = "Ajustes"
+theme_override_styles/normal = SubResource("Style_none")
+theme_override_styles/hover = SubResource("Style_glow")
+theme_override_styles/pressed = SubResource("Style_glow_pressed")
+theme_override_styles/focus = SubResource("Style_glow")
+
+[node name="MainMenuButton" type="Button" parent="PausePanel/Board/Buttons"]
+layout_mode = 0
+offset_left = 229.0
+offset_top = 708.0
+offset_right = 792.0
+offset_bottom = 806.0
+tooltip_text = "Menú principal"
+theme_override_styles/normal = SubResource("Style_none")
+theme_override_styles/hover = SubResource("Style_glow")
+theme_override_styles/pressed = SubResource("Style_glow_pressed")
+theme_override_styles/focus = SubResource("Style_glow")
+
+[node name="SettingsPanel" type="Panel" parent="PausePanel"]
+layout_mode = 0
+offset_left = 441.0
+offset_top = 200.0
+offset_right = 843.0
+offset_bottom = 571.0
+theme = SubResource("Theme_wood")
+theme_override_styles/panel = SubResource("Style_wood_panel")
+
+[node name="SettingsVBox" type="VBoxContainer" parent="PausePanel/SettingsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 22.0
+offset_right = -28.0
+offset_bottom = -22.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 14
+alignment = 1
 
-[node name="Title" type="Label" parent="PausePanel/Panel/SettingsVBox"]
+[node name="Title" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox"]
 layout_mode = 2
 text = "Ajustes"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 30
 
-[node name="VolumeRow" type="HBoxContainer" parent="PausePanel/Panel/SettingsVBox"]
+[node name="VolumeRow" type="HBoxContainer" parent="PausePanel/SettingsPanel/SettingsVBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="PausePanel/Panel/SettingsVBox/VolumeRow"]
+[node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/VolumeRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(125, 0)
+custom_minimum_size = Vector2(135, 0)
 text = "General"
 
-[node name="VolumeSlider" type="HSlider" parent="PausePanel/Panel/SettingsVBox/VolumeRow"]
+[node name="VolumeSlider" type="HSlider" parent="PausePanel/SettingsPanel/SettingsVBox/VolumeRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(180, 0)
+size_flags_horizontal = 3
 size_flags_vertical = 4
-min_value = 0.0
 max_value = 1.0
 step = 0.01
 
-[node name="MusicVolumeRow" type="HBoxContainer" parent="PausePanel/Panel/SettingsVBox"]
+[node name="MusicVolumeRow" type="HBoxContainer" parent="PausePanel/SettingsPanel/SettingsVBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="PausePanel/Panel/SettingsVBox/MusicVolumeRow"]
+[node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/MusicVolumeRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(125, 0)
+custom_minimum_size = Vector2(135, 0)
 text = "Música"
 
-[node name="MusicVolumeSlider" type="HSlider" parent="PausePanel/Panel/SettingsVBox/MusicVolumeRow"]
+[node name="MusicVolumeSlider" type="HSlider" parent="PausePanel/SettingsPanel/SettingsVBox/MusicVolumeRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(180, 0)
+size_flags_horizontal = 3
 size_flags_vertical = 4
-min_value = 0.0
 max_value = 1.0
 step = 0.01
 
-[node name="SfxVolumeRow" type="HBoxContainer" parent="PausePanel/Panel/SettingsVBox"]
+[node name="SfxVolumeRow" type="HBoxContainer" parent="PausePanel/SettingsPanel/SettingsVBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="PausePanel/Panel/SettingsVBox/SfxVolumeRow"]
+[node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/SfxVolumeRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(125, 0)
+custom_minimum_size = Vector2(135, 0)
 text = "Efectos"
 
-[node name="SfxVolumeSlider" type="HSlider" parent="PausePanel/Panel/SettingsVBox/SfxVolumeRow"]
+[node name="SfxVolumeSlider" type="HSlider" parent="PausePanel/SettingsPanel/SettingsVBox/SfxVolumeRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(180, 0)
+size_flags_horizontal = 3
 size_flags_vertical = 4
-min_value = 0.0
 max_value = 1.0
 step = 0.01
 
-[node name="FullscreenRow" type="HBoxContainer" parent="PausePanel/Panel/SettingsVBox"]
+[node name="FullscreenRow" type="HBoxContainer" parent="PausePanel/SettingsPanel/SettingsVBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="PausePanel/Panel/SettingsVBox/FullscreenRow"]
+[node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/FullscreenRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(125, 0)
+custom_minimum_size = Vector2(135, 0)
 text = "Pantalla completa"
 
-[node name="FullscreenCheck" type="CheckBox" parent="PausePanel/Panel/SettingsVBox/FullscreenRow"]
+[node name="FullscreenCheck" type="CheckBox" parent="PausePanel/SettingsPanel/SettingsVBox/FullscreenRow"]
 layout_mode = 2
 text = "Activar"
 
-[node name="BackButton" type="Button" parent="PausePanel/Panel/SettingsVBox"]
+[node name="BackButton" type="Button" parent="PausePanel/SettingsPanel/SettingsVBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 46)
 text = "Volver a pausa"
