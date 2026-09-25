@@ -38,6 +38,7 @@ scale = Vector2(0.21, 0.21)
 sprite_frames = ExtResource("2_frames_p1")
 animation = &"idle"
 autoplay = "idle"
+flip_h = true
 
 [node name="RopeAnchor" type="Marker2D" parent="."]
 position = Vector2(0, -18)
