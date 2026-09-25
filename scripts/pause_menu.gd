@@ -1,9 +1,11 @@
 extends CanvasLayer
 
-## Menú de pausa (Esc). Único para todos los niveles: se instancia desde
-## ui/pause_menu.tscn. El diseño es una imagen (art/ui/pause_menu.webp) y los
-## botones son áreas invisibles encima de los botones pintados; el brillo dorado
-## lo dibuja el botón con foco (o bajo el mouse).
+## Menú de pausa (acción "pause": Esc o P; en web con pantalla completa el
+## navegador se queda con Esc para salir de ella, por eso existe P). Único para
+## todos los niveles: se instancia desde ui/pause_menu.tscn. El diseño es una
+## imagen (assets/ui/pause_menu.webp) y los botones son áreas invisibles encima
+## de los botones pintados; el brillo dorado lo dibuja el botón con foco (o bajo
+## el mouse).
 
 @onready var pause_panel: Control = $PausePanel
 @onready var buttons: Control = $PausePanel/Board/Buttons
@@ -40,7 +42,7 @@ func _ready() -> void:
 	_show_pause_menu()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
+	if event.is_action_pressed("pause"):
 		_toggle_pause()
 		get_viewport().set_input_as_handled()
 

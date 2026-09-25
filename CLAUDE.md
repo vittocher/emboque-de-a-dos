@@ -43,7 +43,7 @@ Redirigir la salida a un archivo y filtrar aparte evita cuelgues del pipe. Los a
 
 Las acciones siguen el patrón `<prefix>_<accion>`: `_left`, `_right`, `_jump`, `_down` (S / flecha abajo), `_release` (soltar = alargar), `_pull` (tirar = acortar), `_throw` (lanzar). Usan `physical_keycode` (independiente del layout del teclado).
 
-**Esc** (`ui_cancel`) abre/cierra el **menú de pausa** en el nivel (ver `pause_menu.gd`).
+**Esc** o **P** (acción `pause`) abre/cierra el **menú de pausa** en el nivel (ver `pause_menu.gd`). P existe porque en web, con pantalla completa, el navegador se queda con Esc para salir de ella y no llega al juego.
 
 **Enganchado** (ver "Balanceo enganchado"): izquierda/derecha **bombean** el balanceo, `saltar` **se lanza** desde la cuerda (impulso del balanceo + salto), `abajo` (S / ↓) se **suelta** conservando la velocidad, `soltar` baja al jugador (rapel) y `tirar` lo sube.
 
@@ -112,7 +112,7 @@ scenes/
   ui/level_selector.tscn Selector de niveles en grilla (Center/LevelsRow: Nivel 1–4, Prueba: muerte, Prueba: física,
                          Prueba: lanzar; futuro: grafo conectado).
   ui/settings.tscn       Ajustes: volumen general / música / efectos + pantalla completa.
-  ui/pause_menu.tscn     Menú de pausa (Esc), ÚNICO para todos los niveles: instanciarlo en cada nivel.
+  ui/pause_menu.tscn     Menú de pausa (Esc / P), ÚNICO para todos los niveles: instanciarlo en cada nivel.
                          Diseño = imagen assets/ui/pause_menu.webp con botones invisibles encima (ver "Menú de pausa").
   ui/victory.tscn        Pantalla de victoria (minimalista): puntaje + récord del nivel + "Menú principal".
 
@@ -140,7 +140,7 @@ scripts/
   score_manager.gd Lleva el puntaje del nivel y actualiza un Label. Está en el grupo "score_manager".
   push_box.gd      Caja empujable (class_name PushBox): el Player la empuja con push(); los extremos la golpean por física.
                    Suena un loop de arrastre mientras se desliza por el piso.
-  pause_menu.gd    Menú de pausa del nivel (Esc): Continuar / Reiniciar / Ajustes / Menú principal. Es el
+  pause_menu.gd    Menú de pausa del nivel (acción `pause` = Esc / P): Continuar / Reiniciar / Ajustes / Menú principal. Es el
                    script de ui/pause_menu.tscn. La pausa NO es global: cada nivel debe instanciar esa escena.
   settings_manager.gd AUTOLOAD (SettingsManager): volúmenes, buses de audio, pantalla completa, música, persistencia.
   score_board.gd   AUTOLOAD (ScoreBoard): datos de la última victoria entre escenas + highscore por nivel en
@@ -461,7 +461,7 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 
 - **Mirada + espejo + sonidos:** mirada/espejo, estados de animación, ~8 pasos/s, pasajero sin pasos, salto, enganche, whoosh por pasada, loop de la caja on/off, muerte sin sonido duplicado. PASS.
 - **Volumen por categoría:** buses creados y enviando a Master, los tres volúmenes no se pisan, persisten en `user://settings.cfg`, Sfx y la caja usan el bus SFX. PASS.
-- **Menú de pausa (diseño del equipo):** cada uno de los 7 niveles tiene exactamente un PauseMenu; Esc pausa/reanuda; foco en Continuar; los 4 botones calzan con los pintados; hover mueve el foco; Ajustes muestra sliders y oculta botones; el slider cambia SettingsManager; Volver devuelve el foco a Ajustes; Continuar reanuda. PASS 43/43.
+- **Menú de pausa (diseño del equipo):** cada uno de los 7 niveles tiene exactamente un PauseMenu; Esc pausa/reanuda; foco en Continuar; los 4 botones calzan con los pintados; hover mueve el foco; Ajustes muestra sliders y oculta botones; el slider cambia SettingsManager; Volver devuelve el foco a Ajustes; Continuar reanuda. PASS 43/43. Luego se agregó P como segunda tecla (acción `pause`): P pausa y reanuda, Esc también (en `level_3`). PASS.
 - **Arte (jugadores, cajas, zonas, sopaipillas, terreno, fondo, ganchos):** cada nivel cargado y capturado sin errores de script; animación de caminata a la frecuencia pedida (cambio de frame cada 12 ticks a 10 FPS con física a 120 Hz).
 
 ### Lanzar el emboque (`test_throw.tscn`) — PASS 49/49

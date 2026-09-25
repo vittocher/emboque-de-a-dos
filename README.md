@@ -18,7 +18,7 @@ Puzzle cooperativo local para 2 jugadores: cada uno lleva media mitad de un embo
 | **Jugador 1** (campana) | `A` / `D` | `W` | `R` | `T` | `S` | `G` |
 | **Jugador 2** (palito) | `←` / `→` | `↑` | `,` | `.` | `↓` | `L` |
 
-\* Solo en los niveles marcados en verde en el selector. **Esc** pausa.
+\* Solo en los niveles marcados en verde en el selector. **Esc** o **P** pausa.
 
 ## Para desarrollar
 
