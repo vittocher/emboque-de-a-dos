@@ -72,7 +72,7 @@ scenes/
   push_box.tscn        Caja empujable (RigidBody2D 64×64, capa 6, rotación bloqueada). Reutilizable en cualquier nivel.
                        Arte: Sprite con assets/props/caja/caja.png (320×320 a escala 0.2); placeholders ocultos.
   closeup_manager.tscn Efecto reutilizable: closeup + cámara lenta al acercarse los extremos (instanciar por nivel).
-  collectible.tscn     Area2D recolectable (rombo turquesa): lo toca un jugador o un extremo del emboque (mask 14)
+  collectible.tscn     Area2D recolectable (sopaipilla animada, assets/props/puntos, 2 frames a 6 FPS; rombo oculto): lo toca un jugador o un extremo del emboque (mask 14)
                        → suma puntos y se destruye. La cuerda no recoge (es solo una Line2D).
   level_2.tscn         Segundo nivel, hecho según un boceto del equipo (escala x·0.64, y·0.473): J1 arriba a la
                        izquierda, J2 arriba a la derecha, muro central (hasta y=-400: no se salta por arriba) con
