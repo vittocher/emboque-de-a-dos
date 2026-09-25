@@ -58,7 +58,9 @@ scenes/
   hook_point.tscn      Area2D (punto de enganche del entorno) + rombo visual.
   player_death_zone.tscn  Area2D que mata al JUGADOR al tocarlo (visual roja).
   emboque_death_zone.tscn Area2D que mata al EMBOQUE al tocarlo (visual morada).
-  both_death_zone.tscn    Zona que mata a ambos (visual naranja); compone los dos scripts.
+  both_death_zone.tscn    Zona que mata a ambos; compone los dos scripts. Arte: fuego animado (assets/hazards/ambos,
+                          9 FPS) que both_death_zone.gd (@tool) repite a lo ancho en cuadros tan altos como la zona,
+                          sin deformarse con la escala de la instancia. El Polygon2D naranja quedó oculto.
   test_death.tscn      Nivel de prueba de las zonas de muerte (2 jugadores + 2 emboques + las 3 zonas).
   test_physics.tscn    "Prueba: Física": copia del Nivel 1 SIN muro central (para probar el balanceo), plataformas
                        más afuera (x=170 / x=1110), muros laterales justo fuera de cámara (x<0 y x>1280, no se
