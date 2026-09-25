@@ -55,7 +55,8 @@ scenes/
   emboque.tscn         Node2D raíz: solo Rope (Line2D). El extremo se instancia en runtime.
   palito.tscn          Extremo RigidBody2D: rectángulo largo y flaco + Tip + HookSensor. (J2)
   campana.tscn         Extremo RigidBody2D: forma de C (3 rects) + CavitySensor + Mouth/Cavity + HookSensor. (J1)
-  hook_point.tscn      Area2D (punto de enganche del entorno) + rombo visual.
+  hook_point.tscn      Area2D (punto de enganche del entorno, radio 18) + Sprite hoyo.png (assets/props/enganche,
+                       ~36 px = el círculo de enganche). Rombo placeholder oculto.
   player_death_zone.tscn  Area2D que mata al JUGADOR al tocarlo (visual roja).
   emboque_death_zone.tscn Area2D que mata al EMBOQUE al tocarlo (visual morada).
   both_death_zone.tscn    Zona que mata a ambos; compone los dos scripts. Arte: fuego (assets/hazards/ambos, 9 FPS).
