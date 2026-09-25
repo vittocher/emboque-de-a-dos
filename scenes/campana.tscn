@@ -1,6 +1,7 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/rope_end.gd" id="1_end"]
+[ext_resource type="Texture2D" uid="uid://cblmb0t4e00no" path="res://art/campana.png" id="2_campana"]
 
 [sub_resource type="RectangleShape2D" id="Rect_spine"]
 size = Vector2(6, 24)
@@ -41,17 +42,9 @@ shape = SubResource("Rect_bar")
 position = Vector2(-1, 9)
 shape = SubResource("Rect_bar")
 
-[node name="VisualSpine" type="Polygon2D" parent="."]
-color = Color(0.72, 0.47, 0.26, 1)
-polygon = PackedVector2Array(-11, -12, -5, -12, -5, 12, -11, 12)
-
-[node name="VisualTop" type="Polygon2D" parent="."]
-color = Color(0.72, 0.47, 0.26, 1)
-polygon = PackedVector2Array(-9, -12, 7, -12, 7, -6, -9, -6)
-
-[node name="VisualBottom" type="Polygon2D" parent="."]
-color = Color(0.72, 0.47, 0.26, 1)
-polygon = PackedVector2Array(-9, 6, 7, 6, 7, 12, -9, 12)
+[node name="Visual" type="Sprite2D" parent="."]
+scale = Vector2(0.07, 0.07)
+texture = ExtResource("2_campana")
 
 [node name="Mouth" type="Marker2D" parent="."]
 position = Vector2(7, 0)

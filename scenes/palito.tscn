@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/rope_end.gd" id="1_end"]
+[ext_resource type="Texture2D" uid="uid://2diwvp31aypr" path="res://art/palito.png" id="2_palito"]
 
 [sub_resource type="RectangleShape2D" id="Rect_palito"]
 size = Vector2(22, 6)
@@ -26,9 +27,10 @@ script = ExtResource("1_end")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("Rect_palito")
 
-[node name="Visual" type="Polygon2D" parent="."]
-color = Color(0.62, 0.42, 0.24, 1)
-polygon = PackedVector2Array(-11, -3, 11, -3, 11, 3, -11, 3)
+[node name="Visual" type="Sprite2D" parent="."]
+rotation = 2.35619
+scale = Vector2(0.06, 0.06)
+texture = ExtResource("2_palito")
 
 [node name="Tip" type="Marker2D" parent="."]
 position = Vector2(11, 0)
