@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Emboque de a Dos"
 config/description="Repositorio del juego \"Emboque de a Dos\" para el curso IIC3686"
-run/main_scene="res://scenes/ui/main_menu.tscn"
+run/main_scene="res://scenes/ui/intro.tscn"
 config/features=PackedStringArray("4.7")
 
 [autoload]

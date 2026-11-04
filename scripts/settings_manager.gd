@@ -22,6 +22,9 @@ var sfx_volume: float = DEFAULT_SFX_VOLUME
 var fullscreen: bool = DEFAULT_FULLSCREEN
 
 var _music_player: AudioStreamPlayer
+var _music_tween: Tween
+## true mientras alguien (la intro) pidió silencio.
+var _music_held := false
 
 func _ready() -> void:
 	_ensure_buses()
@@ -139,4 +142,33 @@ func _start_music() -> void:
 	_music_player.stream = stream
 	_music_player.bus = MUSIC_BUS
 	add_child(_music_player)
+	# Diferido: si la escena de arranque es la intro, alcanza a pedir silencio
+	# (stop_music) antes de que suene el primer instante de la cueca.
+	_play_initial_music.call_deferred()
+
+func _play_initial_music() -> void:
+	if not _music_held:
+		_music_player.play()
+
+## Detiene la música (la intro la apaga mientras corre el video).
+func stop_music() -> void:
+	_music_held = true
+	if _music_player == null:
+		return
+	if _music_tween != null:
+		_music_tween.kill()
+	_music_player.stop()
+
+## Reinicia la música desde el principio, con fundido de entrada opcional.
+## No hace nada si ya está sonando.
+func play_music(fade_in_time: float = 0.0) -> void:
+	_music_held = false
+	if _music_player == null or _music_player.playing:
+		return
+	if _music_tween != null:
+		_music_tween.kill()
+	_music_player.volume_db = -40.0 if fade_in_time > 0.0 else 0.0
 	_music_player.play()
+	if fade_in_time > 0.0:
+		_music_tween = create_tween()
+		_music_tween.tween_property(_music_player, "volume_db", 0.0, fade_in_time)

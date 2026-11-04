@@ -12,7 +12,7 @@ De cada personaje cuelga **media mitad del emboque** por una cuerda: J1 lleva la
 
 - **Editor:** Godot **4.7.2** (ejecutable en `C:\Users\vitto\OneDrive\Desktop\Godot\Godot_v4.7.2-stable_win64.exe`; la variante `..._console.exe` sirve para CLI headless). En esa misma carpeta también está el 4.6 (versión previa). `config/features` en `project.godot` = `4.7`.
 - **Abrir:** importar el `project.godot` de esta carpeta desde el Project Manager, o **F5** para jugar.
-- **Escena de arranque:** `res://scenes/ui/main_menu.tscn` (menú). Los niveles son `main.tscn` (Nivel 1), `level_2`…`level_4` y los `test_*` (ver Arquitectura). Durante el desarrollo, abrir un nivel y correr con **F6** (ejecutar escena actual) para saltarse el menú.
+- **Escena de arranque:** `res://scenes/ui/intro.tscn` (video de intro, se salta con cualquier tecla → menú `ui/main_menu.tscn`). Los niveles son `main.tscn` (Nivel 1), `level_2`…`level_4` y los `test_*` (ver Arquitectura). Durante el desarrollo, abrir un nivel y correr con **F6** (ejecutar escena actual) para saltarse el menú.
 - **Resolución base:** 1280×720 (16:9). Stretch `canvas_items` + aspect `keep` (default en Godot 4, por eso el editor lo omite del archivo). No pixel-art; se adapta a cualquier tamaño de embed sin deformar.
 
 ### Validación headless (sin abrir el editor)
@@ -105,6 +105,8 @@ scenes/
                        piso_neutral (repetido) + piso_right, o piso.png si cabe una sola tabla; verticales =
                        pared.png. Sin deformarse. En juego oculta los Polygon2D "Visual".
 
+  ui/intro.tscn          Intro: video de la historia (video/intro.ogv) al arrancar el juego; se salta con cualquier
+                         tecla / clic / botón (mensaje abajo). Ver "Intro (video)".
   ui/main_menu.tscn      Menú: portada (assets/ui/portada.png, con el título y los controles ya dibujados) de fondo
                          + botones Jugar / Ajustes (sin Salir: el juego es para web).
   ui/boton_madera.tscn   Botón de madera reutilizable del menú principal (boton_madera.gd + shader procedural
@@ -143,17 +145,19 @@ scripts/
   pause_menu.gd    Menú de pausa del nivel (acción `pause` = Esc / P): Continuar / Reiniciar / Ajustes / Menú principal. Es el
                    script de ui/pause_menu.tscn. La pausa NO es global: cada nivel debe instanciar esa escena.
   settings_manager.gd AUTOLOAD (SettingsManager): volúmenes, buses de audio, pantalla completa, música, persistencia.
+                   stop_music() / play_music(fade) (la intro calla la cueca mientras corre el video).
   score_board.gd   AUTOLOAD (ScoreBoard): datos de la última victoria entre escenas + highscore por nivel en
                    user://scores.cfg. WinManager lo usa al ganar; victory.gd lo lee.
   sfx.gd           AUTOLOAD (Sfx): registro único de efectos de sonido (SOUNDS: nombre → ruta + volumen base),
                    pool de AudioStreamPlayer, play(nombre, pitch, volumen). Sobrevive a la recarga del nivel.
-  ui/*.gd          Lógica de los menús (navegación con change_scene_to_file); victory.gd muestra puntaje + récord;
+  ui/*.gd          Lógica de los menús (navegación con change_scene_to_file); intro.gd (class IntroScreen) = la intro; victory.gd muestra puntaje + récord;
                    boton_madera.gd = el botón de madera.
 
 assets/            TODO el arte (sprites, fondos, UI), por tema: jugadores/, emboque/, entorno/, hazards/, props/, ui/.
                    No crear otras carpetas de imágenes. Las subcarpetas alternativos/ guardan arte que hoy no se usa
                    (poses y extremos de una versión anterior), por si se retoma.
 shaders/           madera_boton.gdshader (madera procedural de los botones del menú principal).
+video/             intro.ogv (Ogg Theora: el único formato de video de Godot) + README.md con cómo convertirlo.
 audio/             cueca.ogg (música, la pone SettingsManager) y sfx/: efectos placeholder (WAV 22 kHz mono):
                    step, jump, die, hook, swing, box_push (loop), grab, throw.
 default_bus_layout.tres  Buses de audio Master / Music / SFX (ver "Volumen y buses de audio"). Obligatorio para web.
@@ -203,6 +207,16 @@ La recarga se hace con `get_tree().call_deferred("reload_current_scene")`: **rec
 
 J1 = **campana**, J2 = **palito** (asignados en cada nivel vía `end_scene` + `end_kind` de cada `Emboque`).
 
+### Intro (video) (`ui/intro.tscn` + `ui/intro.gd`)
+
+Escena de arranque. Reproduce `video/intro.ogv` (export `video_path`) y luego pasa al menú; si el archivo no existe va directo al menú (nunca se traba). **Formato: Ogg Theora `.ogv`** (Godot 4 no lee mp4/webm); cómo convertir con ffmpeg en `video/README.md`. Al agregar el video, commitear también el `intro.ogv.uid` que genera Godot.
+
+- **Saltar:** cualquier tecla (no repetición), clic o botón de control, salvo los primeros `skip_guard_time` (0,35 s) para no saltarla con una tecla que venía apretada. Mensaje "Presiona cualquier tecla para saltar" abajo (aparece a los 0,6 s, pulsa suave entre 70 y 100 % de opacidad, en una píldora semitransparente para leerse sobre cualquier video). La tecla que salta se consume (no llega al menú).
+- **Salida:** fundido a negro + fundido del audio del video (0,5 s); el menú aparece desde negro (`IntroScreen.fade_menu_in`) y la cueca entra con fundido de 1,5 s.
+- **Música:** la intro llama `SettingsManager.stop_music()` en `_ready`; `SettingsManager` arranca la cueca **diferida**, así ni un instante suena encima del video. El audio del video va al bus Master (`video_bus`).
+- **Proporción:** el video va dentro de un `AspectRatioContainer` cuyo `ratio` se ajusta al tamaño real del video → franjas negras si no es 16:9, sin deformarse.
+- **Web:** el navegador no deja sonar audio antes del primer gesto, así que en web primero se muestra "Presiona cualquier tecla para comenzar" (ese gesto desbloquea el audio) y recién ahí parte el video. El `.ogv` entra al export con `export_filter="all_resources"`.
+
 ### Coleccionables y puntaje (`collectible.gd` + `score_manager.gd`)
 
 Opcional por nivel. El **coleccionable** es un `Area2D` (`collision_layer = 0`, `mask = 14` = jugadores 2 + campana 4 + palito 8, `monitorable = false`) que al ser tocado por un `Player` **o un extremo del emboque** (`RopeEnd`; la cuerda no, es solo visual) busca el `ScoreManager` por el **grupo `"score_manager"`**, le suma `points` (export, default 100) y se autodestruye (`queue_free`). El **ScoreManager** (`Node`) guarda `score` y refresca un `Label` (`ScoreLabel`) vía su export `score_label`. Si hay coleccionables en un nivel, **tiene que haber un `ScoreManager`** (si no, el coleccionable hace `push_warning` y no suma). Un guard `_collected` evita sumar dos veces si un jugador y su extremo lo tocan en el mismo tick (`queue_free` es diferido). Un extremo en la mano no tiene colisiones, así que no recoge por sí solo (lo hace el cuerpo del jugador).
@@ -235,6 +249,7 @@ El borde dorado lo dibuja el botón **con foco**; el mouse le pasa el foco (`mou
 
 ### Flujo de escenas (UI)
 
+Arranque: `ui/intro.tscn` (video; cualquier tecla lo salta) → `main_menu` (aparece desde negro; la intro solo corre al iniciar el juego, volver al menú no la repite).
 `main_menu` → (Jugar) → `level_selector` → (Nivel 1–4 / Prueba: muerte / Prueba: física / Prueba: lanzar) → `main.tscn` / `level_2.tscn` / `level_3.tscn` / `level_4.tscn` / `test_death.tscn` / `test_physics.tscn` / `test_throw.tscn` (gameplay) → (al ganar) → `ui/victory.tscn` → (Menú principal) → `main_menu`.
 `main_menu` → (Ajustes) → `settings`. No hay botón Salir: el juego es para web, donde `quit()` no cierra la pestaña (solo congela el juego). Selector y Ajustes tienen botón **Volver** al menú.
 Para agregar niveles: agregar el botón en `level_selector.tscn` (dentro de `Center/LevelsRow`, una `GridContainer`) y una línea `"NombreDelBoton": "res://scenes/nivel.tscn"` en `LEVEL_BUTTONS` de `level_selector.gd` (conecta el botón solo, y lo pinta de verde si el nivel tiene lanzar). A futuro: disponer los botones como grafo con líneas de conexión.
@@ -387,6 +402,7 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **En tests, teletransportar a un jugador lejos de su extremo no sirve:** en el mismo tick `_limit_player` lo tira de vuelta hacia el extremo (antes de que la física vea el solapamiento). Mover también el extremo al lado.
 - **Diseño: un gancho con el jugador parado arriba lo arrastra** — enganchado en el suelo, al acortar la cuerda `_limit_player` lo lleva hacia el punto sobre el gancho. Si hay un peligro entre el jugador y ese punto (las púas del Nivel 2), el jugador muere al tirar. Dejar el gancho a un lado del peligro (por eso el gancho izquierdo del Nivel 2 está en x=320 y no en 342 como en el boceto).
 - **Una tecla que hace una acción puntual no debe seguir con su acción continua mientras se mantiene:** `soltar` deja el extremo *y* alarga la cuerda; sin `_release_used`, al dejarlo la cuerda se alargaba unos px y había que tirar dos veces para volver a tomarlo.
+- **Al cargar una escena, los controles dentro de contenedores están un cuadro en (0,0) antes del layout:** Godot calcula el hover con esos rects y un botón puede quedar "con el mouse encima" sin estarlo (pasó con el botón Ajustes del menú al venir de la intro, sobre todo en web, donde el mouse no se ha movido). `boton_madera.gd` llama `get_viewport().update_mouse_cursor_state()` tras el primer cuadro para re-sincronizar el hover.
 - Godot re-guarda escenas/`project.godot` al abrirlos (puede cambiar `uid`/`load_steps` u omitir valores por default); es esperado.
 - **Tras reimportar, muchos `.import` aparecen "modificados" en `git status` sin cambios reales** (`git diff` vacío): Godot los escribe con fin de línea LF y el repo usa `core.autocrlf`. Descartarlos con `git status --porcelain | grep '^ M .*\.import$' | cut -c4- | xargs git checkout --` (ojo: `git diff --name-only` no los lista porque el diff está vacío). Los `.import` de archivos nuevos o movidos sí hay que commitearlos.
 - **Arte hecho en paralelo por dos personas se pisa en el merge sin conflicto de texto:** pasó con los jugadores (sprites `Abierto`/`Cruzado` de una rama + `Sprite` animado de otra, los dos visibles). Tras un merge, correr y mirar cada nivel; todo el arte va en `assets/` para que se note cuando alguien ya tomó un asset.
@@ -408,6 +424,7 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 - **Niveles:** 1 (`main`), 2 (según boceto del equipo), 3 (subir, caer y engancharse), 4 (cajas y plataformas) y las pruebas de muerte, física y lanzar. Todos con muros laterales, pausa, fondo y arte del terreno.
 
 **Menús y presentación**
+- **Intro:** video de la historia al arrancar (`video/intro.ogv`), se salta con cualquier tecla, fundidos de entrada/salida; en web pide una tecla antes para que suene.
 - **Menús:** principal (portada, botones de madera; sin Salir), selector en grilla, ajustes, pausa con el diseño del equipo, pantalla de victoria con highscore por nivel (`user://scores.cfg`).
 - **Audio:** autoload `Sfx` con 8 efectos placeholder, música (cueca) y volumen por categoría (General / Música / Efectos).
 - **Arte (`assets/`):** jugadores animados (idle / caminata a 10 FPS / THROW al apuntar), palito, campana y cuerda, cajas, zonas de muerte animadas (fuego / púas / caca), sopaipillas, ganchos, terreno (piso por piezas + pared) y fondo.
@@ -460,6 +477,8 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 - **Caja empujable:** asentarse, empuje parejo, frenar al soltar, muro, pararse encima, pasajero, golpe de campana, empujes opuestos, caída de borde, pila. PASS.
 
 ### Presentación y sonido
+
+- **Intro (video)** (escritorio con Xvfb + export web en Chromium headless, con un .ogv de prueba): arranca como escena principal, video sonando y cueca callada; una tecla en los primeros 0,35 s no salta; mensaje visible con el texto pedido; el video llena 1280×720 (16:9) y uno 4:3 queda centrado con franjas (960×720 en x=160); tecla → fundido → menú; la cueca vuelve con fundido (−36 dB → 0 dB); volver al menú desde otra escena no repite fundido ni reinicia la música; al terminar el video pasa solo al menú; clic también salta; sin video va directo al menú con música. PASS 20/20. En web: aviso "para comenzar" → video → menú, con salida de audio medida (AnalyserNode): aviso 0,0000, video 0,074, menú (cueca) 0,158; el .ogv entra al .pck. Botón Ajustes con brillo fantasma al llegar al menú (bug previo del layout, ver Lecciones) corregido: sin mouse encima no brilla, con el mouse encima sí, y sigue al mouse.
 
 - **Mirada + espejo + sonidos:** mirada/espejo, estados de animación, ~8 pasos/s, pasajero sin pasos, salto, enganche, whoosh por pasada, loop de la caja on/off, muerte sin sonido duplicado. PASS.
 - **Volumen por categoría:** buses creados y enviando a Master, los tres volúmenes no se pisan, persisten en `user://settings.cfg`, Sfx y la caja usan el bus SFX. PASS.

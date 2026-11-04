@@ -28,6 +28,18 @@ func _ready() -> void:
 	resized.connect(_update_size)
 	_update_size()
 	_refresh()
+	_fix_hover_after_layout.call_deferred()
+
+## Al cargar la escena el botón está un instante en (0,0) antes de que el
+## contenedor lo acomode: si el mouse estaba en esa esquina (o en web, donde aún
+## no se ha movido), Godot lo da por "encima" y el brillo queda pegado; y si el
+## mouse sí estaba sobre el botón, no brilla hasta moverlo. Tras el primer
+## cuadro, con el layout hecho, se re-sincroniza el hover con la posición real
+## (emite mouse_entered/exited como corresponda).
+func _fix_hover_after_layout() -> void:
+	await get_tree().process_frame
+	if is_inside_tree():
+		get_viewport().update_mouse_cursor_state()
 
 ## El glow dorado se activa con mouse encima o foco de teclado.
 func _refresh() -> void:
