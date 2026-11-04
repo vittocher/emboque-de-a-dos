@@ -4,11 +4,17 @@ class_name Collectible
 ## Coleccionable: lo recoge un jugador o un extremo del emboque (palito/campana;
 ## la cuerda es solo visual, no recoge). Mask 14 = jugadores 2 + campana 4 + palito 8.
 
+## Grupo de todos los coleccionables del nivel (el ScoreManager los cuenta).
+const GROUP := &"collectibles"
+
 @export var points: int = 100
 
 # queue_free es diferido: si un jugador y su extremo lo tocan en el mismo tick,
 # sin esto sumaría dos veces.
 var _collected: bool = false
+
+func _enter_tree() -> void:
+	add_to_group(GROUP)
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)

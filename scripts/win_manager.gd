@@ -50,8 +50,10 @@ class_name WinManager
 @export_group("Resultado")
 ## Id estable del nivel para el highscore (ej. "level_1"). Si queda vacío, se
 ## deriva del nombre de archivo de la escena.
+## Lo ignora si el nivel está en LevelCatalog (ahí manda el catálogo).
 @export var level_id: String = ""
-## Nombre del nivel a mostrar en la pantalla de victoria (ej. "Nivel 1").
+## Nombre del nivel a mostrar en la pantalla de victoria (ej. "Nivel 1"). Lo
+## ignora si el nivel está en LevelCatalog.
 @export var level_name: String = ""
 ## Escena de la pantalla de victoria a la que se salta al ganar.
 @export var victory_scene: String = "res://scenes/ui/victory.tscn"
@@ -154,21 +156,22 @@ func _win() -> void:
 	_won = true
 	if _label != null:
 		_label.visible = true
-	# Registrar el resultado (actualiza highscore y deja los datos para la
-	# pantalla de victoria).
-	var id := level_id if level_id != "" else _fallback_id()
-	var display_name := level_name if level_name != "" else id
-	ScoreBoard.report_win(id, display_name, _current_score())
+	# Registrar el resultado (nivel completado, highscore y datos para la
+	# pantalla de victoria). Si el nivel está en el LevelCatalog, su id y nombre
+	# salen de ahí (la lista única de niveles); si no, de los exports.
+	var entry := LevelCatalog.find_by_scene(get_tree().current_scene.scene_file_path)
+	var id: String = entry.get("id", level_id if level_id != "" else _fallback_id())
+	var display_name: String = entry.get("name", level_name if level_name != "" else id)
+	var sm := get_tree().get_first_node_in_group("score_manager") as ScoreManager
+	if sm != null:
+		ScoreBoard.report_win(id, display_name, sm.score, sm.collected, sm.total)
+	else:
+		ScoreBoard.report_win(id, display_name, 0)
 	# ignore_time_scale=true: si hay slow-mo del closeup al ganar, el salto a la
 	# pantalla de victoria ocurre igual tras restart_delay reales (no se alarga
 	# por la cámara lenta).
 	await get_tree().create_timer(restart_delay, true, false, true).timeout
 	get_tree().change_scene_to_file(victory_scene)
-
-## Puntaje actual del nivel (0 si el nivel no tiene ScoreManager).
-func _current_score() -> int:
-	var sm := get_tree().get_first_node_in_group("score_manager") as ScoreManager
-	return sm.score if sm != null else 0
 
 ## Id derivado del nombre de archivo de la escena (ej. "level_2"), como respaldo
 ## si no se configuró level_id en el Inspector.
