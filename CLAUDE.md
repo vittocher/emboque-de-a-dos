@@ -74,6 +74,24 @@ scenes/
                        al centro (240×270, techo y=410) que no se alcanza saltando; un HookPoint afuera de cada
                        esquina de arriba. Cada jugador lanza al gancho de su lado, sube tirando la cuerda y salta
                        arriba de la torre, donde se juntan para embocar. Label de ayuda arriba.
+                       (Los main/level_3/level_4/test_* NO están en el mapa; ver "Mapa de niveles".)
+
+  levels/level_base.tscn  Escena BASE de todo nivel nuevo (se hereda: New Inherited Scene). Trae Background,
+                       Camera2D, WallLeft/WallRight, Player1/2 (z 1), WinManager, CloseupManager, Emboque1/2 (z 1),
+                       ScoreManager, UI (ScoreLabel/WinLabel), TerrainArt y PauseMenu, en el orden correcto.
+  levels/*.tscn        Los 23 niveles nuevos del mapa (heredan la base): tronco_1..4, peligro_1..3, caja_1..3,
+                       placa_1..3, movil_1..3, lanzar_1..3, viento_1..3, final. Cada uno descrito en su solución
+                       tests/solutions/<nivel>.gd. El árbol está en scripts/level_catalog.gd.
+  block.tscn           Bloque de terreno (StaticBody2D, block.gd) con `size` editable: piso, plataforma o muro.
+                       TerrainArt lo viste solo. Con él se traza todo nivel nuevo.
+  bowl.tscn            Cuenco en V (bowl.gd: `width`, `slope`), tablas resbalosas (friction 0): la META de muchos
+                       niveles; los extremos que caen adentro se deslizan al fondo y se juntan. Rotado 180° = embudo
+                       (para extremos que suben con el viento).
+  fall_zone.tscn       Zona invisible bajo la pantalla (PlayerDeathZone): caer a un foso sin piso reinicia.
+  pressure_plate.tscn  Placa de presión (ver "Mecánicas de las ramas"). Arte: assets/props/placa.
+  gate.tscn            Compuerta que se desliza (AnimatableBody2D).
+  moving_platform.tscn Plataforma móvil / ascensor (AnimatableBody2D) con rieles punteados.
+  wind_zone.tscn       Corriente de aire (Area2D) con rayitas de aire (CPUParticles2D) y sonido en loop.
 
   player.tscn          CharacterBody2D 40×64 + RopeAnchor (Marker2D, "la mano") + arte en Visual/Art: Sprite
                        (AnimatedSprite2D, ver "Arte del jugador"). Body/Eye = placeholders ocultos.
@@ -111,12 +129,13 @@ scenes/
                          + botones Jugar / Ajustes (sin Salir: el juego es para web).
   ui/boton_madera.tscn   Botón de madera reutilizable del menú principal (boton_madera.gd + shader procedural
                          shaders/madera_boton.gdshader).
-  ui/level_selector.tscn Selector de niveles en grilla (Center/LevelsRow: Nivel 1–4, Prueba: muerte, Prueba: física,
-                         Prueba: lanzar; futuro: grafo conectado).
+  ui/level_selector.tscn MAPA de niveles (ver "Mapa de niveles y progreso"): nodos de madera (ui/level_node.tscn)
+                         unidos por cuerdas, panel con nombre/récord/sopaipillas, fondo con círculos (map_decor.gd).
   ui/settings.tscn       Ajustes: volumen general / música / efectos + pantalla completa.
   ui/pause_menu.tscn     Menú de pausa (Esc / P), ÚNICO para todos los niveles: instanciarlo en cada nivel.
                          Diseño = imagen assets/ui/pause_menu.webp con botones invisibles encima (ver "Menú de pausa").
-  ui/victory.tscn        Pantalla de victoria (minimalista): puntaje + récord del nivel + "Menú principal".
+  ui/victory.tscn        Pantalla de victoria (estilo del menú): nivel, puntaje, sopaipillas juntadas, récord,
+                         botones Reintentar y Continuar (vuelve al mapa, que anima lo desbloqueado).
 
 scripts/
   player.gd        Controlador de plataformas parametrizado por input_prefix + estado de balanceo
@@ -139,19 +158,26 @@ scripts/
   terrain_art.gd   @tool, class TerrainArt: arte del terreno (ver terrain_art.tscn).
   collectible.gd   Area2D: al tocarlo un jugador o un extremo, busca el ScoreManager (grupo "score_manager"),
                    suma `points` y queue_free.
-  score_manager.gd Lleva el puntaje del nivel y actualiza un Label. Está en el grupo "score_manager".
+  score_manager.gd Lleva el puntaje del nivel (y coleccionables juntados/totales) y actualiza un Label; lo
+                   oculta si el nivel no tiene coleccionables. Está en el grupo "score_manager".
+  level_catalog.gd class LevelCatalog: la ÚNICA lista de niveles (id, escena, nombre, posición en el mapa,
+                   de qué niveles depende). Desbloqueo, número de nivel, coleccionables por escena.
+  block.gd / bowl.gd  Bloque de terreno con `size`; cuenco con `width`/`slope` (ambos @tool).
+  mechanisms/      channel.gd (canales con color), pressure_plate.gd, gate.gd, moving_platform.gd, wind_zone.gd.
   push_box.gd      Caja empujable (class_name PushBox): el Player la empuja con push(); los extremos la golpean por física.
                    Suena un loop de arrastre mientras se desliza por el piso.
   pause_menu.gd    Menú de pausa del nivel (acción `pause` = Esc / P): Continuar / Reiniciar / Ajustes / Menú principal. Es el
                    script de ui/pause_menu.tscn. La pausa NO es global: cada nivel debe instanciar esa escena.
   settings_manager.gd AUTOLOAD (SettingsManager): volúmenes, buses de audio, pantalla completa, música, persistencia.
                    stop_music() / play_music(fade) (la intro calla la cueca mientras corre el video).
-  score_board.gd   AUTOLOAD (ScoreBoard): datos de la última victoria entre escenas + highscore por nivel en
-                   user://scores.cfg. WinManager lo usa al ganar; victory.gd lo lee.
+  score_board.gd   AUTOLOAD (ScoreBoard): datos de la última victoria entre escenas + highscore por nivel +
+                   niveles COMPLETADOS (y máximo de sopaipillas) en user://scores.cfg. De eso depende el
+                   desbloqueo del mapa. `unlock_all` (solo desarrollo, F9 en el mapa) desbloquea todo.
   sfx.gd           AUTOLOAD (Sfx): registro único de efectos de sonido (SOUNDS: nombre → ruta + volumen base),
                    pool de AudioStreamPlayer, play(nombre, pitch, volumen). Sobrevive a la recarga del nivel.
   ui/*.gd          Lógica de los menús (navegación con change_scene_to_file); intro.gd (class IntroScreen) = la intro; victory.gd muestra puntaje + récord;
-                   boton_madera.gd = el botón de madera.
+                   boton_madera.gd = el botón de madera; level_selector.gd = el mapa; level_node.gd = un nivel
+                   del mapa; map_decor.gd = fondo del mapa y de la victoria.
 
 assets/            TODO el arte (sprites, fondos, UI), por tema: jugadores/, emboque/, entorno/, hazards/, props/, ui/.
                    No crear otras carpetas de imágenes. Las subcarpetas alternativos/ guardan arte que hoy no se usa
@@ -161,8 +187,11 @@ video/             intro.ogv (Ogg Theora: el único formato de video de Godot) +
 audio/             cueca.ogg (música, la pone SettingsManager) y sfx/: efectos placeholder (WAV 22 kHz mono):
                    step, jump, die, hook, swing, box_push (loop), grab, throw.
 default_bus_layout.tres  Buses de audio Master / Music / SFX (ver "Volumen y buses de audio"). Obligatorio para web.
-tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python tools/generate_sfx.py`.
-GUIA_ASSETS.md     Guía para el equipo de arte: cómo reemplazar placeholders por arte en Godot.
+tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python tools/generate_sfx.py [nombres]`
+                   (sin nombres, todos; con nombres, solo esos, p. ej. `plate gate wind`).
+tests/             Bot de pruebas (ver "Bot de pruebas"): play_level.gd, run_all.sh, solutions/<nivel>.gd.
+                   Excluido del export (export_presets: exclude_filter "tests/*").
+GUIA_ASSETS.md     Guía para diseño: qué archivo reemplazar para cambiar cada sprite/sonido en TODOS los niveles.
 EmboqueDA2 Concepto.pdf  Documento de concepto del juego.
 ```
 
@@ -250,9 +279,69 @@ El borde dorado lo dibuja el botón **con foco**; el mouse le pasa el foco (`mou
 ### Flujo de escenas (UI)
 
 Arranque: `ui/intro.tscn` (video; cualquier tecla lo salta) → `main_menu` (aparece desde negro; la intro solo corre al iniciar el juego, volver al menú no la repite).
-`main_menu` → (Jugar) → `level_selector` → (Nivel 1–4 / Prueba: muerte / Prueba: física / Prueba: lanzar) → `main.tscn` / `level_2.tscn` / `level_3.tscn` / `level_4.tscn` / `test_death.tscn` / `test_physics.tscn` / `test_throw.tscn` (gameplay) → (al ganar) → `ui/victory.tscn` → (Menú principal) → `main_menu`.
+`main_menu` → (Jugar) → `level_selector` (el MAPA) → (un nivel desbloqueado) → gameplay → (al ganar) → `ui/victory.tscn` → (Continuar) → mapa (anima lo recién desbloqueado) / (Reintentar) → el mismo nivel. Esc en el mapa vuelve al menú.
 `main_menu` → (Ajustes) → `settings`. No hay botón Salir: el juego es para web, donde `quit()` no cierra la pestaña (solo congela el juego). Selector y Ajustes tienen botón **Volver** al menú.
-Para agregar niveles: agregar el botón en `level_selector.tscn` (dentro de `Center/LevelsRow`, una `GridContainer`) y una línea `"NombreDelBoton": "res://scenes/nivel.tscn"` en `LEVEL_BUTTONS` de `level_selector.gd` (conecta el botón solo, y lo pinta de verde si el nivel tiene lanzar). A futuro: disponer los botones como grafo con líneas de conexión.
+Para agregar niveles: una entrada en `LEVELS` de `scripts/level_catalog.gd` (el mapa la dibuja sola).
+
+### Mapa de niveles y progreso (`level_selector` + `LevelCatalog` + `ScoreBoard`)
+
+Como la progresión del concepto: un árbol de niveles que se desbloquean al completar el anterior.
+**`LevelCatalog.LEVELS`** es la única lista: `id`, `scene`, `name`, `pos` (lugar en el mapa, 1280×720) y `from`
+(niveles de los que depende: se desbloquea al completar CUALQUIERA, o al menos `need`). Opcionales: `special`
+(nodo dorado y más grande), `rope: false` (sin cuerdas en el mapa) y `hint` (texto mientras está bloqueado).
+El número del nivel es su orden en la lista. `WinManager` toma el id y el nombre del catálogo.
+
+Árbol actual (24 niveles): **tronco** 1–4 (lo básico, sin objetos: caminar, largo de cuerda, ganchos, cuenco)
+→ desde el 4 se abren **peligros** (púas, caca, brasas, y "La T" = `level_2` del equipo), **cajas** (3) y
+**lanzar** (3). Sub-ramas de mecánicas nuevas: **placas/compuertas** (desde caja 2), **plataformas móviles**
+(desde peligro 2) y **viento** (desde lanzar 2). El **final** se abre con 4 de los 6 finales de rama. Cada
+rama empieza introduciendo su mecánica en un caso simple y sube la dificultad. El mapa no nombra las
+mecánicas (minimalista): se descubren jugando. El primer nivel con lanzar trae un cartel con los controles.
+
+Mapa: nodos con el shader de madera de los botones (bloqueado = madera oscura sin número; disponible = anillo
+que late; completado = número dorado y una sopaipilla si se juntaron todas), cuerdas con la textura de la cuerda
+del emboque (que cuelgan), panel abajo con nombre / récord / sopaipillas. Flechas o mouse + Enter. Tras una
+victoria nueva, las cuerdas hacia lo desbloqueado se "tienden" y los nodos aparecen. **F9** (solo en builds de
+desarrollo) desbloquea todo. Niveles del equipo que NO están en el mapa: `main`, `level_3`, `level_4` (el extremo
+nace bajo la plataforma de inicio y amarra al jugador, ver Lecciones) y los `test_*`.
+
+### Mecánicas de las ramas (`scripts/mechanisms/`)
+
+- **Canal (`Channel`)**: un número 0–3 con un color (amarillo, celeste, rosado, morado; sin verde). Una
+  compuerta o plataforma de canal N se activa mientras alguna placa de canal N esté presionada
+  (`require_all` = todas). Las placas avisan con `Channel.notify` (grupo `channel_listeners`).
+- **Placa (`PressurePlate`)**: Node2D apoyado en el piso (posición = centro de la base, sobre la superficie). La
+  presiona cualquier cosa encima: jugador, **extremo del emboque** o caja (mask 46). `latch` = botón que queda
+  trabado. La tapa se tiñe del color del canal. Sonido `plate`. Para que un extremo se quede quieto encima
+  (rueda: roce 0,05) ponerla en un rebaje del suelo de ~20 px (ver placa_2).
+- **Compuerta (`Gate`)**: AnimatableBody2D con `size`; se desliza `open_offset` (default: hacia arriba su alto)
+  mientras el canal está activo (`inverted` al revés). **No aplasta**: al cerrarse espera si hay un jugador, un
+  extremo o una caja debajo (su `collision_mask` incluye todo eso para que `test_move` los vea). Sonido `gate`.
+- **Plataforma móvil (`MovingPlatform`)**: AnimatableBody2D con `size`, `travel`, `speed`, `wait_time`. Sin canal
+  (`channel = -1`) va y viene sola; con canal va a la punta mientras está activo y vuelve (ascensor). Rieles
+  punteados (top_level) muestran el recorrido. Lleva jugadores; los extremos apoyados resbalan.
+- **Viento (`WindZone`)**: Area2D con `size`, `direction`, `strength` (aceleración sobre extremos y cajas; la
+  gravedad es 980) y `player_factor` (fracción para jugadores, con tope `player_max_speed`; vía
+  `Player.add_wind`). Con viento hacia arriba los extremos suben como un **volantín**: hay que soltar cuerda.
+  `player_factor = 0` → solo afecta a los extremos. Sonido `wind` en loop (AudioStreamPlayer2D).
+
+### Bot de pruebas (`tests/`)
+
+`tests/play_level.gd` juega un nivel siguiendo un plan y termina con `RESULT WIN|DEATH|TIMEOUT` (+ sopaipillas
+que faltaron). Corre headless y mucho más rápido que el tiempo real con `--fixed-fps 120`:
+
+```bash
+"$GODOT" --headless --fixed-fps 120 --path . -s tests/play_level.gd -- res://tests/solutions/tronco_1.gd --trace=0.5
+GODOT="$GODOT" tests/run_all.sh          # todos los niveles; sale con 1 si alguno no se gana
+```
+
+Cada `tests/solutions/<nivel>.gd` declara `const SCENE` y `static func plan(ctx)` con los pasos de cada jugador
+(`walk_to`, `jump_to`, `rope`, `tap`/`hold`, `sync`, `until`, `pump` (columpio), `pump_end` (balancear el
+extremo), `jiggle`…; lista completa arriba de play_level.gd). `tests/solutions/moves.gd` tiene movimientos
+compuestos (correr-saltar-engancharse-columpiarse-lanzarse, lanzar a un ángulo). `--var=nombre=valor` permite
+barrer parámetros (`ctx.var_f`), `--shots=dir` guarda capturas (sin `--headless`, con Xvfb). **Al cambiar la
+física o un nivel, correr `run_all.sh`.** Las soluciones son a la vez documentación de cómo se resuelve cada
+nivel.
 
 ### Capas de física (importante)
 
@@ -303,7 +392,7 @@ Soltarse: **saltar** (solo tenso) → `v_balanceo·swing_launch_multiplier` + `s
 
 **Activarla en un nivel:** agregar un nodo **`LevelRules`** (*Add Child Node → LevelRules*) y marcar **`throw_enabled`** en el Inspector. Sin ese nodo (o con la casilla apagada) el nivel no tiene la mecánica: todos los niveles viejos quedan igual. `LevelRules` se mete al grupo `"level_rules"` en `_enter_tree` (antes que cualquier `_ready`, así el orden en el árbol no importa) y `Emboque._ready` lo lee con `LevelRules.of(get_tree())`. Futuras mecánicas opcionales por nivel van como otra casilla en este mismo nodo.
 
-**Color de la mecánica (verde lima, `LevelRules.THROW_COLOR`):** el selector de niveles pinta solo (texto + borde) el botón de cada nivel que la tiene: `LevelRules.scene_throw_enabled(escena)` lee el `SceneState` de la escena sin instanciarla, así que basta marcar la casilla en el nivel. En el menú principal la línea "Niveles verdes: …" viene dibujada en la portada (si cambia el color, hay que cambiarlo también en la imagen). Para que el selector lo detecte, `LevelRules` tiene que estar **directo en la escena del nivel** (no dentro de una sub-escena instanciada).
+**Color de la mecánica (verde lima, `LevelRules.THROW_COLOR`):** el mapa de niveles NO lo usa (es minimalista: las mecánicas se descubren jugando; el primer nivel con lanzar, `lanzar_1`, trae un cartel con los controles). `LevelRules.scene_throw_enabled(escena)` sigue disponible (lee el `SceneState` sin instanciar). La línea "Niveles verdes: …" dibujada en la portada quedó obsoleta: hay que sacarla de la imagen.
 
 Estados en `emboque.gd` (`ThrowState`), sin tocar nada si la mecánica está apagada:
 
@@ -325,6 +414,11 @@ Identifica palito y campana por `end_kind`. Cada frame, si la punta del palito e
 Al ganar, `WinManager` llama `ScoreBoard.report_win(level_id, level_name, score)` — el puntaje sale del `ScoreManager` del nivel (0 si no tiene) — y luego `change_scene_to_file(victory_scene)`. **`ScoreBoard`** es un autoload que (a) guarda los datos de la última victoria (`last_level_name`, `last_score`, `last_is_record`) para que `victory.gd` los muestre sin tener que pasar parámetros entre escenas, y (b) persiste el **highscore por nivel** en `user://scores.cfg` (sección `highscores`, clave = `level_id`), actualizándolo solo si el puntaje lo supera. `victory.tscn` es minimalista (estilo de los menús): título, nombre del nivel, puntaje, récord (muestra "¡Nuevo récord!" si se batió) y botón **Menú principal**.
 
 ## Anatomía de un nivel (checklist antes de diseñar)
+
+**Lo más simple (y lo que usan los 23 niveles nuevos):** *New Inherited Scene* desde
+`scenes/levels/level_base.tscn`, que ya trae todo lo obligatorio de abajo en el orden correcto; el nivel solo
+agrega bloques (`block.tscn` con su `size`), objetos y la posición de los jugadores, y una entrada en
+`LevelCatalog`. La lista de abajo explica qué trae la base (y sirve para niveles hechos a mano).
 
 Un nivel es una escena `.tscn` con raíz `Node2D`. Antes de ponerse a diseñar el
 trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
@@ -367,8 +461,8 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - [ ] `WinManager` con `level_id` único y `level_name`; antes de los `Emboque`, como `CloseupManager`.
 - [ ] Coleccionables ⇒ `ScoreManager` + `ScoreLabel` (con contorno, como en `level_2`: `font_outline_color` + `outline_size = 10`).
 - [ ] `Player2` sin `modulate`.
-- [ ] Botón en `level_selector.tscn` + línea en `LEVEL_BUTTONS`.
-- [ ] Correr el nivel headless sin errores de script.
+- [ ] Entrada en `LevelCatalog.LEVELS` (posición en el mapa y de qué nivel depende).
+- [ ] Una solución en `tests/solutions/<nivel>.gd` que el bot gane (`tests/run_all.sh`).
 
 **Antes de diseñar el trazado conviene tener decidido:** dónde arrancan los dos jugadores, por dónde va el muro/separación que obliga a cooperar, dónde se juntan los emboques (el punto de "embocar"), qué HookPoints hacen falta para llegar, y dónde están los peligros (zonas de muerte) y recompensas (coleccionables). Recordar que la cámara es **fija 1280×720**: todo el nivel cabe en una pantalla.
 
@@ -403,6 +497,31 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **Diseño: un gancho con el jugador parado arriba lo arrastra** — enganchado en el suelo, al acortar la cuerda `_limit_player` lo lleva hacia el punto sobre el gancho. Si hay un peligro entre el jugador y ese punto (las púas del Nivel 2), el jugador muere al tirar. Dejar el gancho a un lado del peligro (por eso el gancho izquierdo del Nivel 2 está en x=320 y no en 342 como en el boceto).
 - **Una tecla que hace una acción puntual no debe seguir con su acción continua mientras se mantiene:** `soltar` deja el extremo *y* alarga la cuerda; sin `_release_used`, al dejarlo la cuerda se alargaba unos px y había que tirar dos veces para volver a tomarlo.
 - **Al cargar una escena, los controles dentro de contenedores están un cuadro en (0,0) antes del layout:** Godot calcula el hover con esos rects y un botón puede quedar "con el mouse encima" sin estarlo (pasó con el botón Ajustes del menú al venir de la intro, sobre todo en web, donde el mouse no se ha movido). `boton_madera.gd` llama `get_viewport().update_mouse_cursor_state()` tras el primer cuadro para re-sincronizar el hover.
+- **El extremo que nace (o queda) DEBAJO de la plataforma donde está el jugador lo amarra:** la cuerda atraviesa
+  las plataformas pero el extremo no; al saltar, el extremo choca con la cara de abajo y `_limit_player` frena al
+  jugador (saltos de ~85 px). Por eso los jugadores de los niveles nuevos aparecen **en el aire, arriba de donde
+  aterrizan** (el extremo cae encima de la plataforma). Pasa en `level_3`/`level_4` del equipo (fuera del mapa).
+- **La cuerda corta le quita altura al salto** (hay que levantar el extremo): con el extremo apoyado, el salto
+  llega a 155 px con cuerda 60, 194 con 170 y 239 con 320 (libre: 236). Saltos obligatorios ≤ 140 px; uno más
+  alto exige cuerda larga (lo usa peligro_3 a propósito). Desde una caja, con el extremo en el piso 64 px más
+  abajo, el salto queda en ~161 con cuerda 170.
+- **En movimiento el extremo va detrás y a la altura del jugador** (al correr y saltar no se hunde): un peligro
+  "abajo" castiga la cuerda larga cuando el jugador está **quieto** (cuelga derecho) o al soltarse de un gancho.
+- **Los extremos ruedan y resbalan** (roce 0,05; la campana es redonda): no se quedan quietos en una placa
+  plana (usar un rebaje) ni en una plataforma que se mueve. Al bajarse de un ascensor, el extremo que quedó
+  arriba se va con él y tira al jugador.
+- **Las placas las pisan también los extremos**: el extremo que cuelga detrás de un jugador puede activar una
+  placa sin querer (pasó en movil_3); dejar espacio alrededor de las placas.
+- **Muros sobre un cuenco: dejar ≥ 60 px entre el borde de abajo del muro y el cuenco**, o lo parten en dos y
+  un extremo queda encajado entre la esquina del muro y la tabla.
+- **Pozos de 38 px entre dos repisas** (no cabe un jugador, sí los extremos) son una meta simple, pero dos
+  extremos pueden quedar encajados lado a lado sin girar si el pozo es hondo: preferir un cuenco.
+- **Una caja empujada sobre un hueco se traba en la esquina de enfrente si las dos superficies están a la misma
+  altura** (colisión fantasma): dejar la de llegada unos px más baja (caja_3).
+- **Golpear una caja con un extremo casi no la mueve** (~8 px: extremo 1 vs caja 2 con roce): no basar puzzles
+  en eso.
+- **Un AnimatableBody2D que se mueve solo "ve" lo que está en su `collision_mask`**: la compuerta, con la máscara
+  de fábrica (terreno), aplastaba al jugador contra el piso. Con la máscara completa espera.
 - Godot re-guarda escenas/`project.godot` al abrirlos (puede cambiar `uid`/`load_steps` u omitir valores por default); es esperado.
 - **Tras reimportar, muchos `.import` aparecen "modificados" en `git status` sin cambios reales** (`git diff` vacío): Godot los escribe con fin de línea LF y el repo usa `core.autocrlf`. Descartarlos con `git status --porcelain | grep '^ M .*\.import$' | cut -c4- | xargs git checkout --` (ojo: `git diff --name-only` no los lista porque el diff está vacío). Los `.import` de archivos nuevos o movidos sí hay que commitearlos.
 - **Arte hecho en paralelo por dos personas se pisa en el merge sin conflicto de texto:** pasó con los jugadores (sprites `Abierto`/`Cruzado` de una rama + `Sprite` animado de otra, los dos visibles). Tras un merge, correr y mirar cada nivel; todo el arte va en `assets/` para que se note cuando alguien ya tomó un asset.
@@ -421,18 +540,22 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 
 **Objetos y niveles**
 - **Zonas de muerte** (jugador / emboque / ambos), **caja empujable**, **coleccionables + puntaje** (también los recoge el emboque).
-- **Niveles:** 1 (`main`), 2 (según boceto del equipo), 3 (subir, caer y engancharse), 4 (cajas y plataformas) y las pruebas de muerte, física y lanzar. Todos con muros laterales, pausa, fondo y arte del terreno.
+- **Mecánicas nuevas:** placas de presión, compuertas, plataformas móviles/ascensores, corrientes de aire (volantín), cuenco/embudo como meta.
+- **24 niveles en un mapa ramificado** (tronco + 6 ramas + final), todos ganados por el bot de pruebas. Escena base heredable y bloques con `size`.
+- Del equipo: `level_2` está en el mapa (fin de la rama de peligros); `main`, `level_3`, `level_4` y las pruebas siguen en el repo pero fuera del mapa.
 
 **Menús y presentación**
 - **Intro:** video de la historia al arrancar (`video/intro.ogv`), se salta con cualquier tecla, fundidos de entrada/salida; en web pide una tecla antes para que suene.
-- **Menús:** principal (portada, botones de madera; sin Salir), selector en grilla, ajustes, pausa con el diseño del equipo, pantalla de victoria con highscore por nivel (`user://scores.cfg`).
+- **Menús:** principal (portada, botones de madera; sin Salir), mapa de niveles ramificado con progreso, ajustes, pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
 - **Audio:** autoload `Sfx` con 8 efectos placeholder, música (cueca) y volumen por categoría (General / Música / Efectos).
 - **Arte (`assets/`):** jugadores animados (idle / caminata a 10 FPS / THROW al apuntar), palito, campana y cuerda, cajas, zonas de muerte animadas (fuego / púas / caca), sopaipillas, ganchos, terreno (piso por piezas + pared) y fondo.
 
 Pendiente:
 - **Fase 6** — Pasada de tuning de la sensación (magnetismo, masas, largos, velocidades, radios del closeup) jugando los niveles reales.
 - **Arte que falta o hay que pulir:** animaciones `jump` / `fall` / `swing` / `push` del jugador (hoy caen a `idle`/`walk`); costuras entre tablas de `piso_neutral` (vienen del dibujo); alinear bien el arte del palito y la campana con su colisión; la mano (`RopeAnchor`) no coincide exactamente con la mano del dibujo.
-- **Web:** falta el preset de export, las plantillas de 4.7.2 y probar en navegador (renderer Compatibility ya probado en escritorio: se ve igual).
+- **Web:** el preset existe y exporta (probado en Chromium headless con la intro); falta probar los niveles nuevos en navegador y subirlo a Newgrounds.
+- **Portada:** quitar del dibujo la línea "Niveles verdes…" (el mapa ya no pinta los niveles de lanzar).
+- **Niveles del equipo fuera del mapa** (`main`, `level_3`, `level_4`): corregir el inicio (ver Lecciones) si se quieren sumar.
 - **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos.
 
 Post-prototipo (del concepto): más objetos dinámicos, mapa de progresión de niveles (el selector como grafo conectado), más niveles.
@@ -493,3 +616,26 @@ No toma al acortar hasta el mínimo; toma con pulsación nueva; en la mano va si
 ### Nivel 2 (`level_2.tscn`) — PASS 27/27
 
 Rojo mata al jugador y no al emboque; naranja mata a ambos; el muro no se salta por arriba; extremos y jugadores recogen. Rutas: J1 baja con cuidado a la izquierda del rojo, engancha el gancho de abajo (tirar al mínimo, soltar un poco y volver a tirar) y se balancea hasta la T en 10/12 combinaciones largo/ángulo; J2 acorta la cuerda, corre a la izquierda, el palito engancha el gancho derecho y salta a la T en 4/4 ángulos; con la cuerda a 170 el palito roza el bloque naranja; desde la T los extremos cuelgan bajo el muro, se juntan a 5 px y recogen los 2 coleccionables de abajo.
+
+### Niveles del mapa (bot, `tests/run_all.sh`) — 24/24 ganados
+
+Cada nivel se gana con el plan de `tests/solutions/<nivel>.gd` (además se barrieron parámetros: largo de cuerda,
+ángulo de lanzamiento, bombeo, punto de salto; y se probaron "controles" que deben fallar). Resumen:
+
+| Nivel | Tiempo | Controles que fallan (como debe ser) |
+|---|---|---|
+| tronco_1..4 | 5–15 s | T2: sin ajustar largos no se juntan; T3: el salto directo no cruza (el extremo engancha solo) |
+| peligro_1 Púas | 19 s | — (sopaipillas en zanjas de púas que solo el emboque alcanza) |
+| peligro_2 Cuidado abajo | 8 s | quedarse en el borde con cuerda 170, o bajar el extremo de más → caca |
+| peligro_3 Brasas | 9 s | cuerda 90–170 sobre las brasas → el extremo se quema; cuerda 60–100 no sube el escalón |
+| level_2 La T (equipo) | 24 s | cuerda 120 de J2 → el palito toca el bloque de fuego |
+| caja_1..3 | 8–14 s | caja_3: si J2 sigue la caja al piso de J1, su extremo cae a la caca |
+| placa_1..3 | 6–12 s | — |
+| movil_1..3 | 8–17 s | movil_2: cuerda 170 en la plataforma → caca |
+| lanzar_1..3 | 6–10 s | lanzar_3: sin acortar al soltarse, el extremo cuelga al fuego |
+| viento_1..3 | 5–10 s | — |
+| final | 10–13 s | frenar fuera de ~465–470 en el bot → fuego (el humano corrige en el aire) |
+
+También: mapa (desbloqueo, foco inicial en lo recién desbloqueado, F9), flujo completo menú → mapa → nivel →
+victoria → Continuar → mapa con el siguiente desbloqueado (PASS); compuerta no aplasta; capturas de cada nivel
+revisadas.
