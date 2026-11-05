@@ -65,8 +65,11 @@ scenes/
   level_3.tscn         Nivel 3: cada jugador sube por 3 escalones de su lado hasta la cima, cae y se engancha a
                        un HookPoint (2, uno por lado) para aterrizar en la plataforma central, donde se emboca.
                        Piso de fuego; 8 coleccionables.
-  level_4.tscn         Nivel 4: una caja por lado en el piso de partida; se empujan para saltar a las plataformas
-                       escalonadas hasta la meta central de arriba. Sin ganchos; piso de fuego; 5 coleccionables.
+  level_4.tscn         "Escalones" (del equipo, en el mapa al final de la rama de cajas; ahora hereda level_base):
+                       una caja por lado DEBAJO de la primera plataforma (200 px sobre el piso): hay que pasar
+                       por encima, empujarla hacia atrás (o hasta el borde del foso) y saltar desde ella. Luego
+                       2 escalones de 100 px hasta la meta: dos repisas con una ranura de 36 px (no cabe un
+                       jugador, sí los extremos) y un cuenco debajo. Piso de fuego en el foso; 5 coleccionables.
   test_death.tscn      "Prueba: muerte": las 3 zonas de muerte (2 jugadores + 2 emboques). Sin CloseupManager.
   test_physics.tscn    "Prueba: física": Nivel 1 SIN muro central (para probar el balanceo), plataformas más
                        afuera (x=170 / x=1110), 3 HookPoint (izq/centro/der) y 2 cajas en el suelo.
@@ -74,7 +77,7 @@ scenes/
                        al centro (240×270, techo y=410) que no se alcanza saltando; un HookPoint afuera de cada
                        esquina de arriba. Cada jugador lanza al gancho de su lado, sube tirando la cuerda y salta
                        arriba de la torre, donde se juntan para embocar. Label de ayuda arriba.
-                       (Los main/level_3/level_4/test_* NO están en el mapa; ver "Mapa de niveles".)
+                       (Los main/level_3/test_* NO están en el mapa; ver "Mapa de niveles".)
 
   levels/level_base.tscn  Escena BASE de todo nivel nuevo (se hereda: New Inherited Scene). Trae Background,
                        Camera2D, WallLeft/WallRight, Player1/2 (z 1), WinManager, CloseupManager, Emboque1/2 (z 1),
@@ -291,8 +294,8 @@ Como la progresión del concepto: un árbol de niveles que se desbloquean al com
 (nodo dorado y más grande), `rope: false` (sin cuerdas en el mapa) y `hint` (texto mientras está bloqueado).
 El número del nivel es su orden en la lista. `WinManager` toma el id y el nombre del catálogo.
 
-Árbol actual (24 niveles): **tronco** 1–4 (lo básico, sin objetos: caminar, largo de cuerda, ganchos, cuenco)
-→ desde el 4 se abren **peligros** (púas, caca, brasas, y "La T" = `level_2` del equipo), **cajas** (3) y
+Árbol actual (25 niveles): **tronco** 1–4 (lo básico, sin objetos: caminar, largo de cuerda, ganchos, cuenco)
+→ desde el 4 se abren **peligros** (púas, caca, brasas, y "La T" = `level_2` del equipo), **cajas** (3 + "Escalones" = `level_4` del equipo) y
 **lanzar** (3). Sub-ramas de mecánicas nuevas: **placas/compuertas** (desde caja 2), **plataformas móviles**
 (desde peligro 2) y **viento** (desde lanzar 2). El **final** se abre con 4 de los 6 finales de rama. Cada
 rama empieza introduciendo su mecánica en un caso simple y sube la dificultad. El mapa no nombra las
@@ -302,8 +305,9 @@ Mapa: nodos con el shader de madera de los botones (bloqueado = madera oscura si
 que late; completado = número dorado y una sopaipilla si se juntaron todas), cuerdas con la textura de la cuerda
 del emboque (que cuelgan), panel abajo con nombre / récord / sopaipillas. Flechas o mouse + Enter. Tras una
 victoria nueva, las cuerdas hacia lo desbloqueado se "tienden" y los nodos aparecen. **F9** (solo en builds de
-desarrollo) desbloquea todo. Niveles del equipo que NO están en el mapa: `main`, `level_3`, `level_4` (el extremo
-nace bajo la plataforma de inicio y amarra al jugador, ver Lecciones) y los `test_*`.
+desarrollo) desbloquea todo. Niveles del equipo que NO están en el mapa: `main`, `level_3` (el extremo nace bajo la plataforma
+de inicio y amarra al jugador, ver Lecciones) y los `test_*`. `level_2` ("La T") y `level_4`
+("Escalones") sí están, al final de las ramas de peligros y de cajas.
 
 ### Mecánicas de las ramas (`scripts/mechanisms/`)
 
@@ -500,7 +504,7 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **El extremo que nace (o queda) DEBAJO de la plataforma donde está el jugador lo amarra:** la cuerda atraviesa
   las plataformas pero el extremo no; al saltar, el extremo choca con la cara de abajo y `_limit_player` frena al
   jugador (saltos de ~85 px). Por eso los jugadores de los niveles nuevos aparecen **en el aire, arriba de donde
-  aterrizan** (el extremo cae encima de la plataforma). Pasa en `level_3`/`level_4` del equipo (fuera del mapa).
+  aterrizan** (el extremo cae encima de la plataforma). Pasaba en `level_3`/`level_4` del equipo (`level_4` ya se corrigió y está en el mapa).
 - **La cuerda corta le quita altura al salto** (hay que levantar el extremo): con el extremo apoyado, el salto
   llega a 155 px con cuerda 60, 194 con 170 y 239 con 320 (libre: 236). Saltos obligatorios ≤ 140 px; uno más
   alto exige cuerda larga (lo usa peligro_3 a propósito). Desde una caja, con el extremo en el piso 64 px más
@@ -541,8 +545,8 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 **Objetos y niveles**
 - **Zonas de muerte** (jugador / emboque / ambos), **caja empujable**, **coleccionables + puntaje** (también los recoge el emboque).
 - **Mecánicas nuevas:** placas de presión, compuertas, plataformas móviles/ascensores, corrientes de aire (volantín), cuenco/embudo como meta.
-- **24 niveles en un mapa ramificado** (tronco + 6 ramas + final), todos ganados por el bot de pruebas. Escena base heredable y bloques con `size`.
-- Del equipo: `level_2` está en el mapa (fin de la rama de peligros); `main`, `level_3`, `level_4` y las pruebas siguen en el repo pero fuera del mapa.
+- **25 niveles en un mapa ramificado** (tronco + 6 ramas + final), todos ganados por el bot de pruebas. Escena base heredable y bloques con `size`.
+- Del equipo: `level_2` ("La T") y `level_4` ("Escalones", rehecho sobre level_base) están en el mapa (fin de las ramas de peligros y de cajas); `main`, `level_3` y las pruebas siguen en el repo pero fuera del mapa.
 
 **Menús y presentación**
 - **Intro:** video de la historia al arrancar (`video/intro.ogv`), se salta con cualquier tecla, fundidos de entrada/salida; en web pide una tecla antes para que suene.
@@ -555,7 +559,7 @@ Pendiente:
 - **Arte que falta o hay que pulir:** animaciones `jump` / `fall` / `swing` / `push` del jugador (hoy caen a `idle`/`walk`); costuras entre tablas de `piso_neutral` (vienen del dibujo); alinear bien el arte del palito y la campana con su colisión; la mano (`RopeAnchor`) no coincide exactamente con la mano del dibujo.
 - **Web:** el preset existe y exporta (probado en Chromium headless con la intro); falta probar los niveles nuevos en navegador y subirlo a Newgrounds.
 - **Portada:** quitar del dibujo la línea "Niveles verdes…" (el mapa ya no pinta los niveles de lanzar).
-- **Niveles del equipo fuera del mapa** (`main`, `level_3`, `level_4`): corregir el inicio (ver Lecciones) si se quieren sumar.
+- **Niveles del equipo fuera del mapa** (`main`, `level_3`): corregir el inicio (ver Lecciones) si se quieren sumar.
 - **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos.
 
 Post-prototipo (del concepto): más objetos dinámicos, mapa de progresión de niveles (el selector como grafo conectado), más niveles.
@@ -617,7 +621,7 @@ No toma al acortar hasta el mínimo; toma con pulsación nueva; en la mano va si
 
 Rojo mata al jugador y no al emboque; naranja mata a ambos; el muro no se salta por arriba; extremos y jugadores recogen. Rutas: J1 baja con cuidado a la izquierda del rojo, engancha el gancho de abajo (tirar al mínimo, soltar un poco y volver a tirar) y se balancea hasta la T en 10/12 combinaciones largo/ángulo; J2 acorta la cuerda, corre a la izquierda, el palito engancha el gancho derecho y salta a la T en 4/4 ángulos; con la cuerda a 170 el palito roza el bloque naranja; desde la T los extremos cuelgan bajo el muro, se juntan a 5 px y recogen los 2 coleccionables de abajo.
 
-### Niveles del mapa (bot, `tests/run_all.sh`) — 24/24 ganados
+### Niveles del mapa (bot, `tests/run_all.sh`) — 25/25 ganados
 
 Cada nivel se gana con el plan de `tests/solutions/<nivel>.gd` (además se barrieron parámetros: largo de cuerda,
 ángulo de lanzamiento, bombeo, punto de salto; y se probaron "controles" que deben fallar). Resumen:
@@ -630,6 +634,7 @@ Cada nivel se gana con el plan de `tests/solutions/<nivel>.gd` (además se barri
 | peligro_3 Brasas | 9 s | cuerda 90–170 sobre las brasas → el extremo se quema; cuerda 60–100 no sube el escalón |
 | level_2 La T (equipo) | 24 s | cuerda 120 de J2 → el palito toca el bloque de fuego |
 | caja_1..3 | 8–14 s | caja_3: si J2 sigue la caja al piso de J1, su extremo cae a la caca |
+| level_4 Escalones (equipo) | 15 s | caja empujada a <30 px de la plataforma → el salto choca con ella (gana con largos 130–190 al bajar al cuenco) |
 | placa_1..3 | 6–12 s | — |
 | movil_1..3 | 8–17 s | movil_2: cuerda 170 en la plataforma → caca |
 | lanzar_1..3 | 6–10 s | lanzar_3: sin acortar al soltarse, el extremo cuelga al fuego |
