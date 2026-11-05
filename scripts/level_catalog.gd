@@ -62,6 +62,8 @@ const LEVELS: Array[Dictionary] = [
 		"pos": Vector2(336, 558), "from": ["placa_1"]},
 	{"id": "placa_3", "scene": "res://scenes/levels/placa_3.tscn",
 		"pos": Vector2(246, 580), "from": ["placa_2"]},
+	{"id": "placa_4", "scene": "res://scenes/levels/placa_4.tscn",
+		"pos": Vector2(158, 610), "from": ["placa_3"]},
 	# --- Rama: plataformas que se mueven (sale de los peligros) ---
 	{"id": "movil_1", "scene": "res://scenes/levels/movil_1.tscn",
 		"pos": Vector2(500, 188), "from": ["peligro_2"]},
@@ -80,7 +82,7 @@ const LEVELS: Array[Dictionary] = [
 	{"id": "final", "scene": "res://scenes/levels/final.tscn",
 		"pos": Vector2(700, 112), "need": 4, "special": true, "rope": false,
 		"hint": "MAP_HINT_FINAL",
-		"from": ["level_2", "level_4", "lanzar_4", "placa_3", "movil_3", "viento_3"]},
+		"from": ["level_2", "level_4", "lanzar_4", "placa_4", "movil_3", "viento_3"]},
 ]
 
 ## Clave de traducción del nombre del nivel (i18n/textos.csv): "LEVEL_TRONCO_1".

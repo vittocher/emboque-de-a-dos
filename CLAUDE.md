@@ -82,8 +82,8 @@ scenes/
   levels/level_base.tscn  Escena BASE de todo nivel nuevo (se hereda: New Inherited Scene). Trae Background,
                        Camera2D, WallLeft/WallRight, Player1/2 (z 1), WinManager, CloseupManager, Emboque1/2 (z 1),
                        ScoreManager, UI (ScoreLabel/WinLabel), TerrainArt y PauseMenu, en el orden correcto.
-  levels/*.tscn        Los 24 niveles nuevos del mapa (heredan la base): tronco_1..4, peligro_1..3, caja_1..3,
-                       placa_1..3, movil_1..3, lanzar_1..4, viento_1..3, final. Cada uno descrito en su solución
+  levels/*.tscn        Los 25 niveles nuevos del mapa (heredan la base): tronco_1..4, peligro_1..3, caja_1..3,
+                       placa_1..4, movil_1..3, lanzar_1..4, viento_1..3, final. Cada uno descrito en su solución
                        tests/solutions/<nivel>.gd. El árbol está en scripts/level_catalog.gd.
   block.tscn           Bloque de terreno (StaticBody2D, block.gd) con `size` editable: piso, plataforma o muro.
                        TerrainArt lo viste solo. Con él se traza todo nivel nuevo.
@@ -329,9 +329,9 @@ Como la progresión del concepto: un árbol de niveles que se desbloquean al com
 (nodo dorado y más grande), `rope: false` (sin cuerdas en el mapa) y `hint` (texto mientras está bloqueado).
 El número del nivel es su orden en la lista. `WinManager` toma el id y el nombre del catálogo.
 
-Árbol actual (26 niveles): **tronco** 1–4 (lo básico, sin objetos: caminar, largo de cuerda, ganchos, cuenco)
+Árbol actual (27 niveles): **tronco** 1–4 (lo básico, sin objetos: caminar, largo de cuerda, ganchos, cuenco)
 → desde el 4 se abren **peligros** (púas, caca, brasas, y "La T" = `level_2` del equipo), **cajas** (3 + "Escalones" = `level_4` del equipo) y
-**lanzar** (3 + "Buzón": lanzar el extremo por una ranura a una placa). Sub-ramas de mecánicas nuevas: **placas/compuertas** (desde caja 2), **plataformas móviles**
+**lanzar** (3 + "Buzón": lanzar el extremo por una ranura a una placa). Sub-ramas de mecánicas nuevas: **placas/compuertas** (desde caja 2; la 4.ª, "Relevo", con ganchos: cada uno abre la puerta del columpio del otro), **plataformas móviles**
 (desde peligro 2) y **viento** (desde lanzar 2). El **final** se abre con 4 de los 6 finales de rama. Cada
 rama empieza introduciendo su mecánica en un caso simple y sube la dificultad. El mapa no nombra las
 mecánicas (minimalista): se descubren jugando. El primer nivel con lanzar trae un cartel con los controles.
@@ -591,7 +591,7 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 **Objetos y niveles**
 - **Zonas de muerte** (jugador / emboque / ambos), **caja empujable**, **coleccionables + puntaje** (también los recoge el emboque).
 - **Mecánicas nuevas:** placas de presión, compuertas, plataformas móviles/ascensores, corrientes de aire (volantín), cuenco/embudo como meta.
-- **26 niveles en un mapa ramificado** (tronco + 6 ramas + final), todos ganados por el bot de pruebas. Escena base heredable y bloques con `size`.
+- **27 niveles en un mapa ramificado** (tronco + 6 ramas + final), todos ganados por el bot de pruebas. Escena base heredable y bloques con `size`.
 - Del equipo: `level_2` ("La T") y `level_4` ("Escalones", rehecho sobre level_base) están en el mapa (fin de las ramas de peligros y de cajas); `main`, `level_3` y las pruebas siguen en el repo pero fuera del mapa.
 
 **Menús y presentación**
@@ -680,7 +680,7 @@ No toma al acortar hasta el mínimo; toma con pulsación nueva; en la mano va si
 
 Rojo mata al jugador y no al emboque; naranja mata a ambos; el muro no se salta por arriba; extremos y jugadores recogen. Rutas: J1 baja con cuidado a la izquierda del rojo, engancha el gancho de abajo (tirar al mínimo, soltar un poco y volver a tirar) y se balancea hasta la T en 10/12 combinaciones largo/ángulo; J2 acorta la cuerda, corre a la izquierda, el palito engancha el gancho derecho y salta a la T en 4/4 ángulos; con la cuerda a 170 el palito roza el bloque naranja; desde la T los extremos cuelgan bajo el muro, se juntan a 5 px y recogen los 2 coleccionables de abajo.
 
-### Niveles del mapa (bot, `tests/run_all.sh`) — 26/26 ganados
+### Niveles del mapa (bot, `tests/run_all.sh`) — 27/27 ganados
 
 Cada nivel se gana con el plan de `tests/solutions/<nivel>.gd` (además se barrieron parámetros: largo de cuerda,
 ángulo de lanzamiento, bombeo, punto de salto; y se probaron "controles" que deben fallar). Resumen:
@@ -695,6 +695,7 @@ Cada nivel se gana con el plan de `tests/solutions/<nivel>.gd` (además se barri
 | caja_1..3 | 8–14 s | caja_3: si J2 sigue la caja al piso de J1, su extremo cae a la caca |
 | level_4 Escalones (equipo) | 15 s | caja empujada a <30 px de la plataforma → el salto choca con ella (gana con largos 130–190 al bajar al cuenco) |
 | placa_1..3 | 6–12 s | — |
+| placa_4 Relevo | 18 s | J2 fuera de su placa → la puerta de J1 no abre y no pasa; gana con bombeo 1,3 y 1,6 |
 | movil_1..3 | 8–17 s | movil_2: cuerda 170 en la plataforma → caca |
 | lanzar_1..3 | 6–10 s | lanzar_3: sin acortar al soltarse, el extremo cuelga al fuego |
 | lanzar_4 Buzón | 14 s | lanzar a 12° o más (desde 250 px) pega sobre la ranura: la compuerta de J2 no abre; gana lanzando de 130 a 310 px y con 0–8° |

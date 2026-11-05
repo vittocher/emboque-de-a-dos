@@ -54,6 +54,7 @@ LEVEL_LANZAR_4,Buzón,Mail Slot
 LEVEL_PLACA_1,La placa,Pressure Plate
 LEVEL_PLACA_2,Peso muerto,Dead Weight
 LEVEL_PLACA_3,Turnos,Taking Turns
+LEVEL_PLACA_4,Relevo,Relay
 LEVEL_MOVIL_1,Ascensor,Elevator
 LEVEL_MOVIL_2,Vaivén,Back and Forth
 LEVEL_MOVIL_3,Andén,All Aboard
