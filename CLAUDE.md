@@ -587,27 +587,29 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 - **Base (fases 0–5):** Input Map y capas; personaje plataformero; cuerda híbrida (extremo-péndulo + cuerda visual) con largo continuo; el extremo colisiona y la cuerda limita al jugador; enganche a `HookPoint`; victoria con magnetismo.
 - **Extremos como emboque real:** palito y campana `RigidBody2D` que rotan y chocan entre sí; victoria = palito dentro de la campana. Partes a ~1/3 del jugador y física a 120 Hz contra el tunneling. Proyecto en Godot 4.7.2 (antes 4.6).
 - **Balanceo estilo DKC:** enganche instantáneo, péndulo propio del jugador, bombeo, salto desde la cuerda, soltarse con abajo, rapel, inclinación + squash/stretch.
-- **Tomar y lanzar el emboque** (por nivel, `LevelRules`), con mira en ping-pong y vuelo recto; niveles con lanzar en verde en los menús.
+- **Animaciones** jump/fall/swing/push provisorias (cuadros existentes) + estirón al saltar, aplastón y golpe al aterrizar, inclinación al empujar.
+- **Tomar y lanzar el emboque** (por nivel, `LevelRules`), con mira en ping-pong y vuelo recto. Se usa en lanzar_1..4 y en el final.
 - **Magnetismo con curva + trabado:** suave a distancia, resorte fuerte una vez embocado.
 - **Closeup + cámara lenta** al acercarse los extremos (estilo Peggle).
 
 **Objetos y niveles**
 - **Zonas de muerte** (jugador / emboque / ambos), **caja empujable**, **coleccionables + puntaje** (también los recoge el emboque).
 - **Mecánicas nuevas:** placas de presión, compuertas, plataformas móviles/ascensores, corrientes de aire (volantín), cuenco/embudo como meta.
-- **28 niveles en un mapa ramificado** (tronco + 6 ramas + final), todos ganados por el bot de pruebas. Escena base heredable y bloques con `size`.
+- **28 niveles en un mapa ramificado** (tronco + 6 ramas + final), todos ganados por el bot de pruebas. Escena base heredable y bloques con `size`. Las ramas de peligros, cajas, lanzar, placas y viento tienen 4 niveles (la de plataformas móviles, 3).
 - Del equipo: `level_2` ("La T") y `level_4` ("Escalones", rehecho sobre level_base) están en el mapa (fin de las ramas de peligros y de cajas); `main`, `level_3` y las pruebas siguen en el repo pero fuera del mapa.
 
 **Menús y presentación**
 - **Intro:** video de la historia al arrancar (`video/intro.ogv`), se salta con cualquier tecla, fundidos de entrada/salida; en web pide una tecla antes para que suene.
 - **Idiomas:** español e inglés (todo el texto en `i18n/textos.csv`, imágenes con texto por idioma), selector en el menú principal, Ajustes y pausa; agregar un idioma = una columna.
-- **Menús:** principal (portada, botones de madera; sin Salir), mapa de niveles ramificado con progreso, ajustes, pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
-- **Audio:** autoload `Sfx` con 8 efectos placeholder, música (cueca) y volumen por categoría (General / Música / Efectos).
+- **Menús:** principal (portada, botones de madera, botón de idioma; sin Salir), mapa de niveles ramificado con progreso, ajustes con el tema de madera (y borrar progreso), pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
+- **Audio:** autoload `Sfx` con 11 efectos placeholder, música (cueca, sigue en la pausa) y volumen por categoría (General / Música / Efectos, con muestra al mover Efectos).
 - **Arte (`assets/`):** jugadores animados (idle / caminata a 10 FPS / THROW al apuntar), palito, campana y cuerda, cajas, zonas de muerte animadas (fuego / púas / caca), sopaipillas, ganchos, terreno (piso por piezas + pared) y fondo.
 
 Pendiente:
 - **Fase 6** — Pasada de tuning de la sensación (magnetismo, masas, largos, velocidades, radios del closeup) jugando los niveles reales.
 - **Arte que falta o hay que pulir:** cuadros propios para `jump` / `fall` / `swing` / `push` (hoy son provisorias con los cuadros de caminar/lanzar); costuras entre tablas de `piso_neutral` (vienen del dibujo); alinear bien el arte del palito y la campana con su colisión; la mano (`RopeAnchor`) no coincide exactamente con la mano del dibujo.
-- **Web:** el preset existe y exporta (probado en Chromium headless con la intro); falta probar los niveles nuevos en navegador y subirlo a Newgrounds.
+- **Web:** el preset exporta y se probó en Chromium headless (intro, menú, idiomas, mapa, nivel, pausa); falta subirlo a Newgrounds y probarlo con gente.
+- **Plataformas móviles:** la rama tiene 3 niveles (las otras ramas, 4).
 - **Imágenes en inglés definitivas** (`assets/ui/en/portada.png`, `pause_menu.webp`): hoy son el arte original
   con el texto reescrito por código; diseño puede reemplazarlas con el mismo nombre.
 - **Niveles del equipo fuera del mapa** (`main`, `level_3`): corregir el inicio (ver Lecciones) si se quieren sumar.
