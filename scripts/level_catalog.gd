@@ -37,12 +37,10 @@ const LEVELS: Array[Dictionary] = [
 	# --- Rama: cajas ---
 	{"id": "caja_1", "scene": "res://scenes/levels/caja_1.tscn", "name": "Una caja",
 		"pos": Vector2(550, 408), "from": ["tronco_4"]},
-	{"id": "caja_2", "scene": "res://scenes/levels/caja_2.tscn", "name": "Campanazo",
+	{"id": "caja_2", "scene": "res://scenes/levels/caja_2.tscn", "name": "Escalera",
 		"pos": Vector2(458, 434), "from": ["caja_1"]},
-	{"id": "caja_3", "scene": "res://scenes/levels/caja_3.tscn", "name": "Escalera de cajas",
+	{"id": "caja_3", "scene": "res://scenes/levels/caja_3.tscn", "name": "Encomienda",
 		"pos": Vector2(366, 460), "from": ["caja_2"]},
-	{"id": "caja_4", "scene": "res://scenes/levels/caja_4.tscn", "name": "Mudanza",
-		"pos": Vector2(274, 486), "from": ["caja_3"]},
 	# --- Rama: lanzar ---
 	{"id": "lanzar_1", "scene": "res://scenes/levels/lanzar_1.tscn", "name": "Al aire",
 		"pos": Vector2(722, 324), "from": ["tronco_4"]},
@@ -77,7 +75,7 @@ const LEVELS: Array[Dictionary] = [
 	{"id": "final", "scene": "res://scenes/levels/final.tscn", "name": "Emboque de a dos",
 		"pos": Vector2(700, 112), "need": 4, "special": true, "rope": false,
 		"hint": "Completa 4 caminos para abrirlo",
-		"from": ["level_2", "caja_4", "lanzar_3", "placa_4", "movil_3", "viento_3"]},
+		"from": ["level_2", "caja_3", "lanzar_3", "placa_4", "movil_3", "viento_3"]},
 ]
 
 ## Entrada del nivel con ese id (diccionario vacío si no existe).

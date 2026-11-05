@@ -30,6 +30,9 @@ extends SceneTree
 ##   ["until", Callable(ctx) -> bool, timeout_s=20]
 ##   ["do", Callable(ctx)]          ejecuta algo una vez
 ##   ["pump", s]                    colgando: empuja a favor del balanceo durante s
+##   ["pump_end", s, centro_x, margen]  en el suelo: camina hacia donde se mueve su
+##                                  extremo (como empujar un columpio) sin alejarse
+##                                  más de margen de centro_x; agranda el balanceo
 ##   ["release_all"]
 ##   ["jiggle", home_x, back, veces=6]  va y vuelve (home_x-back ↔ home_x) para
 ##                                  balancear el extremo; termina antes si ya ganó
@@ -304,6 +307,23 @@ func _do_step(who: String, step: Array, dt: float) -> bool:
 				if st["leg"] == 0:
 					st["n"] += 1
 					st["wait_until"] = t + 0.6
+			return false
+		"pump_end":
+			var center := float(step[2])
+			var margin := float(step[3])
+			var evx: float = emboques[who].get_end().linear_velocity.x
+			var dx := pl.global_position.x - center
+			var want := 0
+			if absf(evx) > 20.0:
+				want = 1 if evx > 0.0 else -1
+			if dx > margin and want > 0 or dx < -margin and want < 0:
+				want = 0
+			_act(who, "right", want > 0)
+			_act(who, "left", want < 0)
+			if t >= float(step[1]) or won():
+				_act(who, "right", false)
+				_act(who, "left", false)
+				return true
 			return false
 		"pump":
 			var omega: float = pl._swing_omega
