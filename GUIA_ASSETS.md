@@ -16,7 +16,7 @@ correr `godot --headless --import --path .`.
 
 | Qué se ve | Archivo(s) a reemplazar | Escena que lo usa | Notas |
 |---|---|---|---|
-| Jugador 1 (rojo) | `assets/jugadores/p1/walk/P1_WALK_01.png`, `P1_WALK_02.png`, `throw/P1_THROW.png` | `scenes/player.tscn` (vía `p1_frames.tres`) | Dibujos **mirando a la izquierda** (el código los da vuelta). Animaciones nuevas (`jump`, `fall`, `swing`, `push`): agregarlas en `p1_frames.tres` con ese nombre y se usan solas. |
+| Jugador 1 (rojo) | `assets/jugadores/p1/walk/P1_WALK_01.png`, `P1_WALK_02.png`, `throw/P1_THROW.png` | `scenes/player.tscn` (vía `p1_frames.tres`) | Dibujos **mirando a la izquierda** (el código los da vuelta). `jump`, `fall`, `swing` y `push` hoy reusan esos cuadros (provisorias): para el arte definitivo, abrir `p1_frames.tres` en Godot y cambiar los cuadros de esa animación (mismo nombre). |
 | Jugador 2 (azul) | `assets/jugadores/p2/...` (mismos nombres con `P2_`) | `scenes/player.tscn` (vía `p2_frames.tres`) | Igual que J1. |
 | Campana | `assets/emboque/campana.png` | `scenes/campana.tscn` | Si cambia la proporción, ajustar la escala del `Sprite` en esa escena para que calce con la colisión (~18×24 px). |
 | Palito | `assets/emboque/palito.png` | `scenes/palito.tscn` | Colisión 22×6 px. |

@@ -85,6 +85,14 @@ const STEP_MIN_SPEED := 30.0
 const SWING_WHOOSH_MIN_SPEED := 150.0
 ## Animación de reemplazo cuando el arte no trae la del estado (si no está acá, "idle").
 const ANIM_FALLBACK := {"push": "walk"}
+## Caída mínima (px/s) para aplastar el cuerpo y sonar al aterrizar; a
+## LAND_HARD_SPEED el aplastón es el máximo.
+const LAND_MIN_SPEED := 320.0
+const LAND_HARD_SPEED := 1000.0
+## Inclinación hacia adelante al empujar una caja (grados) y punto de apoyo del
+## giro (los pies, en coordenadas de Visual/Art).
+const PUSH_LEAN_DEG := 9.0
+const FEET := Vector2(0, 32)
 
 ## Hacia dónde mira: 1 = derecha, -1 = izquierda.
 var facing: int = 1
@@ -112,6 +120,9 @@ var _squash_tween: Tween
 @onready var _art: Node2D = $Visual/Art
 @onready var _sprite: AnimatedSprite2D = $Visual/Art.get_node_or_null("Sprite") as AnimatedSprite2D
 @onready var _anchor_offset: Vector2 = ($RopeAnchor as Node2D).position
+@onready var _sprite_rest: Vector2 = _sprite.position if _sprite != null else Vector2.ZERO
+var _lean := 0.0
+@onready var _squash_pivot: Vector2 = _anchor_offset
 
 func _ready() -> void:
 	# Al empezar mira hacia el centro de la pantalla (hacia su compañero).
@@ -135,6 +146,7 @@ func _physics_process(delta: float) -> void:
 	_update_animation()
 
 func _process_platformer(delta: float) -> void:
+	var was_on_floor := is_on_floor()
 	# Gravedad.
 	if not is_on_floor():
 		velocity.y += _gravity * delta
@@ -144,6 +156,7 @@ func _process_platformer(delta: float) -> void:
 	if not aiming and is_on_floor() and Input.is_action_just_pressed(input_prefix + "_jump"):
 		velocity.y = jump_velocity
 		Sfx.play(&"jump")
+		_squash(Vector2(0.88, 1.14), FEET)
 
 	# Movimiento horizontal (apuntando se queda quieto; el input solo lo gira).
 	var direction := 0.0 if aiming else Input.get_axis(input_prefix + "_left", input_prefix + "_right")
@@ -157,7 +170,10 @@ func _process_platformer(delta: float) -> void:
 
 	_pushing = direction != 0.0 and is_on_floor() and _try_push_box(direction)
 	var push_velocity := velocity.x
+	var fall_speed := velocity.y
 	move_and_slide()
+	if not was_on_floor and is_on_floor():
+		_on_landed(fall_speed)
 	if _pushing:
 		# Al chocar con la caja el deslizamiento anula la velocidad; se restaura
 		# para seguir empujando parejo el próximo tick (sin tirones).
@@ -165,6 +181,15 @@ func _process_platformer(delta: float) -> void:
 	if _launched and (is_on_floor() or is_on_wall()):
 		_launched = false
 	_update_footsteps(delta)
+
+## Al aterrizar de una caída fuerte: aplastón (mayor cuanto más rápido) y un
+## golpe sordo (el sonido de paso, más grave).
+func _on_landed(fall_speed: float) -> void:
+	if fall_speed < LAND_MIN_SPEED:
+		return
+	var t := clampf(inverse_lerp(LAND_MIN_SPEED, LAND_HARD_SPEED, fall_speed), 0.0, 1.0)
+	_squash(Vector2(1.08 + 0.14 * t, 0.92 - 0.14 * t), FEET)
+	Sfx.play(&"step", 0.75, -2.0 + 4.0 * t)
 
 ## Pasos: un sonido cada STEP_LENGTH px caminados de verdad sobre el piso (sin
 ## contar lo que lo mueve una caja de abajo, ni empujar contra un muro).
@@ -421,10 +446,22 @@ func _update_visual(delta: float) -> void:
 		target_rotation = -atan2(offset.x, offset.y) * swing_tilt_amount
 	var weight := 1.0 - exp(-TILT_SHARPNESS * delta)
 	_visual.rotation = lerp_angle(_visual.rotation, target_rotation, weight)
-	_visual.position = _anchor_offset - (_anchor_offset * _visual.scale).rotated(_visual.rotation)
+	# Gira sobre la mano (A) y se aplasta sobre _squash_pivot (Q):
+	# posición = A + R·(Q − S·Q − A).
+	_visual.position = _anchor_offset \
+		+ (_squash_pivot - _visual.scale * _squash_pivot - _anchor_offset).rotated(_visual.rotation)
+	# Al empujar, el cuerpo se inclina hacia adelante girando sobre los pies (Art
+	# está espejado según facing, así que "adelante" siempre es hacia donde mira).
+	_lean = lerpf(_lean, deg_to_rad(PUSH_LEAN_DEG) if _pushing else 0.0, weight)
+	if _sprite != null:
+		_sprite.rotation = _lean
+		_sprite.position = FEET - (FEET - _sprite_rest).rotated(_lean)
 
 ## Aplasta/estira el visual y lo devuelve a su tamaño con un rebote corto.
-func _squash(amount: Vector2) -> void:
+## [param pivot] = punto que queda fijo (la mano al engancharse, los pies al
+## saltar o aterrizar).
+func _squash(amount: Vector2, pivot: Vector2 = _anchor_offset) -> void:
+	_squash_pivot = pivot
 	if _squash_tween != null:
 		_squash_tween.kill()
 	_visual.scale = amount
