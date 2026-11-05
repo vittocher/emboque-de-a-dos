@@ -71,6 +71,8 @@ const LEVELS: Array[Dictionary] = [
 		"pos": Vector2(530, 108), "from": ["movil_1"]},
 	{"id": "movil_3", "scene": "res://scenes/levels/movil_3.tscn",
 		"pos": Vector2(450, 66), "from": ["movil_2"]},
+	{"id": "movil_4", "scene": "res://scenes/levels/movil_4.tscn",
+		"pos": Vector2(368, 50), "from": ["movil_3"]},
 	# --- Rama: viento (sale de lanzar) ---
 	{"id": "viento_1", "scene": "res://scenes/levels/viento_1.tscn",
 		"pos": Vector2(888, 336), "from": ["lanzar_2"]},
@@ -84,7 +86,7 @@ const LEVELS: Array[Dictionary] = [
 	{"id": "final", "scene": "res://scenes/levels/final.tscn",
 		"pos": Vector2(700, 112), "need": 4, "special": true, "rope": false,
 		"hint": "MAP_HINT_FINAL",
-		"from": ["level_2", "level_4", "lanzar_4", "placa_4", "movil_3", "viento_4"]},
+		"from": ["level_2", "level_4", "lanzar_4", "placa_4", "movil_4", "viento_4"]},
 ]
 
 ## Clave de traducción del nombre del nivel (i18n/textos.csv): "LEVEL_TRONCO_1".

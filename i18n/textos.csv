@@ -58,6 +58,7 @@ LEVEL_PLACA_4,Relevo,Relay
 LEVEL_MOVIL_1,Ascensor,Elevator
 LEVEL_MOVIL_2,Vaivén,Back and Forth
 LEVEL_MOVIL_3,Andén,All Aboard
+LEVEL_MOVIL_4,Contratiempo,Off-Beat
 LEVEL_VIENTO_1,Volantín,Kite
 LEVEL_VIENTO_2,Ventolera,Gale
 LEVEL_VIENTO_3,Remolino,Whirlwind
