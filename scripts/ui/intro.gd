@@ -66,12 +66,25 @@ func _ready() -> void:
 
 func _load_video() -> VideoStream:
 	if video_path.is_empty() or not ResourceLoader.exists(video_path):
-		push_warning("Intro: no está el video %s; se pasa directo al menú." % video_path)
+		push_warning("Intro: no está el video %s; se pasa directo al menú.%s" % [video_path, _conversion_hint()])
 		return null
 	var stream := load(video_path) as VideoStream
 	if stream == null:
 		push_warning("Intro: no se pudo cargar %s (¿es Ogg Theora .ogv?)." % video_path)
 	return stream
+
+## Si en la carpeta del video hay otro formato (mp4, mov…), recuerda cómo
+## convertirlo (Godot solo reproduce Ogg Theora).
+func _conversion_hint() -> String:
+	var dir := video_path.get_base_dir()
+	# Solo sirve a quien desarrolla (en el juego exportado la carpeta ni existe).
+	if not OS.has_feature("editor") or not DirAccess.dir_exists_absolute(dir):
+		return ""
+	for file in DirAccess.get_files_at(dir):
+		if file.get_extension().to_lower() in ["mp4", "mov", "webm", "mkv", "avi", "m4v"]:
+			return " Hay un %s en %s: conviértelo a .ogv con tools/convertir_video.bat (ver video/README.md)." \
+				% [file, dir]
+	return ""
 
 func _start_video() -> void:
 	_state = State.PLAYING
@@ -135,7 +148,7 @@ func _input(event: InputEvent) -> void:
 func _is_skip_event(event: InputEvent) -> bool:
 	if event is InputEventKey:
 		return event.pressed and not event.echo
-	if event is InputEventMouseButton or event is InputEventJoypadButton:
+	if event is InputEventMouseButton or event is InputEventJoypadButton or event is InputEventScreenTouch:
 		return event.pressed
 	return false
 

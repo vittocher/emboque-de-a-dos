@@ -1,7 +1,7 @@
 extends Node
 
-## AUTOLOAD (SettingsManager). Volumen (general/música/efectos), pantalla completa
-## y persistencia. Los buses "Music" y "SFX" vienen en res://default_bus_layout.tres
+## AUTOLOAD (SettingsManager). Volumen (general/música/efectos), pantalla completa,
+## idioma (ver Languages) y persistencia. Los buses "Music" y "SFX" vienen en res://default_bus_layout.tres
 ## (Godot lo carga al arrancar); _ensure_buses() solo es un respaldo.
 
 const SETTINGS_PATH := "user://settings.cfg"
@@ -20,6 +20,9 @@ var master_volume: float = DEFAULT_MASTER_VOLUME
 var music_volume: float = DEFAULT_MUSIC_VOLUME
 var sfx_volume: float = DEFAULT_SFX_VOLUME
 var fullscreen: bool = DEFAULT_FULLSCREEN
+## Código del idioma (ver Languages). Vacío hasta cargar: la primera vez se usa
+## el del sistema si el juego lo tiene.
+var language: String = ""
 
 var _music_player: AudioStreamPlayer
 var _music_tween: Tween
@@ -69,6 +72,19 @@ func set_fullscreen(enabled: bool) -> void:
 	_apply_window_mode()
 	_save_settings()
 
+## Cambia el idioma de todo el juego (los textos en pantalla se actualizan solos).
+func set_language(code: String) -> void:
+	if not Languages.available().has(code):
+		code = Languages.DEFAULT
+	language = code
+	TranslationServer.set_locale(language)
+	_save_settings()
+
+## Pasa al idioma siguiente de la lista (botón de idioma del menú principal).
+func cycle_language() -> void:
+	set_language(Languages.next_after(language))
+
+## Restaura volúmenes y pantalla (el idioma se mantiene: no es un "valor").
 func reset_to_defaults() -> void:
 	master_volume = DEFAULT_MASTER_VOLUME
 	music_volume = DEFAULT_MUSIC_VOLUME
@@ -81,7 +97,15 @@ func _apply_settings() -> void:
 	_apply_bus_volume("Master", master_volume)
 	_apply_bus_volume(MUSIC_BUS, music_volume)
 	_apply_bus_volume(SFX_BUS, sfx_volume)
-	_apply_window_mode()
+	# En web el navegador solo deja entrar a pantalla completa tras un clic o
+	# tecla: el juego arranca en ventana (se activa desde Ajustes).
+	if OS.has_feature("web"):
+		fullscreen = false
+	else:
+		_apply_window_mode()
+	if language == "" or not Languages.available().has(language):
+		language = Languages.system_default()
+	TranslationServer.set_locale(language)
 
 func _apply_bus_volume(bus_name: String, value: float) -> void:
 	var idx := AudioServer.get_bus_index(bus_name)
@@ -122,6 +146,7 @@ func _load_settings() -> void:
 		1.0
 	)
 	fullscreen = bool(config.get_value("display", "fullscreen", DEFAULT_FULLSCREEN))
+	language = String(config.get_value("general", "language", ""))
 
 func _save_settings() -> void:
 	var config := ConfigFile.new()
@@ -129,6 +154,7 @@ func _save_settings() -> void:
 	config.set_value("audio", "music_volume", music_volume)
 	config.set_value("audio", "sfx_volume", sfx_volume)
 	config.set_value("display", "fullscreen", fullscreen)
+	config.set_value("general", "language", language)
 	config.save(SETTINGS_PATH)
 
 func _start_music() -> void:
@@ -141,6 +167,8 @@ func _start_music() -> void:
 	_music_player = AudioStreamPlayer.new()
 	_music_player.stream = stream
 	_music_player.bus = MUSIC_BUS
+	# Sigue sonando en la pausa (si no, el volumen de música no se oye al ajustarlo).
+	_music_player.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_music_player)
 	# Diferido: si la escena de arranque es la intro, alcanza a pedir silencio
 	# (stop_music) antes de que suene el primer instante de la cueca.

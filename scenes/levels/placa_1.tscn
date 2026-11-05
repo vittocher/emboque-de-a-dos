@@ -1,0 +1,54 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="PackedScene" path="res://scenes/pressure_plate.tscn" id="4_plate"]
+[ext_resource type="PackedScene" path="res://scenes/gate.tscn" id="5_gate"]
+
+[node name="Placa1" instance=ExtResource("1_base")]
+
+[node name="Player1" parent="."]
+position = Vector2(100, 380)
+
+[node name="Player2" parent="."]
+position = Vector2(1180, 380)
+
+[node name="GroundLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(310.5, 660)
+size = Vector2(621, 120)
+
+[node name="GroundRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(969.5, 660)
+size = Vector2(621, 120)
+
+[node name="ShaftFloor" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 700)
+size = Vector2(38, 40)
+
+[node name="GateLeft" parent="." instance=ExtResource("5_gate")]
+position = Vector2(540, 470)
+size = Vector2(24, 260)
+
+[node name="GateRight" parent="." instance=ExtResource("5_gate")]
+position = Vector2(740, 470)
+size = Vector2(24, 260)
+channel = 1
+
+[node name="ButtonForRight" parent="." instance=ExtResource("4_plate")]
+position = Vector2(320, 600)
+channel = 1
+latch = true
+
+[node name="ButtonForLeft" parent="." instance=ExtResource("4_plate")]
+position = Vector2(960, 600)
+latch = true
+
+[node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(320, 470)
+
+[node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(960, 470)
+
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(640, 664)

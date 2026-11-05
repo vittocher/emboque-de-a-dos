@@ -1,0 +1,66 @@
+keys,es,en
+LANGUAGE_NAME,Español,English
+MENU_PLAY,Jugar,Play
+MENU_SETTINGS,Ajustes,Settings
+COMMON_BACK,Volver,Back
+SETTINGS_TITLE,Ajustes,Settings
+SETTINGS_MASTER,General,Master
+SETTINGS_MUSIC,Música,Music
+SETTINGS_SFX,Efectos,Effects
+SETTINGS_FULLSCREEN,Pantalla completa,Fullscreen
+SETTINGS_ENABLE,Activar,On
+SETTINGS_LANGUAGE,Idioma,Language
+SETTINGS_RESET,Restaurar valores,Restore defaults
+SETTINGS_ERASE,Borrar progreso,Erase progress
+SETTINGS_ERASE_SURE,¿Seguro? Presiona otra vez,Sure? Press again
+SETTINGS_ERASED,Progreso borrado,Progress erased
+PAUSE_RESUME,Continuar,Resume
+PAUSE_RESTART,Reiniciar nivel,Restart level
+PAUSE_MAIN_MENU,Menú principal,Main menu
+PAUSE_BACK,Volver a pausa,Back to pause
+INTRO_SKIP,Presiona cualquier tecla para saltar,Press any key to skip
+INTRO_START,Presiona cualquier tecla para comenzar,Press any key to start
+HUD_POINTS,Puntos: %d,Points: %d
+WIN_TITLE,¡Emboque logrado!,Perfect catch!
+VICTORY_SCORE,Puntaje: %d,Score: %d
+VICTORY_NEW_RECORD,¡Nuevo récord!,New record!
+VICTORY_BEST,Mejor puntaje: %d,Best score: %d
+VICTORY_RETRY,Reintentar,Retry
+VICTORY_CONTINUE,Continuar,Continue
+MAP_LEVEL,Nivel %d,Level %d
+MAP_LOCKED,Bloqueado,Locked
+MAP_SOON,Próximamente,Coming soon
+MAP_RECORD,Récord: %d,Best: %d
+MAP_COLLECTED,Sopaipillas: %d / %d,Sopaipillas: %d / %d
+MAP_NOT_DONE,Sin completar,Not completed yet
+MAP_HINT_FINAL,Completa 4 caminos para abrirlo,Complete 4 paths to unlock it
+HINT_GRAB_THROW,"Cuerda al mínimo y tirar otra vez: tomas el emboque.\nG / L: apuntar, y otra vez para lanzar.","Rope all the way in, then pull once more to grab the emboque.\nG / L: aim, then press again to throw."
+LEVEL_TRONCO_1,Primer emboque,First Catch
+LEVEL_TRONCO_2,Cuerda larga,Long Rope
+LEVEL_TRONCO_3,Colgados,Hanging Around
+LEVEL_TRONCO_4,El cuenco,The Bowl
+LEVEL_PELIGRO_1,Púas,Spikes
+LEVEL_PELIGRO_2,Cuidado abajo,Look Out Below
+LEVEL_PELIGRO_3,Brasas,Embers
+LEVEL_LEVEL_2,La T,The T
+LEVEL_CAJA_1,Una caja,A Box
+LEVEL_CAJA_2,Escalera,Staircase
+LEVEL_CAJA_3,Encomienda,Special Delivery
+LEVEL_LEVEL_4,Escalones,Steps
+LEVEL_LANZAR_1,Al aire,Up in the Air
+LEVEL_LANZAR_2,Puntería,Good Aim
+LEVEL_LANZAR_3,Lazo,Lasso
+LEVEL_LANZAR_4,Buzón,Mail Slot
+LEVEL_PLACA_1,La placa,Pressure Plate
+LEVEL_PLACA_2,Peso muerto,Dead Weight
+LEVEL_PLACA_3,Turnos,Taking Turns
+LEVEL_PLACA_4,Relevo,Relay
+LEVEL_MOVIL_1,Ascensor,Elevator
+LEVEL_MOVIL_2,Vaivén,Back and Forth
+LEVEL_MOVIL_3,Andén,All Aboard
+LEVEL_MOVIL_4,Contratiempo,Off-Beat
+LEVEL_VIENTO_1,Volantín,Kite
+LEVEL_VIENTO_2,Ventolera,Gale
+LEVEL_VIENTO_3,Remolino,Whirlwind
+LEVEL_VIENTO_4,Remonte,Updraft
+LEVEL_FINAL,Emboque de a dos,Emboque de a Dos

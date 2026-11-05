@@ -1,0 +1,94 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="PackedScene" path="res://scenes/hook_point.tscn" id="4_hook"]
+[ext_resource type="PackedScene" path="res://scenes/both_death_zone.tscn" id="5_fire"]
+[ext_resource type="PackedScene" path="res://scenes/bowl.tscn" id="6_bowl"]
+[ext_resource type="PackedScene" path="res://scenes/pressure_plate.tscn" id="7_plate"]
+[ext_resource type="PackedScene" path="res://scenes/gate.tscn" id="8_gate"]
+[ext_resource type="PackedScene" path="res://scenes/fall_zone.tscn" id="9_fall"]
+
+[node name="Placa4" instance=ExtResource("1_base")]
+
+[node name="Player1" parent="."]
+position = Vector2(70, 300)
+
+[node name="Player2" parent="."]
+position = Vector2(1210, 300)
+
+[node name="LedgeLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(85, 392)
+size = Vector2(170, 24)
+
+[node name="LedgeRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(1195, 392)
+size = Vector2(170, 24)
+
+[node name="CurtainLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(380, 15)
+size = Vector2(40, 630)
+
+[node name="CurtainRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(900, 15)
+size = Vector2(40, 630)
+
+[node name="Center" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 482)
+size = Vector2(200, 24)
+
+[node name="FrameLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(222, 100)
+size = Vector2(24, 200)
+
+[node name="DoorLeft" parent="." instance=ExtResource("8_gate")]
+position = Vector2(222, 420)
+size = Vector2(24, 440)
+
+[node name="FrameRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(1058, 100)
+size = Vector2(24, 200)
+
+[node name="DoorRight" parent="." instance=ExtResource("8_gate")]
+position = Vector2(1058, 420)
+size = Vector2(24, 440)
+channel = 1
+
+[node name="PlateRight" parent="." instance=ExtResource("7_plate")]
+position = Vector2(1235, 380)
+
+[node name="PlateCenter" parent="." instance=ExtResource("7_plate")]
+position = Vector2(690, 470)
+channel = 1
+
+[node name="HookLeft" parent="." instance=ExtResource("4_hook")]
+position = Vector2(300, 400)
+
+[node name="HookRight" parent="." instance=ExtResource("4_hook")]
+position = Vector2(980, 400)
+
+[node name="Bowl" parent="." instance=ExtResource("6_bowl")]
+position = Vector2(640, 560)
+width = 170.0
+
+[node name="PitFire" parent="." instance=ExtResource("5_fire")]
+position = Vector2(640, 700)
+scale = Vector2(12.8, 1.0)
+
+[node name="FallZone" parent="." instance=ExtResource("9_fall")]
+
+[node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(110, 240)
+
+[node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(1170, 240)
+
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(300, 600)
+
+[node name="Collectible4" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(980, 600)
+
+[node name="Collectible5" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(640, 576)

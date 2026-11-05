@@ -1,0 +1,65 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="PackedScene" path="res://scenes/push_box.tscn" id="4_box"]
+
+[node name="Caja2" instance=ExtResource("1_base")]
+
+[node name="Player1" parent="."]
+position = Vector2(60, 350)
+
+[node name="Player2" parent="."]
+position = Vector2(1220, 350)
+
+[node name="Ground" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 660)
+size = Vector2(1280, 120)
+
+[node name="StepLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(350, 500)
+size = Vector2(180, 200)
+
+[node name="TopLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(530.5, 400)
+size = Vector2(181, 400)
+
+[node name="StepRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(930, 500)
+size = Vector2(180, 200)
+
+[node name="TopRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(749.5, 400)
+size = Vector2(181, 400)
+
+[node name="ShaftFloor" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 430)
+size = Vector2(38, 340)
+
+[node name="BoxLeft1" parent="." instance=ExtResource("4_box")]
+position = Vector2(170, 568)
+
+[node name="BoxLeft2" parent="." instance=ExtResource("4_box")]
+position = Vector2(330, 368)
+
+[node name="BoxRight1" parent="." instance=ExtResource("4_box")]
+position = Vector2(1110, 568)
+
+[node name="BoxRight2" parent="." instance=ExtResource("4_box")]
+position = Vector2(950, 368)
+
+[node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(240, 330)
+
+[node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(1040, 330)
+
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(470, 130)
+
+[node name="Collectible4" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(810, 130)
+
+[node name="Collectible5" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(640, 245)

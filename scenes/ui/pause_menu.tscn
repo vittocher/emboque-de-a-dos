@@ -1,7 +1,9 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/pause_menu.gd" id="1_pause"]
 [ext_resource type="Texture2D" path="res://assets/ui/pause_menu.webp" id="2_art"]
+[ext_resource type="Script" path="res://scripts/ui/localized_texture_rect.gd" id="3_loc"]
+[ext_resource type="Theme" path="res://scenes/ui/tema_madera.tres" id="4_theme"]
 
 [sub_resource type="StyleBoxEmpty" id="Style_none"]
 
@@ -60,72 +62,6 @@ corner_radius_bottom_left = 10
 shadow_color = Color(0, 0, 0, 0.45)
 shadow_size = 8
 
-[sub_resource type="StyleBoxFlat" id="Style_plank"]
-bg_color = Color(0.4, 0.23, 0.12, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.2, 0.11, 0.05, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxFlat" id="Style_plank_focus"]
-bg_color = Color(0.45, 0.27, 0.14, 1)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(1, 0.84, 0.35, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-shadow_color = Color(1, 0.78, 0.25, 0.45)
-shadow_size = 8
-
-[sub_resource type="StyleBoxFlat" id="Style_slider"]
-content_margin_top = 4.0
-content_margin_bottom = 4.0
-bg_color = Color(0.16, 0.09, 0.04, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="Style_slider_fill"]
-content_margin_top = 4.0
-content_margin_bottom = 4.0
-bg_color = Color(0.85, 0.65, 0.28, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="Theme" id="Theme_wood"]
-Button/colors/font_color = Color(0.97, 0.93, 0.82, 1)
-Button/colors/font_focus_color = Color(1, 0.95, 0.75, 1)
-Button/colors/font_hover_color = Color(1, 0.95, 0.75, 1)
-Button/colors/font_pressed_color = Color(1, 0.95, 0.75, 1)
-Button/styles/focus = SubResource("Style_plank_focus")
-Button/styles/hover = SubResource("Style_plank_focus")
-Button/styles/normal = SubResource("Style_plank")
-Button/styles/pressed = SubResource("Style_plank_focus")
-CheckBox/colors/font_color = Color(0.97, 0.93, 0.82, 1)
-CheckBox/colors/font_focus_color = Color(1, 0.95, 0.75, 1)
-CheckBox/colors/font_hover_color = Color(1, 0.95, 0.75, 1)
-CheckBox/colors/font_pressed_color = Color(1, 0.95, 0.75, 1)
-CheckBox/styles/focus = SubResource("Style_none")
-CheckBox/styles/hover = SubResource("Style_none")
-CheckBox/styles/normal = SubResource("Style_none")
-CheckBox/styles/pressed = SubResource("Style_none")
-HSlider/styles/grabber_area = SubResource("Style_slider_fill")
-HSlider/styles/grabber_area_highlight = SubResource("Style_slider_fill")
-HSlider/styles/slider = SubResource("Style_slider")
-Label/colors/font_color = Color(0.97, 0.93, 0.82, 1)
-
 [node name="PauseMenu" type="CanvasLayer"]
 script = ExtResource("1_pause")
 
@@ -154,6 +90,7 @@ offset_bottom = 1024.0
 scale = Vector2(0.703125, 0.703125)
 
 [node name="Art" type="TextureRect" parent="PausePanel/Board"]
+script = ExtResource("3_loc")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -197,7 +134,7 @@ offset_left = 229.0
 offset_top = 294.0
 offset_right = 792.0
 offset_bottom = 392.0
-tooltip_text = "Continuar"
+tooltip_text = "PAUSE_RESUME"
 theme_override_styles/normal = SubResource("Style_none")
 theme_override_styles/hover = SubResource("Style_glow")
 theme_override_styles/pressed = SubResource("Style_glow_pressed")
@@ -209,7 +146,7 @@ offset_left = 229.0
 offset_top = 432.0
 offset_right = 792.0
 offset_bottom = 528.0
-tooltip_text = "Reiniciar nivel"
+tooltip_text = "PAUSE_RESTART"
 theme_override_styles/normal = SubResource("Style_none")
 theme_override_styles/hover = SubResource("Style_glow")
 theme_override_styles/pressed = SubResource("Style_glow_pressed")
@@ -221,7 +158,7 @@ offset_left = 229.0
 offset_top = 570.0
 offset_right = 792.0
 offset_bottom = 666.0
-tooltip_text = "Ajustes"
+tooltip_text = "MENU_SETTINGS"
 theme_override_styles/normal = SubResource("Style_none")
 theme_override_styles/hover = SubResource("Style_glow")
 theme_override_styles/pressed = SubResource("Style_glow_pressed")
@@ -233,7 +170,7 @@ offset_left = 229.0
 offset_top = 708.0
 offset_right = 792.0
 offset_bottom = 806.0
-tooltip_text = "Menú principal"
+tooltip_text = "PAUSE_MAIN_MENU"
 theme_override_styles/normal = SubResource("Style_none")
 theme_override_styles/hover = SubResource("Style_glow")
 theme_override_styles/pressed = SubResource("Style_glow_pressed")
@@ -242,10 +179,10 @@ theme_override_styles/focus = SubResource("Style_glow")
 [node name="SettingsPanel" type="Panel" parent="PausePanel"]
 layout_mode = 0
 offset_left = 441.0
-offset_top = 200.0
+offset_top = 185.0
 offset_right = 843.0
-offset_bottom = 571.0
-theme = SubResource("Theme_wood")
+offset_bottom = 601.0
+theme = ExtResource("4_theme")
 theme_override_styles/panel = SubResource("Style_wood_panel")
 
 [node name="SettingsVBox" type="VBoxContainer" parent="PausePanel/SettingsPanel"]
@@ -264,7 +201,7 @@ alignment = 1
 
 [node name="Title" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox"]
 layout_mode = 2
-text = "Ajustes"
+text = "SETTINGS_TITLE"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 30
 
@@ -275,7 +212,7 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/VolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(135, 0)
-text = "General"
+text = "SETTINGS_MASTER"
 
 [node name="VolumeSlider" type="HSlider" parent="PausePanel/SettingsPanel/SettingsVBox/VolumeRow"]
 layout_mode = 2
@@ -291,7 +228,7 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/MusicVolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(135, 0)
-text = "Música"
+text = "SETTINGS_MUSIC"
 
 [node name="MusicVolumeSlider" type="HSlider" parent="PausePanel/SettingsPanel/SettingsVBox/MusicVolumeRow"]
 layout_mode = 2
@@ -307,7 +244,7 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/SfxVolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(135, 0)
-text = "Efectos"
+text = "SETTINGS_SFX"
 
 [node name="SfxVolumeSlider" type="HSlider" parent="PausePanel/SettingsPanel/SettingsVBox/SfxVolumeRow"]
 layout_mode = 2
@@ -323,14 +260,28 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/FullscreenRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(135, 0)
-text = "Pantalla completa"
+text = "SETTINGS_FULLSCREEN"
 
 [node name="FullscreenCheck" type="CheckBox" parent="PausePanel/SettingsPanel/SettingsVBox/FullscreenRow"]
 layout_mode = 2
-text = "Activar"
+text = "SETTINGS_ENABLE"
+
+[node name="LanguageRow" type="HBoxContainer" parent="PausePanel/SettingsPanel/SettingsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/LanguageRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(135, 0)
+text = "SETTINGS_LANGUAGE"
+
+[node name="LanguageButton" type="Button" parent="PausePanel/SettingsPanel/SettingsVBox/LanguageRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "LANGUAGE_NAME"
 
 [node name="BackButton" type="Button" parent="PausePanel/SettingsPanel/SettingsVBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 46)
-text = "Volver a pausa"
+text = "PAUSE_BACK"
 theme_override_font_sizes/font_size = 20

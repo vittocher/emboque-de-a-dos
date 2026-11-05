@@ -1,12 +1,15 @@
 extends Control
 
-## Menú principal: portada de fondo + Jugar (→ selector de niveles) y Ajustes.
-## El título y los controles están dibujados en la portada (assets/ui/portada.png).
+## Menú principal: portada de fondo + Jugar (→ selector de niveles) y Ajustes, y
+## arriba a la derecha el botón de idioma (muestra el idioma actual; cada clic
+## pasa al siguiente). El título y los controles están dibujados en la portada
+## (assets/ui/portada.png; la versión de cada idioma en assets/ui/<código>/).
 ## Sin botón Salir: el juego es para web, donde quit() no cierra la pestaña.
 
 func _ready() -> void:
 	$Center/VBox/PlayButton.pressed.connect(_on_play_pressed)
 	$Center/VBox/SettingsButton.pressed.connect(_on_settings_pressed)
+	$LanguageButton.pressed.connect(SettingsManager.cycle_language)
 	_fade_in_after_intro()
 
 ## Al venir de la intro (que se funde a negro), el menú aparece desde negro.

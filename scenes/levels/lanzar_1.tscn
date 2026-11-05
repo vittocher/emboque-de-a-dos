@@ -1,0 +1,65 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="PackedScene" path="res://scenes/hook_point.tscn" id="4_hook"]
+[ext_resource type="Script" path="res://scripts/level_rules.gd" id="5_rules"]
+
+[sub_resource type="LabelSettings" id="Settings_hint"]
+font_size = 20
+font_color = Color(0.95, 0.95, 0.9, 1)
+outline_size = 8
+outline_color = Color(0.05, 0.06, 0.12, 1)
+
+[node name="Lanzar1" instance=ExtResource("1_base")]
+
+[node name="LevelRules" type="Node" parent="."]
+script = ExtResource("5_rules")
+throw_enabled = true
+
+[node name="Player1" parent="."]
+position = Vector2(250, 460)
+
+[node name="Player2" parent="."]
+position = Vector2(1030, 460)
+
+[node name="Ground" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 700)
+size = Vector2(1280, 40)
+
+[node name="TowerLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(570.5, 545)
+size = Vector2(101, 270)
+
+[node name="TowerRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(709.5, 545)
+size = Vector2(101, 270)
+
+[node name="ShaftFloor" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 600)
+size = Vector2(38, 160)
+
+[node name="HookLeft" parent="." instance=ExtResource("4_hook")]
+position = Vector2(495, 375)
+
+[node name="HookRight" parent="." instance=ExtResource("4_hook")]
+position = Vector2(785, 375)
+
+[node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(470, 470)
+
+[node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(810, 470)
+
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(640, 500)
+
+[node name="Hint" type="Label" parent="UI"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 70.0
+offset_bottom = 130.0
+text = "HINT_GRAB_THROW"
+label_settings = SubResource("Settings_hint")
+horizontal_alignment = 1

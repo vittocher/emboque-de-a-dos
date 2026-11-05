@@ -19,6 +19,9 @@ extends CanvasLayer
 @onready var settings_sfx_volume: HSlider = $PausePanel/SettingsPanel/SettingsVBox/SfxVolumeRow/SfxVolumeSlider
 @onready var settings_fullscreen: CheckBox = $PausePanel/SettingsPanel/SettingsVBox/FullscreenRow/FullscreenCheck
 @onready var settings_back_button: Button = $PausePanel/SettingsPanel/SettingsVBox/BackButton
+## Muestra el idioma actual (su texto es la clave LANGUAGE_NAME); cada clic pasa
+## al siguiente y todo el nivel se traduce al tiro.
+@onready var settings_language: Button = $PausePanel/SettingsPanel/SettingsVBox/LanguageRow/LanguageButton
 
 var _is_paused := false
 var _settings: Node
@@ -35,6 +38,7 @@ func _ready() -> void:
 	settings_music_volume.value_changed.connect(_on_music_volume_changed)
 	settings_sfx_volume.value_changed.connect(_on_sfx_volume_changed)
 	settings_fullscreen.toggled.connect(_on_fullscreen_toggled)
+	settings_language.pressed.connect(_settings.cycle_language)
 	# El mouse mueve el foco: así brilla un solo botón a la vez.
 	for button: Button in [continue_button, restart_button, settings_button, main_menu_button]:
 		button.mouse_entered.connect(button.grab_focus)
@@ -75,10 +79,11 @@ func _back_from_settings() -> void:
 func _show_settings() -> void:
 	buttons.visible = false
 	settings_box.visible = true
-	settings_master_volume.value = _settings.master_volume
-	settings_music_volume.value = _settings.music_volume
-	settings_sfx_volume.value = _settings.sfx_volume
-	settings_fullscreen.button_pressed = _settings.fullscreen
+	# Sin señal: mostrar los valores no debe volver a guardarlos ni sonar.
+	settings_master_volume.set_value_no_signal(_settings.master_volume)
+	settings_music_volume.set_value_no_signal(_settings.music_volume)
+	settings_sfx_volume.set_value_no_signal(_settings.sfx_volume)
+	settings_fullscreen.set_pressed_no_signal(_settings.fullscreen)
 	settings_back_button.grab_focus()
 
 func _on_master_volume_changed(value: float) -> void:
@@ -89,6 +94,7 @@ func _on_music_volume_changed(value: float) -> void:
 
 func _on_sfx_volume_changed(value: float) -> void:
 	_settings.set_sfx_volume(value)
+	Sfx.preview()
 
 func _on_fullscreen_toggled(enabled: bool) -> void:
 	_settings.set_fullscreen(enabled)
