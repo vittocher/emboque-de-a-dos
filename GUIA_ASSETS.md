@@ -59,7 +59,7 @@ Los cuadros se repiten a lo ancho de la zona sin deformarse (`HazardArt`).
 | Portada del menú principal (título y controles dibujados) | `assets/ui/portada.png` (español) y `assets/ui/en/portada.png` (inglés) | `scenes/ui/main_menu.tscn` | La fila de lanzar ahora dice "LANZAR" (el mapa ya no tiene "niveles verdes"). |
 | Menú de pausa | `assets/ui/pause_menu.webp` (español) y `assets/ui/en/pause_menu.webp` (inglés) | `scenes/ui/pause_menu.tscn` | Ver "Menú de pausa" en CLAUDE.md. Los botones pintados tienen que quedar en el mismo lugar en todos los idiomas. |
 | Botones de madera, nodos del mapa | (procedurales: `shaders/madera_boton.gdshader`) | `scenes/ui/boton_madera.tscn`, `scenes/ui/level_node.tscn` | Colores de la madera en los parámetros del shader. |
-| Video de intro | `video/intro.ogv` | `scenes/ui/intro.tscn` | Ver `video/README.md`. |
+| Video de intro | `video/intro.ogv` | `scenes/ui/intro.tscn` | Arrastrar el video (mp4…) sobre `tools/convertir_video.bat` y listo. Ver `video/README.md`. |
 
 ### Imágenes con texto en otros idiomas
 

@@ -194,6 +194,7 @@ audio/             cueca.ogg (música, la pone SettingsManager) y sfx/: efectos 
                    step, jump, die, hook, swing, box_push (loop), grab, throw.
 i18n/              textos.csv: TODOS los textos del juego, una columna por idioma (ver "Idiomas").
 default_bus_layout.tres  Buses de audio Master / Music / SFX (ver "Volumen y buses de audio"). Obligatorio para web.
+tools/convertir_video.bat|.sh  Convierte el video de la intro a video/intro.ogv (ver "Intro (video)").
 tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python tools/generate_sfx.py [nombres]`
                    (sin nombres, todos; con nombres, solo esos, p. ej. `plate gate wind`).
 tests/             Bot de pruebas (ver "Bot de pruebas"): play_level.gd, run_all.sh, solutions/<nivel>.gd.
@@ -245,7 +246,7 @@ J1 = **campana**, J2 = **palito** (asignados en cada nivel vía `end_scene` + `e
 
 ### Intro (video) (`ui/intro.tscn` + `ui/intro.gd`)
 
-Escena de arranque. Reproduce `video/intro.ogv` (export `video_path`) y luego pasa al menú; si el archivo no existe va directo al menú (nunca se traba). **Formato: Ogg Theora `.ogv`** (Godot 4 no lee mp4/webm); cómo convertir con ffmpeg en `video/README.md`. Al agregar el video, commitear también el `intro.ogv.uid` que genera Godot.
+Escena de arranque. Reproduce `video/intro.ogv` (export `video_path`) y luego pasa al menú; si el archivo no existe va directo al menú (nunca se traba; si hay un mp4 en `video/`, avisa cómo convertirlo). **Formato: Ogg Theora `.ogv`** (Godot 4 no lee mp4/webm): **`tools/convertir_video.bat`** (arrastrar el video encima; `.sh` en Mac/Linux) lo deja en 1280×720 máx., 30 fps, Theora q7 + Vorbis estéreo (detalles en `video/README.md`). Al agregar el video, commitear también el `intro.ogv.uid` que genera Godot; el mp4 original lo ignora `video/.gitignore`.
 
 - **Saltar:** cualquier tecla (no repetición), clic o botón de control, salvo los primeros `skip_guard_time` (0,35 s) para no saltarla con una tecla que venía apretada. Mensaje "Presiona cualquier tecla para saltar" abajo (aparece a los 0,6 s, pulsa suave entre 70 y 100 % de opacidad, en una píldora semitransparente para leerse sobre cualquier video). La tecla que salta se consume (no llega al menú).
 - **Salida:** fundido a negro + fundido del audio del video (0,5 s); el menú aparece desde negro (`IntroScreen.fade_menu_in`) y la cueca entra con fundido de 1,5 s.
@@ -635,6 +636,7 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 
 ### Presentación y sonido
 
+- **Video convertido con `tools/convertir_video.sh`** (fuente 1920×1080 a 60 fps con audio, 12 s): sale Theora 1280×720 30 fps + Vorbis 44,1 kHz estéreo; en la intro avanza a velocidad real (6,08 s a los 6 s) y al terminar (12,5 s) pasa solo al menú; resto del test de la intro igual. PASS 21/21.
 - **Intro (video)** (escritorio con Xvfb + export web en Chromium headless, con un .ogv de prueba): arranca como escena principal, video sonando y cueca callada; una tecla en los primeros 0,35 s no salta; mensaje visible con el texto pedido; el video llena 1280×720 (16:9) y uno 4:3 queda centrado con franjas (960×720 en x=160); tecla → fundido → menú; la cueca vuelve con fundido (−36 dB → 0 dB); volver al menú desde otra escena no repite fundido ni reinicia la música; al terminar el video pasa solo al menú; clic también salta; sin video va directo al menú con música. PASS 20/20. En web: aviso "para comenzar" → video → menú, con salida de audio medida (AnalyserNode): aviso 0,0000, video 0,074, menú (cueca) 0,158; el .ogv entra al .pck. Botón Ajustes con brillo fantasma al llegar al menú (bug previo del layout, ver Lecciones) corregido: sin mouse encima no brilla, con el mouse encima sí, y sigue al mouse.
 
 - **Mirada + espejo + sonidos:** mirada/espejo, estados de animación, ~8 pasos/s, pasajero sin pasos, salto, enganche, whoosh por pasada, loop de la caja on/off, muerte sin sonido duplicado. PASS.
