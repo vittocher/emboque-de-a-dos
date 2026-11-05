@@ -1,4 +1,5 @@
 extends RefCounted
+const SCENE := "res://scenes/levels/tronco_4.tscn"
 ## Tronco 4: cada uno cruza con su gancho por debajo de su cortina (J2 más
 ## arriba). Ya junto al muro, bajan los extremos dentro del cuenco: J1 un poco,
 ## J2 casi todo el largo; se deslizan al fondo y se emboca.

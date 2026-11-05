@@ -4,7 +4,9 @@ extends SceneTree
 ##
 ## Uso (headless y más rápido que tiempo real con --fixed-fps):
 ##   godot --headless --fixed-fps 120 --path . -s tests/play_level.gd -- \
-##       res://scenes/levels/tronco_1.tscn res://tests/solutions/tronco_1.gd [opciones]
+##       res://tests/solutions/tronco_1.gd [opciones]
+## (la escena sale de la const SCENE de la solución; también se puede pasar antes).
+## Todas las soluciones de una vez: tests/run_all.sh
 ## Opciones:
 ##   --timeout=S     segundos de juego antes de rendirse (default 90)
 ##   --trace=S       imprime posiciones cada S segundos
@@ -61,8 +63,13 @@ const ACTIONS := ["left", "right", "jump", "down", "release", "pull", "throw"]
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
+	# Con un solo argumento posicional (la solución), la escena sale de su const SCENE.
+	if args.size() >= 1 and args[0].ends_with(".gd"):
+		var sol := load(args[0]) as GDScript
+		var scene_path: String = sol.get_script_constant_map().get("SCENE", "") if sol != null else ""
+		args.insert(0, scene_path)
 	if args.size() < 2:
-		print("uso: -- <escena> <solucion.gd> [opciones]")
+		print("uso: -- [escena] <solucion.gd> [opciones]")
 		quit(2)
 		return
 	for a in args.slice(2):

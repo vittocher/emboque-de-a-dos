@@ -1,20 +1,17 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=3 format=3]
 
-[sub_resource type="RectangleShape2D" id="Rect_plank"]
-size = Vector2(80, 12)
+[ext_resource type="Script" path="res://scripts/bowl.gd" id="1_bowl"]
+
+[sub_resource type="PhysicsMaterial" id="Slippery"]
+friction = 0.0
 
 [node name="Bowl" type="StaticBody2D"]
+physics_material_override = SubResource("Slippery")
+script = ExtResource("1_bowl")
 
 [node name="LeftPlank" type="CollisionShape2D" parent="."]
-position = Vector2(-34, 0)
-rotation = 0.42
-shape = SubResource("Rect_plank")
 
 [node name="RightPlank" type="CollisionShape2D" parent="."]
-position = Vector2(34, 0)
-rotation = -0.42
-shape = SubResource("Rect_plank")
 
 [node name="Visual" type="Polygon2D" parent="."]
 color = Color(0.4, 0.35, 0.3, 1)
-polygon = PackedVector2Array(-71, -22, -36, -6, 0, 11, 36, -6, 71, -22, 71, -10, 0, 23, -71, -10)

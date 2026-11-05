@@ -1,4 +1,5 @@
 extends RefCounted
+const SCENE := "res://scenes/levels/tronco_2.tscn"
 ## Tronco 2: J1 (arriba) alarga la cuerda y J2 (abajo) la acorta hasta la misma
 ## altura bajo el muro; un paso atrás y volver da el impulso para que se junten.
 static func plan(ctx) -> Dictionary:

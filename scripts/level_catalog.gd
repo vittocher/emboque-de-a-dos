@@ -39,10 +39,10 @@ const LEVELS: Array[Dictionary] = [
 		"pos": Vector2(550, 408), "from": ["tronco_4"]},
 	{"id": "caja_2", "scene": "res://scenes/levels/caja_2.tscn", "name": "Campanazo",
 		"pos": Vector2(458, 434), "from": ["caja_1"]},
-	{"id": "level_4", "scene": "res://scenes/level_4.tscn", "name": "Escalera de cajas",
+	{"id": "caja_3", "scene": "res://scenes/levels/caja_3.tscn", "name": "Escalera de cajas",
 		"pos": Vector2(366, 460), "from": ["caja_2"]},
 	{"id": "caja_4", "scene": "res://scenes/levels/caja_4.tscn", "name": "Mudanza",
-		"pos": Vector2(274, 486), "from": ["level_4"]},
+		"pos": Vector2(274, 486), "from": ["caja_3"]},
 	# --- Rama: lanzar ---
 	{"id": "lanzar_1", "scene": "res://scenes/levels/lanzar_1.tscn", "name": "Al aire",
 		"pos": Vector2(722, 324), "from": ["tronco_4"]},
