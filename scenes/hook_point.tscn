@@ -1,4 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/props/enganche/hoyo.png" id="1_hoyo"]
 
 [sub_resource type="CircleShape2D" id="Circle_hook"]
 radius = 18.0
@@ -13,5 +15,11 @@ monitoring = false
 shape = SubResource("Circle_hook")
 
 [node name="Visual" type="Polygon2D" parent="."]
+visible = false
 color = Color(0.9, 0.8, 0.3, 1)
 polygon = PackedVector2Array(0, -14, 12, -7, 12, 7, 0, 14, -12, 7, -12, -7)
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture_filter = 4
+scale = Vector2(0.28, 0.28)
+texture = ExtResource("1_hoyo")

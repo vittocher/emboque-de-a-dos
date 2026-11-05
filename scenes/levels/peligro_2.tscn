@@ -1,0 +1,62 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="PackedScene" path="res://scenes/emboque_death_zone.tscn" id="4_caca"]
+[ext_resource type="PackedScene" path="res://scenes/bowl.tscn" id="5_bowl"]
+
+[node name="Peligro2" instance=ExtResource("1_base")]
+
+[node name="Player1" parent="."]
+position = Vector2(120, 140)
+
+[node name="Player2" parent="."]
+position = Vector2(1160, 140)
+
+[node name="Floor" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 615)
+size = Vector2(1280, 210)
+
+[node name="Caca" parent="." instance=ExtResource("4_caca")]
+position = Vector2(640, 500)
+scale = Vector2(12.8, 1.0)
+
+[node name="ShelfA" parent="." instance=ExtResource("2_block")]
+position = Vector2(130, 392)
+size = Vector2(260, 24)
+
+[node name="ShelfB" parent="." instance=ExtResource("2_block")]
+position = Vector2(494, 392)
+size = Vector2(190, 24)
+
+[node name="ShelfA2" parent="." instance=ExtResource("2_block")]
+position = Vector2(1150, 392)
+size = Vector2(260, 24)
+
+[node name="ShelfB2" parent="." instance=ExtResource("2_block")]
+position = Vector2(786, 392)
+size = Vector2(190, 24)
+
+[node name="Wall" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 30)
+size = Vector2(12, 660)
+
+[node name="Bowl" parent="." instance=ExtResource("5_bowl")]
+position = Vector2(640, 456)
+width = 190.0
+
+[node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(330, 250)
+
+[node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(950, 250)
+
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(282, 456)
+
+[node name="Collectible4" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(998, 456)
+
+[node name="Collectible5" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(640, 444)

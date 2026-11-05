@@ -16,6 +16,24 @@ class_name WinManager
 @export var linear_accel: float = 900.0
 ## Ganancia de alineación angular (rad/s por rad de error, escalada por cercanía).
 @export var angular_gain: float = 2.5
+## Curva de la asistencia: fuerza = cercanía ^ exponente. 1 = lineal; más alto =
+## casi nada a distancia y fuerte solo al final (3 → a medio radio, 12 %).
+@export var falloff_exponent: float = 3.0
+
+@export_group("Trabado")
+## Con el palito ya embocado (dentro de la cavidad o su punta a menos de este
+## radio de ella) el magnetismo pasa a un resorte muy fuerte que lo retiene.
+@export var lock_radius: float = 18.0
+## Rigidez del resorte punta → cavidad (px/s² por px de separación).
+@export var lock_strength: float = 400.0
+## Freno de la velocidad relativa entre los extremos (1/s): evita que el palito
+## rebote o tiemble dentro de la campana.
+@export var lock_damping: float = 30.0
+## Tope de la aceleración del resorte (px/s²), para que no arrastre a los
+## jugadores a través de la cuerda.
+@export var lock_max_accel: float = 6000.0
+## Ganancia de alineación angular trabados (rad/s por rad de error).
+@export var lock_angular_gain: float = 15.0
 
 @export_group("Victoria")
 ## Distancia punta↔cavidad para ganar por proximidad+ángulo (respaldo).
@@ -25,7 +43,20 @@ class_name WinManager
 ## Tiempo que debe cumplirse la condición para ganar (s).
 @export var capture_time: float = 0.2
 @export var win_label: NodePath
+## Segundos que se muestra el cartel de victoria (con el slow-mo del closeup)
+## antes de saltar a la pantalla de victoria.
 @export var restart_delay: float = 2.5
+
+@export_group("Resultado")
+## Id estable del nivel para el highscore (ej. "level_1"). Si queda vacío, se
+## deriva del nombre de archivo de la escena.
+## Lo ignora si el nivel está en LevelCatalog (ahí manda el catálogo).
+@export var level_id: String = ""
+## Nombre del nivel a mostrar en la pantalla de victoria (ej. "Nivel 1"). Lo
+## ignora si el nivel está en LevelCatalog.
+@export var level_name: String = ""
+## Escena de la pantalla de victoria a la que se salta al ganar.
+@export var victory_scene: String = "res://scenes/ui/victory.tscn"
 
 var _palito: Emboque
 var _campana: Emboque
@@ -54,6 +85,10 @@ func _physics_process(delta: float) -> void:
 	var camp := _campana.get_end()
 	if pal == null or camp == null:
 		return
+	# Con un extremo en la mano no vale: embocar es con la cuerda, no a mano.
+	if _palito.is_held() or _campana.is_held():
+		_hold = 0.0
+		return
 
 	# Geometría en mundo.
 	var tip: Vector2 = pal.get_node("Tip").global_position
@@ -63,9 +98,21 @@ func _physics_process(delta: float) -> void:
 	var camp_open := camp.global_transform.x.normalized()         # cavidad → boca (hacia afuera)
 
 	var dist := tip.distance_to(mouth)
+	var desired_pal := -camp_open
+	var desired_camp := (tip - cavity).normalized() if (tip - cavity).length() > 0.001 else camp_open
 
-	if dist < magnet_radius:
-		var closeness: float = clampf(1.0 - dist / magnet_radius, 0.0, 1.0)
+	if _is_locked(pal, tip, cavity):
+		# Trabado: resorte amortiguado punta → cavidad, con fuerzas iguales y
+		# opuestas (se atraen entre sí sin empujar al conjunto).
+		var rel_vel := pal.linear_velocity - camp.linear_velocity
+		var accel := ((cavity - tip) * lock_strength - rel_vel * lock_damping).limit_length(lock_max_accel)
+		var force := accel * pal.mass
+		pal.apply_central_force(force)
+		camp.apply_central_force(-force)
+		pal.angular_velocity = pal_axis.angle_to(desired_pal) * lock_angular_gain
+		camp.angular_velocity = camp_open.angle_to(desired_camp) * lock_angular_gain
+	elif dist < magnet_radius:
+		var closeness: float = pow(clampf(1.0 - dist / magnet_radius, 0.0, 1.0), falloff_exponent)
 
 		# Magnetismo lineal: la punta hacia la cavidad; la campana hacia la punta.
 		var to_cavity := cavity - tip
@@ -76,8 +123,6 @@ func _physics_process(delta: float) -> void:
 
 		# Magnetismo angular: el palito apunta HACIA la cavidad (eje = -camp_open);
 		# la campana abre su boca hacia la punta.
-		var desired_pal := -camp_open
-		var desired_camp := (tip - cavity).normalized() if (tip - cavity).length() > 0.001 else camp_open
 		pal.angular_velocity = pal_axis.angle_to(desired_pal) * angular_gain * closeness
 		camp.angular_velocity = camp_open.angle_to(desired_camp) * angular_gain * closeness
 
@@ -88,6 +133,13 @@ func _physics_process(delta: float) -> void:
 			_win()
 	else:
 		_hold = 0.0
+
+## Ya embocado: la punta dentro de la cavidad o a menos de lock_radius de ella.
+func _is_locked(pal: RopeEnd, tip: Vector2, cavity: Vector2) -> bool:
+	var cavity_sensor := _campana.get_cavity_sensor()
+	if cavity_sensor != null and cavity_sensor.overlaps_body(pal):
+		return true
+	return tip.distance_to(cavity) < lock_radius
 
 func _is_embocado(pal: RopeEnd, camp: RopeEnd, tip: Vector2, cavity: Vector2, pal_axis: Vector2, camp_open: Vector2) -> bool:
 	# Real: la punta del palito está dentro del sensor de cavidad de la campana.
@@ -102,7 +154,30 @@ func _win() -> void:
 	if _won:
 		return
 	_won = true
+	LevelFlow.mark_won(get_tree())
 	if _label != null:
 		_label.visible = true
-	await get_tree().create_timer(restart_delay).timeout
-	get_tree().reload_current_scene()
+	# Registrar el resultado (nivel completado, highscore y datos para la
+	# pantalla de victoria). Si el nivel está en el LevelCatalog, su id y nombre
+	# salen de ahí (la lista única de niveles; el nombre va como clave de
+	# traducción); si no, de los exports.
+	var entry := LevelCatalog.find_by_scene(get_tree().current_scene.scene_file_path)
+	var id: String = entry.get("id", level_id if level_id != "" else _fallback_id())
+	var display_name: String = LevelCatalog.name_key(id) if not entry.is_empty() \
+		else (level_name if level_name != "" else id)
+	var sm := get_tree().get_first_node_in_group("score_manager") as ScoreManager
+	if sm != null:
+		ScoreBoard.report_win(id, display_name, sm.score, sm.collected, sm.total)
+	else:
+		ScoreBoard.report_win(id, display_name, 0)
+	# ignore_time_scale=true: si hay slow-mo del closeup al ganar, el salto a la
+	# pantalla de victoria ocurre igual tras restart_delay reales (no se alarga
+	# por la cámara lenta).
+	await get_tree().create_timer(restart_delay, true, false, true).timeout
+	get_tree().change_scene_to_file(victory_scene)
+
+## Id derivado del nombre de archivo de la escena (ej. "level_2"), como respaldo
+## si no se configuró level_id en el Inspector.
+func _fallback_id() -> String:
+	var path := get_tree().current_scene.scene_file_path
+	return path.get_file().get_basename() if path != "" else "nivel"

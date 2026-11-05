@@ -1,0 +1,48 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="PackedScene" path="res://scenes/wind_zone.tscn" id="4_wind"]
+[ext_resource type="PackedScene" path="res://scenes/bowl.tscn" id="5_bowl"]
+
+[node name="Viento1" instance=ExtResource("1_base")]
+
+[node name="Player1" parent="."]
+position = Vector2(150, 380)
+
+[node name="Player2" parent="."]
+position = Vector2(1130, 380)
+
+[node name="Ground" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 660)
+size = Vector2(1280, 120)
+
+[node name="FenceLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(550, 430)
+size = Vector2(20, 260)
+
+[node name="FenceRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(730, 430)
+size = Vector2(20, 260)
+
+[node name="Wind" parent="." instance=ExtResource("4_wind")]
+position = Vector2(640, 440)
+size = Vector2(160, 320)
+
+[node name="Funnel" parent="." instance=ExtResource("5_bowl")]
+position = Vector2(640, 296)
+rotation = 3.14159
+width = 150.0
+
+[node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(400, 545)
+
+[node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(880, 545)
+
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(592, 430)
+
+[node name="Collectible4" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(688, 430)

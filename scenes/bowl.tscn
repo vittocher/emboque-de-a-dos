@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/bowl.gd" id="1_bowl"]
+
+[sub_resource type="PhysicsMaterial" id="Slippery"]
+friction = 0.0
+
+[node name="Bowl" type="StaticBody2D"]
+physics_material_override = SubResource("Slippery")
+script = ExtResource("1_bowl")
+
+[node name="LeftPlank" type="CollisionShape2D" parent="."]
+
+[node name="RightPlank" type="CollisionShape2D" parent="."]
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.4, 0.35, 0.3, 1)

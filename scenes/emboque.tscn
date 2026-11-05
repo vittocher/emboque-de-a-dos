@@ -1,10 +1,14 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/emboque.gd" id="1_emboque"]
+[ext_resource type="Texture2D" path="res://assets/emboque/cuerda.png" id="2_cuerda"]
 
 [node name="Emboque" type="Node2D"]
 script = ExtResource("1_emboque")
 
 [node name="Rope" type="Line2D" parent="."]
+texture_filter = 4
+texture_repeat = 2
 width = 4.0
-default_color = Color(0.72, 0.55, 0.32, 1)
+texture = ExtResource("2_cuerda")
+texture_mode = 1

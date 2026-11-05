@@ -1,0 +1,72 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="PackedScene" path="res://scenes/moving_platform.tscn" id="4_mp"]
+[ext_resource type="PackedScene" path="res://scenes/emboque_death_zone.tscn" id="5_caca"]
+
+[node name="Movil2" instance=ExtResource("1_base")]
+
+[node name="Player1" parent="."]
+position = Vector2(110, 200)
+
+[node name="Player2" parent="."]
+position = Vector2(1170, 200)
+
+[node name="Floor" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 625)
+size = Vector2(1280, 190)
+
+[node name="Caca" parent="." instance=ExtResource("5_caca")]
+position = Vector2(640, 515)
+scale = Vector2(12.8, 1.0)
+
+[node name="LedgeLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(130, 520)
+size = Vector2(260, 240)
+
+[node name="LedgeRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(1150, 520)
+size = Vector2(260, 240)
+
+[node name="IslandLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(580.5, 520)
+size = Vector2(81, 240)
+
+[node name="IslandRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(699.5, 520)
+size = Vector2(81, 240)
+
+[node name="ShaftFloor" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 570)
+size = Vector2(38, 140)
+
+[node name="CeilingLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(400, 280)
+size = Vector2(280, 40)
+
+[node name="CeilingRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(880, 280)
+size = Vector2(280, 40)
+
+[node name="PlatformLeft" parent="." instance=ExtResource("4_mp")]
+position = Vector2(330, 412)
+size = Vector2(100, 24)
+travel = Vector2(140, 0)
+speed = 90.0
+
+[node name="PlatformRight" parent="." instance=ExtResource("4_mp")]
+position = Vector2(950, 412)
+size = Vector2(100, 24)
+travel = Vector2(-140, 0)
+speed = 90.0
+
+[node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(400, 350)
+
+[node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(880, 350)
+
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(640, 485)

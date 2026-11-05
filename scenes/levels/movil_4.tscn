@@ -1,0 +1,98 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="PackedScene" path="res://scenes/moving_platform.tscn" id="4_mp"]
+[ext_resource type="PackedScene" path="res://scenes/both_death_zone.tscn" id="5_fire"]
+[ext_resource type="PackedScene" path="res://scenes/bowl.tscn" id="6_bowl"]
+[ext_resource type="PackedScene" path="res://scenes/fall_zone.tscn" id="7_fall"]
+
+[node name="Movil4" instance=ExtResource("1_base")]
+
+[node name="Player1" parent="."]
+position = Vector2(100, 480)
+
+[node name="Player2" parent="."]
+position = Vector2(1180, 480)
+
+[node name="StartLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(115, 670)
+size = Vector2(230, 100)
+
+[node name="StartRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(1165, 670)
+size = Vector2(230, 100)
+
+[node name="PitFloor" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 715)
+size = Vector2(840, 10)
+
+[node name="PitFire" parent="." instance=ExtResource("5_fire")]
+position = Vector2(640, 694)
+scale = Vector2(8.4, 1.0)
+
+[node name="LiftLeftA" parent="." instance=ExtResource("4_mp")]
+position = Vector2(290, 630)
+size = Vector2(120, 20)
+travel = Vector2(0, -230)
+speed = 95.0
+wait_time = 0.7
+
+[node name="LiftLeftB" parent="." instance=ExtResource("4_mp")]
+position = Vector2(422, 170)
+size = Vector2(120, 20)
+travel = Vector2(0, 230)
+speed = 95.0
+wait_time = 0.7
+
+[node name="LiftRightA" parent="." instance=ExtResource("4_mp")]
+position = Vector2(990, 630)
+size = Vector2(120, 20)
+travel = Vector2(0, -230)
+speed = 95.0
+wait_time = 0.7
+
+[node name="LiftRightB" parent="." instance=ExtResource("4_mp")]
+position = Vector2(858, 170)
+size = Vector2(120, 20)
+travel = Vector2(0, 230)
+speed = 95.0
+wait_time = 0.7
+
+[node name="TowerWallLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(560, 450)
+size = Vector2(40, 500)
+
+[node name="TowerWallRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(720, 450)
+size = Vector2(40, 500)
+
+[node name="RoofLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(556, 180)
+size = Vector2(132, 20)
+
+[node name="RoofRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(724, 180)
+size = Vector2(132, 20)
+
+[node name="Bowl" parent="." instance=ExtResource("6_bowl")]
+position = Vector2(640, 310)
+width = 116.0
+
+[node name="FallZone" parent="." instance=ExtResource("7_fall")]
+
+[node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(290, 300)
+
+[node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(990, 300)
+
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(422, 110)
+
+[node name="Collectible4" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(858, 110)
+
+[node name="Collectible5" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(640, 260)

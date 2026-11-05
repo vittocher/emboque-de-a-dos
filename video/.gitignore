@@ -1,0 +1,7 @@
+# El video original (mp4, mov…) no va al repo: solo el convertido intro.ogv (+ su .uid).
+*.mp4
+*.mov
+*.m4v
+*.mkv
+*.webm
+*.avi

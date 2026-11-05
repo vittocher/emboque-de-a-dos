@@ -1,6 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/emboque_death_zone.gd" id="1_edz"]
+[ext_resource type="Script" path="res://scripts/hazard_art.gd" id="2_art"]
+[ext_resource type="SpriteFrames" path="res://assets/hazards/emboques/caca_frames.tres" id="3_caca"]
 
 [sub_resource type="RectangleShape2D" id="Rect_zone"]
 size = Vector2(100, 30)
@@ -15,5 +17,11 @@ script = ExtResource("1_edz")
 shape = SubResource("Rect_zone")
 
 [node name="Visual" type="Polygon2D" parent="."]
+visible = false
 color = Color(0.55, 0.2, 0.75, 1)
 polygon = PackedVector2Array(-50, -15, 50, -15, 50, 15, -50, 15)
+
+[node name="Art" type="Node2D" parent="."]
+script = ExtResource("2_art")
+frames = ExtResource("3_caca")
+shape_path = NodePath("../CollisionShape2D")

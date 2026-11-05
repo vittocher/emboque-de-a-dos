@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/terrain_art.gd" id="1_terrain"]
+[ext_resource type="Texture2D" path="res://assets/entorno/colision/piso.png" id="2_piso"]
+[ext_resource type="Texture2D" path="res://assets/entorno/colision/pared.png" id="3_pared"]
+[ext_resource type="Texture2D" path="res://assets/entorno/colision/piso_left.png" id="4_left"]
+[ext_resource type="Texture2D" path="res://assets/entorno/colision/piso_neutral.png" id="5_middle"]
+[ext_resource type="Texture2D" path="res://assets/entorno/colision/piso_right.png" id="6_right"]
+
+[node name="TerrainArt" type="Node"]
+script = ExtResource("1_terrain")
+floor_texture = ExtResource("2_piso")
+floor_left = ExtResource("4_left")
+floor_middle = ExtResource("5_middle")
+floor_right = ExtResource("6_right")
+wall_texture = ExtResource("3_pared")

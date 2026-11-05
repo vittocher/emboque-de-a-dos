@@ -1,0 +1,76 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="PackedScene" path="res://scenes/hook_point.tscn" id="4_hook"]
+[ext_resource type="Script" path="res://scripts/level_rules.gd" id="5_rules"]
+[ext_resource type="PackedScene" path="res://scenes/both_death_zone.tscn" id="6_fire"]
+[ext_resource type="PackedScene" path="res://scenes/bowl.tscn" id="7_bowl"]
+
+[node name="Lanzar3" instance=ExtResource("1_base")]
+
+[node name="LevelRules" type="Node" parent="."]
+script = ExtResource("5_rules")
+throw_enabled = true
+
+[node name="Player1" parent="."]
+position = Vector2(90, 330)
+
+[node name="Player2" parent="."]
+position = Vector2(1190, 330)
+
+[node name="LedgeLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(100, 620)
+size = Vector2(200, 200)
+
+[node name="LedgeRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(1180, 620)
+size = Vector2(200, 200)
+
+[node name="PitFloor" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 705)
+size = Vector2(880, 30)
+
+[node name="PitFire" parent="." instance=ExtResource("6_fire")]
+position = Vector2(640, 676)
+scale = Vector2(8.8, 0.9)
+
+[node name="CeilingLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(380, 100)
+size = Vector2(240, 400)
+
+[node name="CeilingRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(900, 100)
+size = Vector2(240, 400)
+
+[node name="IslandLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(560, 620)
+size = Vector2(80, 200)
+
+[node name="IslandRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(720, 620)
+size = Vector2(80, 200)
+
+[node name="Bowl" parent="." instance=ExtResource("7_bowl")]
+position = Vector2(640, 590)
+width = 96.0
+
+[node name="Wall" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 60)
+size = Vector2(16, 720)
+
+[node name="HookLeft" parent="." instance=ExtResource("4_hook")]
+position = Vector2(330, 330)
+
+[node name="HookRight" parent="." instance=ExtResource("4_hook")]
+position = Vector2(950, 330)
+
+[node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(330, 560)
+
+[node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(950, 560)
+
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(640, 600)
