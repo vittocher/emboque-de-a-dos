@@ -53,6 +53,8 @@ const LEVELS: Array[Dictionary] = [
 		"pos": Vector2(804, 274), "from": ["lanzar_1"]},
 	{"id": "lanzar_3", "scene": "res://scenes/levels/lanzar_3.tscn",
 		"pos": Vector2(886, 226), "from": ["lanzar_2"]},
+	{"id": "lanzar_4", "scene": "res://scenes/levels/lanzar_4.tscn",
+		"pos": Vector2(968, 178), "from": ["lanzar_3"]},
 	# --- Rama: placas y compuertas (sale de las cajas) ---
 	{"id": "placa_1", "scene": "res://scenes/levels/placa_1.tscn",
 		"pos": Vector2(424, 520), "from": ["caja_2"]},
@@ -78,7 +80,7 @@ const LEVELS: Array[Dictionary] = [
 	{"id": "final", "scene": "res://scenes/levels/final.tscn",
 		"pos": Vector2(700, 112), "need": 4, "special": true, "rope": false,
 		"hint": "MAP_HINT_FINAL",
-		"from": ["level_2", "level_4", "lanzar_3", "placa_3", "movil_3", "viento_3"]},
+		"from": ["level_2", "level_4", "lanzar_4", "placa_3", "movil_3", "viento_3"]},
 ]
 
 ## Clave de traducción del nombre del nivel (i18n/textos.csv): "LEVEL_TRONCO_1".
