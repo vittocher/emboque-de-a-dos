@@ -18,18 +18,20 @@ const MAP_SCENE := "res://scenes/ui/level_selector.tscn"
 func _ready() -> void:
 	get_tree().paused = false
 	if ScoreBoard.last_level_name != "":
+		# last_level_name es una clave de traducción (niveles del catálogo) o un
+		# nombre literal (niveles de prueba): tr() sirve para los dos.
+		var level_name := tr(ScoreBoard.last_level_name)
 		var number := LevelCatalog.number_of(ScoreBoard.last_level_id)
-		_subtitle.text = ScoreBoard.last_level_name if number == 0 \
-			else "%d · %s" % [number, ScoreBoard.last_level_name]
-	_score.text = "Puntaje: %d" % ScoreBoard.last_score
+		_subtitle.text = level_name if number == 0 else "%d · %s" % [number, level_name]
+	_score.text = tr("VICTORY_SCORE") % ScoreBoard.last_score
 	_collected_row.visible = ScoreBoard.last_total > 0
 	_collected.text = "%d / %d" % [ScoreBoard.last_collected, ScoreBoard.last_total]
 	var best := ScoreBoard.get_highscore(ScoreBoard.last_level_id)
 	if ScoreBoard.last_is_record and ScoreBoard.last_score > 0:
-		_record.text = "¡Nuevo récord!"
+		_record.text = tr("VICTORY_NEW_RECORD")
 		_record.add_theme_color_override("font_color", Color(1, 0.86, 0.38))
 	else:
-		_record.text = "Mejor puntaje: %d" % best
+		_record.text = tr("VICTORY_BEST") % best
 	_continue.pressed.connect(_on_continue)
 	_retry.pressed.connect(_on_retry)
 	_retry.visible = _level_scene() != ""

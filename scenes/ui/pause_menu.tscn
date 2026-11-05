@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/pause_menu.gd" id="1_pause"]
 [ext_resource type="Texture2D" path="res://assets/ui/pause_menu.webp" id="2_art"]
+[ext_resource type="Script" path="res://scripts/ui/localized_texture_rect.gd" id="3_loc"]
 
 [sub_resource type="StyleBoxEmpty" id="Style_none"]
 
@@ -154,6 +155,7 @@ offset_bottom = 1024.0
 scale = Vector2(0.703125, 0.703125)
 
 [node name="Art" type="TextureRect" parent="PausePanel/Board"]
+script = ExtResource("3_loc")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -197,7 +199,7 @@ offset_left = 229.0
 offset_top = 294.0
 offset_right = 792.0
 offset_bottom = 392.0
-tooltip_text = "Continuar"
+tooltip_text = "PAUSE_RESUME"
 theme_override_styles/normal = SubResource("Style_none")
 theme_override_styles/hover = SubResource("Style_glow")
 theme_override_styles/pressed = SubResource("Style_glow_pressed")
@@ -209,7 +211,7 @@ offset_left = 229.0
 offset_top = 432.0
 offset_right = 792.0
 offset_bottom = 528.0
-tooltip_text = "Reiniciar nivel"
+tooltip_text = "PAUSE_RESTART"
 theme_override_styles/normal = SubResource("Style_none")
 theme_override_styles/hover = SubResource("Style_glow")
 theme_override_styles/pressed = SubResource("Style_glow_pressed")
@@ -221,7 +223,7 @@ offset_left = 229.0
 offset_top = 570.0
 offset_right = 792.0
 offset_bottom = 666.0
-tooltip_text = "Ajustes"
+tooltip_text = "MENU_SETTINGS"
 theme_override_styles/normal = SubResource("Style_none")
 theme_override_styles/hover = SubResource("Style_glow")
 theme_override_styles/pressed = SubResource("Style_glow_pressed")
@@ -233,7 +235,7 @@ offset_left = 229.0
 offset_top = 708.0
 offset_right = 792.0
 offset_bottom = 806.0
-tooltip_text = "Menú principal"
+tooltip_text = "PAUSE_MAIN_MENU"
 theme_override_styles/normal = SubResource("Style_none")
 theme_override_styles/hover = SubResource("Style_glow")
 theme_override_styles/pressed = SubResource("Style_glow_pressed")
@@ -242,9 +244,9 @@ theme_override_styles/focus = SubResource("Style_glow")
 [node name="SettingsPanel" type="Panel" parent="PausePanel"]
 layout_mode = 0
 offset_left = 441.0
-offset_top = 200.0
+offset_top = 185.0
 offset_right = 843.0
-offset_bottom = 571.0
+offset_bottom = 601.0
 theme = SubResource("Theme_wood")
 theme_override_styles/panel = SubResource("Style_wood_panel")
 
@@ -264,7 +266,7 @@ alignment = 1
 
 [node name="Title" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox"]
 layout_mode = 2
-text = "Ajustes"
+text = "SETTINGS_TITLE"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 30
 
@@ -275,7 +277,7 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/VolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(135, 0)
-text = "General"
+text = "SETTINGS_MASTER"
 
 [node name="VolumeSlider" type="HSlider" parent="PausePanel/SettingsPanel/SettingsVBox/VolumeRow"]
 layout_mode = 2
@@ -291,7 +293,7 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/MusicVolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(135, 0)
-text = "Música"
+text = "SETTINGS_MUSIC"
 
 [node name="MusicVolumeSlider" type="HSlider" parent="PausePanel/SettingsPanel/SettingsVBox/MusicVolumeRow"]
 layout_mode = 2
@@ -307,7 +309,7 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/SfxVolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(135, 0)
-text = "Efectos"
+text = "SETTINGS_SFX"
 
 [node name="SfxVolumeSlider" type="HSlider" parent="PausePanel/SettingsPanel/SettingsVBox/SfxVolumeRow"]
 layout_mode = 2
@@ -323,14 +325,28 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/FullscreenRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(135, 0)
-text = "Pantalla completa"
+text = "SETTINGS_FULLSCREEN"
 
 [node name="FullscreenCheck" type="CheckBox" parent="PausePanel/SettingsPanel/SettingsVBox/FullscreenRow"]
 layout_mode = 2
-text = "Activar"
+text = "SETTINGS_ENABLE"
+
+[node name="LanguageRow" type="HBoxContainer" parent="PausePanel/SettingsPanel/SettingsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="PausePanel/SettingsPanel/SettingsVBox/LanguageRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(135, 0)
+text = "SETTINGS_LANGUAGE"
+
+[node name="LanguageButton" type="Button" parent="PausePanel/SettingsPanel/SettingsVBox/LanguageRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "LANGUAGE_NAME"
 
 [node name="BackButton" type="Button" parent="PausePanel/SettingsPanel/SettingsVBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 46)
-text = "Volver a pausa"
+text = "PAUSE_BACK"
 theme_override_font_sizes/font_size = 20

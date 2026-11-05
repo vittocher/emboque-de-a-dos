@@ -7,6 +7,7 @@ extends Control
 @onready var _sfx_volume: HSlider = $Center/VBox/SfxVolumeRow/SfxVolumeSlider
 @onready var _fullscreen: CheckBox = $Center/VBox/FullscreenRow/FullscreenCheck
 @onready var _reset_button: Button = $Center/VBox/ResetButton
+@onready var _language: OptionButton = $Center/VBox/LanguageRow/LanguageOption
 
 var _settings: Node
 
@@ -25,6 +26,14 @@ func _ready() -> void:
 	_fullscreen.toggled.connect(_on_fullscreen_toggled)
 	_reset_button.pressed.connect(_on_reset_pressed)
 
+	# Un ítem por idioma disponible, cada uno con su nombre en su idioma.
+	for code in Languages.available():
+		_language.add_item(Languages.name_of(code))
+		_language.set_item_metadata(_language.item_count - 1, code)
+		if code == _settings.language:
+			_language.select(_language.item_count - 1)
+	_language.item_selected.connect(_on_language_selected)
+
 	$Center/VBox/BackButton.pressed.connect(_on_back_pressed)
 
 func _on_master_volume_changed(value: float) -> void:
@@ -38,6 +47,9 @@ func _on_sfx_volume_changed(value: float) -> void:
 
 func _on_fullscreen_toggled(pressed: bool) -> void:
 	_settings.set_fullscreen(pressed)
+
+func _on_language_selected(index: int) -> void:
+	_settings.set_language(String(_language.get_item_metadata(index)))
 
 func _on_reset_pressed() -> void:
 	_settings.reset_to_defaults()

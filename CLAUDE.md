@@ -171,7 +171,10 @@ scripts/
                    Suena un loop de arrastre mientras se desliza por el piso.
   pause_menu.gd    Menú de pausa del nivel (acción `pause` = Esc / P): Continuar / Reiniciar / Ajustes / Menú principal. Es el
                    script de ui/pause_menu.tscn. La pausa NO es global: cada nivel debe instanciar esa escena.
-  settings_manager.gd AUTOLOAD (SettingsManager): volúmenes, buses de audio, pantalla completa, música, persistencia.
+  settings_manager.gd AUTOLOAD (SettingsManager): volúmenes, buses de audio, pantalla completa, idioma, música,
+                   persistencia.
+  languages.gd     class Languages: idiomas disponibles, nombre de cada uno, traducción desde código estático e
+                   imagen localizada (ver "Idiomas").
                    stop_music() / play_music(fade) (la intro calla la cueca mientras corre el video).
   score_board.gd   AUTOLOAD (ScoreBoard): datos de la última victoria entre escenas + highscore por nivel +
                    niveles COMPLETADOS (y máximo de sopaipillas) en user://scores.cfg. De eso depende el
@@ -189,6 +192,7 @@ shaders/           madera_boton.gdshader (madera procedural de los botones del m
 video/             intro.ogv (Ogg Theora: el único formato de video de Godot) + README.md con cómo convertirlo.
 audio/             cueca.ogg (música, la pone SettingsManager) y sfx/: efectos placeholder (WAV 22 kHz mono):
                    step, jump, die, hook, swing, box_push (loop), grab, throw.
+i18n/              textos.csv: TODOS los textos del juego, una columna por idioma (ver "Idiomas").
 default_bus_layout.tres  Buses de audio Master / Music / SFX (ver "Volumen y buses de audio"). Obligatorio para web.
 tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python tools/generate_sfx.py [nombres]`
                    (sin nombres, todos; con nombres, solo esos, p. ej. `plate gate wind`).
@@ -278,6 +282,30 @@ PauseMenu (CanvasLayer, pause_menu.gd, process_mode ALWAYS)
 ```
 
 El borde dorado lo dibuja el botón **con foco**; el mouse le pasa el foco (`mouse_entered → grab_focus`), así brilla uno solo. Al pausar el foco va a Continuar; al volver de Ajustes, a Ajustes. **Cambiar el arte:** reemplazar `assets/ui/pause_menu.webp` por otra con el mismo encuadre. Si los botones pintados se mueven, ajustar los `offset_*` de cada botón en píxeles de la imagen (se leen directo en un editor de imágenes); si cambia el tamaño de la imagen, ajustar el tamaño del `Board` y su `scale` (= 720 / alto) y centrarlo (x = (1280 − ancho·scale) / 2). La imagen **no debe traer un botón ya iluminado** (el brillo es del código).
+
+### Idiomas (`i18n/textos.csv` + `Languages` + `SettingsManager.set_language`)
+
+Español (original) e inglés. **Todos los textos** están en `i18n/textos.csv`: columna `keys` (la clave) + una
+columna por idioma (`es`, `en`). Godot lo importa como `i18n/textos.<código>.translation` (registradas en
+`project.godot`, `[internationalization]`, con `locale/fallback = "es"`).
+
+- **En escenas** el `text` (o `tooltip_text`) de un Label/Button es la **clave** (`MENU_PLAY`, `SETTINGS_MUSIC`…):
+  Godot la traduce solo y la retraduce al cambiar de idioma (en el editor se ven las claves).
+- **En código**: `tr("CLAVE")`, con `%` para los números (`tr("HUD_POINTS") % score`); desde funciones
+  estáticas, `Languages.text("CLAVE")`. Un texto armado por código que deba cambiar en vivo se rehace en
+  `NOTIFICATION_TRANSLATION_CHANGED` (ver `score_manager.gd`).
+- **Nombres de nivel**: clave `LEVEL_<ID>` (`LevelCatalog.name_key` / `display_name`); el catálogo ya no
+  guarda nombres. `ScoreBoard.last_level_name` guarda la clave y la victoria le aplica `tr()`.
+- **Imágenes con texto dibujado** (portada, menú de pausa): `LocalizedTextureRect`
+  (`scripts/ui/localized_texture_rect.gd`) muestra `assets/ui/<código>/<mismo nombre>` si existe; si no, la
+  original. Las de inglés (`assets/ui/en/`) se generaron reescribiendo el texto sobre el arte original (fuentes
+  Bungee / Barlow Semi Condensed / Titan One): son **provisorias** hasta que diseño haga las definitivas.
+- **Selector**: botón arriba a la derecha del menú principal (muestra el idioma actual, cada clic pasa al
+  siguiente), fila "Idioma" en Ajustes (lista) y en el panel de ajustes de la pausa. Se guarda en
+  `user://settings.cfg` (`general/language`); la primera vez se usa el idioma del sistema si existe.
+- **Agregar un idioma**: columna nueva en el CSV (la fila `LANGUAGE_NAME` = su nombre en ese idioma) → abrir
+  Godot (genera la `.translation`) → sumarla en Proyecto → Configuración → Localización → Traducciones →
+  (opcional) imágenes en `assets/ui/<código>/`. Los selectores la listan solos (`Languages.available()`).
 
 ### Flujo de escenas (UI)
 
@@ -396,7 +424,7 @@ Soltarse: **saltar** (solo tenso) → `v_balanceo·swing_launch_multiplier` + `s
 
 **Activarla en un nivel:** agregar un nodo **`LevelRules`** (*Add Child Node → LevelRules*) y marcar **`throw_enabled`** en el Inspector. Sin ese nodo (o con la casilla apagada) el nivel no tiene la mecánica: todos los niveles viejos quedan igual. `LevelRules` se mete al grupo `"level_rules"` en `_enter_tree` (antes que cualquier `_ready`, así el orden en el árbol no importa) y `Emboque._ready` lo lee con `LevelRules.of(get_tree())`. Futuras mecánicas opcionales por nivel van como otra casilla en este mismo nodo.
 
-**Color de la mecánica (verde lima, `LevelRules.THROW_COLOR`):** el mapa de niveles NO lo usa (es minimalista: las mecánicas se descubren jugando; el primer nivel con lanzar, `lanzar_1`, trae un cartel con los controles). `LevelRules.scene_throw_enabled(escena)` sigue disponible (lee el `SceneState` sin instanciar). La línea "Niveles verdes: …" dibujada en la portada quedó obsoleta: hay que sacarla de la imagen.
+**Color de la mecánica (verde lima, `LevelRules.THROW_COLOR`):** el mapa de niveles NO lo usa (es minimalista: las mecánicas se descubren jugando; el primer nivel con lanzar, `lanzar_1`, trae un cartel con los controles). `LevelRules.scene_throw_enabled(escena)` sigue disponible (lee el `SceneState` sin instanciar). En la portada, la fila de controles de lanzar ahora dice "LANZAR" (antes "NIVELES VERDES").
 
 Estados en `emboque.gd` (`ThrowState`), sin tocar nada si la mecánica está apagada:
 
@@ -550,6 +578,7 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 
 **Menús y presentación**
 - **Intro:** video de la historia al arrancar (`video/intro.ogv`), se salta con cualquier tecla, fundidos de entrada/salida; en web pide una tecla antes para que suene.
+- **Idiomas:** español e inglés (todo el texto en `i18n/textos.csv`, imágenes con texto por idioma), selector en el menú principal, Ajustes y pausa; agregar un idioma = una columna.
 - **Menús:** principal (portada, botones de madera; sin Salir), mapa de niveles ramificado con progreso, ajustes, pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
 - **Audio:** autoload `Sfx` con 8 efectos placeholder, música (cueca) y volumen por categoría (General / Música / Efectos).
 - **Arte (`assets/`):** jugadores animados (idle / caminata a 10 FPS / THROW al apuntar), palito, campana y cuerda, cajas, zonas de muerte animadas (fuego / púas / caca), sopaipillas, ganchos, terreno (piso por piezas + pared) y fondo.
@@ -558,7 +587,8 @@ Pendiente:
 - **Fase 6** — Pasada de tuning de la sensación (magnetismo, masas, largos, velocidades, radios del closeup) jugando los niveles reales.
 - **Arte que falta o hay que pulir:** animaciones `jump` / `fall` / `swing` / `push` del jugador (hoy caen a `idle`/`walk`); costuras entre tablas de `piso_neutral` (vienen del dibujo); alinear bien el arte del palito y la campana con su colisión; la mano (`RopeAnchor`) no coincide exactamente con la mano del dibujo.
 - **Web:** el preset existe y exporta (probado en Chromium headless con la intro); falta probar los niveles nuevos en navegador y subirlo a Newgrounds.
-- **Portada:** quitar del dibujo la línea "Niveles verdes…" (el mapa ya no pinta los niveles de lanzar).
+- **Imágenes en inglés definitivas** (`assets/ui/en/portada.png`, `pause_menu.webp`): hoy son el arte original
+  con el texto reescrito por código; diseño puede reemplazarlas con el mismo nombre.
 - **Niveles del equipo fuera del mapa** (`main`, `level_3`): corregir el inicio (ver Lecciones) si se quieren sumar.
 - **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos.
 

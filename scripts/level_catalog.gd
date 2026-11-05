@@ -10,73 +10,84 @@ class_name LevelCatalog
 ## entrada lo trae). El primer nivel no tiene "from": siempre está abierto.
 ##
 ## Opcionales: "special": true (nodo más grande y dorado), "rope": false (sin cuerdas en el mapa, p. ej. el final, que depende
-## de niveles lejanos) y "hint" (texto del mapa mientras está bloqueado).
+## de niveles lejanos) y "hint" (clave del texto del mapa mientras está bloqueado).
+##
+## El NOMBRE de cada nivel está en i18n/textos.csv, con la clave LEVEL_<ID> (ver
+## name_key): así se traduce como cualquier otro texto.
 ##
 ## Para agregar un nivel: crear la escena (heredando scenes/levels/level_base.tscn)
 ## y agregar una entrada acá. "pos" es su lugar en el mapa (1280×720).
 
 const LEVELS: Array[Dictionary] = [
 	# --- Tronco: lo básico (moverse, la cuerda, los ganchos) ---
-	{"id": "tronco_1", "scene": "res://scenes/levels/tronco_1.tscn", "name": "Primer emboque",
+	{"id": "tronco_1", "scene": "res://scenes/levels/tronco_1.tscn",
 		"pos": Vector2(640, 606), "from": []},
-	{"id": "tronco_2", "scene": "res://scenes/levels/tronco_2.tscn", "name": "Cuerda larga",
+	{"id": "tronco_2", "scene": "res://scenes/levels/tronco_2.tscn",
 		"pos": Vector2(640, 531), "from": ["tronco_1"]},
-	{"id": "tronco_3", "scene": "res://scenes/levels/tronco_3.tscn", "name": "Colgados",
+	{"id": "tronco_3", "scene": "res://scenes/levels/tronco_3.tscn",
 		"pos": Vector2(640, 456), "from": ["tronco_2"]},
-	{"id": "tronco_4", "scene": "res://scenes/levels/tronco_4.tscn", "name": "El cuenco",
+	{"id": "tronco_4", "scene": "res://scenes/levels/tronco_4.tscn",
 		"pos": Vector2(640, 376), "from": ["tronco_3"]},
 	# --- Rama: peligros (púas, caca, fuego) ---
-	{"id": "peligro_1", "scene": "res://scenes/levels/peligro_1.tscn", "name": "Púas",
+	{"id": "peligro_1", "scene": "res://scenes/levels/peligro_1.tscn",
 		"pos": Vector2(560, 324), "from": ["tronco_4"]},
-	{"id": "peligro_2", "scene": "res://scenes/levels/peligro_2.tscn", "name": "Cuidado abajo",
+	{"id": "peligro_2", "scene": "res://scenes/levels/peligro_2.tscn",
 		"pos": Vector2(478, 274), "from": ["peligro_1"]},
-	{"id": "peligro_3", "scene": "res://scenes/levels/peligro_3.tscn", "name": "Brasas",
+	{"id": "peligro_3", "scene": "res://scenes/levels/peligro_3.tscn",
 		"pos": Vector2(396, 226), "from": ["peligro_2"]},
-	{"id": "level_2", "scene": "res://scenes/level_2.tscn", "name": "La T",
+	{"id": "level_2", "scene": "res://scenes/level_2.tscn",
 		"pos": Vector2(314, 180), "from": ["peligro_3"]},
 	# --- Rama: cajas ---
-	{"id": "caja_1", "scene": "res://scenes/levels/caja_1.tscn", "name": "Una caja",
+	{"id": "caja_1", "scene": "res://scenes/levels/caja_1.tscn",
 		"pos": Vector2(550, 408), "from": ["tronco_4"]},
-	{"id": "caja_2", "scene": "res://scenes/levels/caja_2.tscn", "name": "Escalera",
+	{"id": "caja_2", "scene": "res://scenes/levels/caja_2.tscn",
 		"pos": Vector2(458, 434), "from": ["caja_1"]},
-	{"id": "caja_3", "scene": "res://scenes/levels/caja_3.tscn", "name": "Encomienda",
+	{"id": "caja_3", "scene": "res://scenes/levels/caja_3.tscn",
 		"pos": Vector2(366, 460), "from": ["caja_2"]},
-	{"id": "level_4", "scene": "res://scenes/level_4.tscn", "name": "Escalones",
+	{"id": "level_4", "scene": "res://scenes/level_4.tscn",
 		"pos": Vector2(274, 486), "from": ["caja_3"]},
 	# --- Rama: lanzar ---
-	{"id": "lanzar_1", "scene": "res://scenes/levels/lanzar_1.tscn", "name": "Al aire",
+	{"id": "lanzar_1", "scene": "res://scenes/levels/lanzar_1.tscn",
 		"pos": Vector2(722, 324), "from": ["tronco_4"]},
-	{"id": "lanzar_2", "scene": "res://scenes/levels/lanzar_2.tscn", "name": "Puntería",
+	{"id": "lanzar_2", "scene": "res://scenes/levels/lanzar_2.tscn",
 		"pos": Vector2(804, 274), "from": ["lanzar_1"]},
-	{"id": "lanzar_3", "scene": "res://scenes/levels/lanzar_3.tscn", "name": "Lazo",
+	{"id": "lanzar_3", "scene": "res://scenes/levels/lanzar_3.tscn",
 		"pos": Vector2(886, 226), "from": ["lanzar_2"]},
 	# --- Rama: placas y compuertas (sale de las cajas) ---
-	{"id": "placa_1", "scene": "res://scenes/levels/placa_1.tscn", "name": "La placa",
+	{"id": "placa_1", "scene": "res://scenes/levels/placa_1.tscn",
 		"pos": Vector2(424, 520), "from": ["caja_2"]},
-	{"id": "placa_2", "scene": "res://scenes/levels/placa_2.tscn", "name": "Peso muerto",
+	{"id": "placa_2", "scene": "res://scenes/levels/placa_2.tscn",
 		"pos": Vector2(336, 558), "from": ["placa_1"]},
-	{"id": "placa_3", "scene": "res://scenes/levels/placa_3.tscn", "name": "Turnos",
+	{"id": "placa_3", "scene": "res://scenes/levels/placa_3.tscn",
 		"pos": Vector2(246, 580), "from": ["placa_2"]},
 	# --- Rama: plataformas que se mueven (sale de los peligros) ---
-	{"id": "movil_1", "scene": "res://scenes/levels/movil_1.tscn", "name": "Ascensor",
+	{"id": "movil_1", "scene": "res://scenes/levels/movil_1.tscn",
 		"pos": Vector2(500, 188), "from": ["peligro_2"]},
-	{"id": "movil_2", "scene": "res://scenes/levels/movil_2.tscn", "name": "Vaivén",
+	{"id": "movil_2", "scene": "res://scenes/levels/movil_2.tscn",
 		"pos": Vector2(530, 108), "from": ["movil_1"]},
-	{"id": "movil_3", "scene": "res://scenes/levels/movil_3.tscn", "name": "Andén",
+	{"id": "movil_3", "scene": "res://scenes/levels/movil_3.tscn",
 		"pos": Vector2(450, 66), "from": ["movil_2"]},
 	# --- Rama: viento (sale de lanzar) ---
-	{"id": "viento_1", "scene": "res://scenes/levels/viento_1.tscn", "name": "Volantín",
+	{"id": "viento_1", "scene": "res://scenes/levels/viento_1.tscn",
 		"pos": Vector2(888, 336), "from": ["lanzar_2"]},
-	{"id": "viento_2", "scene": "res://scenes/levels/viento_2.tscn", "name": "Ventolera",
+	{"id": "viento_2", "scene": "res://scenes/levels/viento_2.tscn",
 		"pos": Vector2(976, 374), "from": ["viento_1"]},
-	{"id": "viento_3", "scene": "res://scenes/levels/viento_3.tscn", "name": "Remolino",
+	{"id": "viento_3", "scene": "res://scenes/levels/viento_3.tscn",
 		"pos": Vector2(1064, 406), "from": ["viento_2"]},
 	# --- Final: se abre con 4 de los 6 finales de rama ---
-	{"id": "final", "scene": "res://scenes/levels/final.tscn", "name": "Emboque de a dos",
+	{"id": "final", "scene": "res://scenes/levels/final.tscn",
 		"pos": Vector2(700, 112), "need": 4, "special": true, "rope": false,
-		"hint": "Completa 4 caminos para abrirlo",
+		"hint": "MAP_HINT_FINAL",
 		"from": ["level_2", "level_4", "lanzar_3", "placa_3", "movil_3", "viento_3"]},
 ]
+
+## Clave de traducción del nombre del nivel (i18n/textos.csv): "LEVEL_TRONCO_1".
+static func name_key(id: String) -> String:
+	return "LEVEL_" + id.to_upper()
+
+## Nombre del nivel en el idioma actual.
+static func display_name(id: String) -> String:
+	return Languages.text(name_key(id))
 
 ## Entrada del nivel con ese id (diccionario vacío si no existe).
 static func get_level(id: String) -> Dictionary:

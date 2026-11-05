@@ -158,10 +158,12 @@ func _win() -> void:
 		_label.visible = true
 	# Registrar el resultado (nivel completado, highscore y datos para la
 	# pantalla de victoria). Si el nivel está en el LevelCatalog, su id y nombre
-	# salen de ahí (la lista única de niveles); si no, de los exports.
+	# salen de ahí (la lista única de niveles; el nombre va como clave de
+	# traducción); si no, de los exports.
 	var entry := LevelCatalog.find_by_scene(get_tree().current_scene.scene_file_path)
 	var id: String = entry.get("id", level_id if level_id != "" else _fallback_id())
-	var display_name: String = entry.get("name", level_name if level_name != "" else id)
+	var display_name: String = LevelCatalog.name_key(id) if not entry.is_empty() \
+		else (level_name if level_name != "" else id)
 	var sm := get_tree().get_first_node_in_group("score_manager") as ScoreManager
 	if sm != null:
 		ScoreBoard.report_win(id, display_name, sm.score, sm.collected, sm.total)

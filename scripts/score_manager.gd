@@ -30,4 +30,8 @@ func add_points(points: int) -> void:
 
 func _update_label() -> void:
 	if _label != null:
-		_label.text = "Puntos: %d" % score
+		_label.text = tr("HUD_POINTS") % score
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_update_label()

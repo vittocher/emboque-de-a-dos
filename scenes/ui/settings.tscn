@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/settings.gd" id="1_set"]
 
@@ -34,7 +34,7 @@ theme_override_constants/separation = 24
 
 [node name="Title" type="Label" parent="Center/VBox"]
 layout_mode = 2
-text = "Ajustes"
+text = "SETTINGS_TITLE"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 48
 
@@ -45,7 +45,7 @@ theme_override_constants/separation = 20
 [node name="VolumeLabel" type="Label" parent="Center/VBox/VolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(220, 0)
-text = "General"
+text = "SETTINGS_MASTER"
 theme_override_font_sizes/font_size = 26
 
 [node name="VolumeSlider" type="HSlider" parent="Center/VBox/VolumeRow"]
@@ -64,7 +64,7 @@ theme_override_constants/separation = 20
 [node name="MusicVolumeLabel" type="Label" parent="Center/VBox/MusicVolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(220, 0)
-text = "Música"
+text = "SETTINGS_MUSIC"
 theme_override_font_sizes/font_size = 26
 
 [node name="MusicVolumeSlider" type="HSlider" parent="Center/VBox/MusicVolumeRow"]
@@ -83,7 +83,7 @@ theme_override_constants/separation = 20
 [node name="SfxVolumeLabel" type="Label" parent="Center/VBox/SfxVolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(220, 0)
-text = "Efectos"
+text = "SETTINGS_SFX"
 theme_override_font_sizes/font_size = 26
 
 [node name="SfxVolumeSlider" type="HSlider" parent="Center/VBox/SfxVolumeRow"]
@@ -102,23 +102,38 @@ theme_override_constants/separation = 20
 [node name="FullscreenLabel" type="Label" parent="Center/VBox/FullscreenRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(220, 0)
-text = "Pantalla completa"
+text = "SETTINGS_FULLSCREEN"
 theme_override_font_sizes/font_size = 26
 
 [node name="FullscreenCheck" type="CheckBox" parent="Center/VBox/FullscreenRow"]
 layout_mode = 2
-text = "Activar"
+text = "SETTINGS_ENABLE"
+
+[node name="LanguageRow" type="HBoxContainer" parent="Center/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="LanguageLabel" type="Label" parent="Center/VBox/LanguageRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(220, 0)
+text = "SETTINGS_LANGUAGE"
+theme_override_font_sizes/font_size = 26
+
+[node name="LanguageOption" type="OptionButton" parent="Center/VBox/LanguageRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 44)
+theme_override_font_sizes/font_size = 22
 
 [node name="ResetButton" type="Button" parent="Center/VBox"]
 layout_mode = 2
 size_flags_horizontal = 4
 custom_minimum_size = Vector2(220, 52)
-text = "Restaurar valores"
+text = "SETTINGS_RESET"
 theme_override_font_sizes/font_size = 24
 
 [node name="BackButton" type="Button" parent="Center/VBox"]
 layout_mode = 2
 size_flags_horizontal = 4
 custom_minimum_size = Vector2(220, 52)
-text = "Volver"
+text = "COMMON_BACK"
 theme_override_font_sizes/font_size = 26

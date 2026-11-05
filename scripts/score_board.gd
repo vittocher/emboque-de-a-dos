@@ -14,6 +14,8 @@ const SCORES_PATH := "user://scores.cfg"
 
 # Datos de la última victoria, para que la pantalla de victoria y el mapa los lean.
 var last_level_id: String = ""
+## Clave de traducción del nombre (LEVEL_<ID>) o, en niveles fuera del catálogo,
+## un nombre literal: la pantalla de victoria le aplica tr().
 var last_level_name: String = ""
 var last_score: int = 0
 var last_is_record: bool = false

@@ -19,6 +19,9 @@ extends CanvasLayer
 @onready var settings_sfx_volume: HSlider = $PausePanel/SettingsPanel/SettingsVBox/SfxVolumeRow/SfxVolumeSlider
 @onready var settings_fullscreen: CheckBox = $PausePanel/SettingsPanel/SettingsVBox/FullscreenRow/FullscreenCheck
 @onready var settings_back_button: Button = $PausePanel/SettingsPanel/SettingsVBox/BackButton
+## Muestra el idioma actual (su texto es la clave LANGUAGE_NAME); cada clic pasa
+## al siguiente y todo el nivel se traduce al tiro.
+@onready var settings_language: Button = $PausePanel/SettingsPanel/SettingsVBox/LanguageRow/LanguageButton
 
 var _is_paused := false
 var _settings: Node
@@ -35,6 +38,7 @@ func _ready() -> void:
 	settings_music_volume.value_changed.connect(_on_music_volume_changed)
 	settings_sfx_volume.value_changed.connect(_on_sfx_volume_changed)
 	settings_fullscreen.toggled.connect(_on_fullscreen_toggled)
+	settings_language.pressed.connect(_settings.cycle_language)
 	# El mouse mueve el foco: así brilla un solo botón a la vez.
 	for button: Button in [continue_button, restart_button, settings_button, main_menu_button]:
 		button.mouse_entered.connect(button.grab_focus)

@@ -164,21 +164,21 @@ func _on_focused(id: String) -> void:
 	var level := LevelCatalog.get_level(id)
 	var number := LevelCatalog.number_of(id)
 	if not LevelCatalog.is_unlocked(id):
-		_title.text = "Nivel %d" % number
-		_details.text = level.get("hint", "Bloqueado")
+		_title.text = tr("MAP_LEVEL") % number
+		_details.text = tr(level.get("hint", "MAP_LOCKED"))
 		return
-	_title.text = "%d · %s" % [number, level.name]
+	_title.text = "%d · %s" % [number, LevelCatalog.display_name(id)]
 	if not _exists(id):
-		_details.text = "Próximamente"
+		_details.text = tr("MAP_SOON")
 		return
 	var total := ScoreBoard.collectible_total(id)
 	var parts: Array[String] = []
 	if ScoreBoard.is_completed(id):
-		parts.append("Récord: %d" % ScoreBoard.get_highscore(id))
+		parts.append(tr("MAP_RECORD") % ScoreBoard.get_highscore(id))
 		if total > 0:
-			parts.append("Sopaipillas: %d / %d" % [ScoreBoard.best_collected(id), total])
+			parts.append(tr("MAP_COLLECTED") % [ScoreBoard.best_collected(id), total])
 	else:
-		parts.append("Sin completar")
+		parts.append(tr("MAP_NOT_DONE"))
 	_details.text = "   ·   ".join(parts)
 
 func _on_chosen(id: String) -> void:

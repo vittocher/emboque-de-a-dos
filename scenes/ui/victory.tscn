@@ -65,13 +65,13 @@ theme_override_constants/separation = 14
 
 [node name="Title" type="Label" parent="Center/VBox"]
 layout_mode = 2
-text = "¡Emboque logrado!"
+text = "WIN_TITLE"
 label_settings = SubResource("Settings_title")
 horizontal_alignment = 1
 
 [node name="Subtitle" type="Label" parent="Center/VBox"]
 layout_mode = 2
-text = "Nivel"
+text = ""
 label_settings = SubResource("Settings_big")
 horizontal_alignment = 1
 
@@ -120,9 +120,9 @@ theme_override_constants/separation = 24
 [node name="RetryButton" parent="Center/VBox/Buttons" instance=ExtResource("3_boton")]
 layout_mode = 2
 custom_minimum_size = Vector2(220, 58)
-text = "Reintentar"
+text = "VICTORY_RETRY"
 
 [node name="ContinueButton" parent="Center/VBox/Buttons" instance=ExtResource("3_boton")]
 layout_mode = 2
 custom_minimum_size = Vector2(220, 58)
-text = "Continuar"
+text = "VICTORY_CONTINUE"
