@@ -19,6 +19,9 @@ const SOUNDS := {
 	&"box_push": ["res://audio/sfx/box_push.wav", -8.0],
 	&"grab": ["res://audio/sfx/grab.wav", -8.0],
 	&"throw": ["res://audio/sfx/throw.wav", -6.0],
+	&"plate": ["res://audio/sfx/plate.wav", -6.0],
+	&"gate": ["res://audio/sfx/gate.wav", -8.0],
+	&"wind": ["res://audio/sfx/wind.wav", -14.0],
 }
 ## Cuántos efectos pueden sonar a la vez.
 const POOL_SIZE := 12

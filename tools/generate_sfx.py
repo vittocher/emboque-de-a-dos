@@ -171,7 +171,47 @@ def box_push():
     return x[:loop]
 
 
+def plate():
+    # Placa de presión: "clac" de madera grave (sube un poco el tono) + click seco.
+    t = time(0.12)
+    knock = np.sin(sweep_phase(np.linspace(240, 300, len(t)))) * np.exp(-t / 0.025)
+    click = lowpass(rng.uniform(-1, 1, len(t)), 2500) * np.exp(-t / 0.004) * 0.8
+    return (knock + click) * attack(len(t), 0.001)
+
+
+def gate():
+    # Compuerta: madera que se desliza (ruido grave con granos) y un golpe al final.
+    t = time(0.55)
+    noise = np.cumsum(rng.uniform(-1, 1, len(t)))
+    noise -= lowpass(noise, 20)
+    slide = lowpass(noise, 500) * (0.6 + 0.4 * np.abs(np.sin(2 * np.pi * 11 * t)))
+    slide *= np.minimum(t / 0.05, 1.0) * np.clip((0.45 - t) / 0.1, 0.0, 1.0)
+    thud_t = np.clip(t - 0.42, 0.0, None)
+    thud = np.where(t > 0.42, np.sin(2 * np.pi * 90 * thud_t) * np.exp(-thud_t / 0.05), 0.0)
+    return slide * 0.8 + thud
+
+
+def wind():
+    # Corriente de aire en loop: ruido filtrado que "respira" lento. 2 s exactos
+    # con los extremos fundidos para que el loop no se note.
+    loop = int(SR * 2.0)
+    fade = int(SR * 0.2)
+    t = np.arange(loop + fade) / SR
+    center = 500 + 300 * np.sin(2 * np.pi * 0.5 * t)
+    x = bandpass(rng.uniform(-1, 1, len(t)), center, q=0.8)
+    x *= 0.75 + 0.25 * np.sin(2 * np.pi * 1.0 * t + 1.0)
+    ramp = np.linspace(0, 1, fade)
+    x[:fade] = x[:fade] * ramp + x[loop:loop + fade] * (1 - ramp)
+    return x[:loop]
+
+
+ALL = (step, jump, die, hook, swing, box_push, grab, throw, plate, gate, wind)
+
 if __name__ == "__main__":
+    import sys
+    # Sin argumentos genera todos; con nombres, solo esos (p. ej. "plate gate").
+    wanted = set(sys.argv[1:])
     print("Generando efectos en", os.path.normpath(OUT_DIR))
-    for fn in (step, jump, die, hook, swing, box_push, grab, throw):
-        write(fn.__name__, fn())
+    for fn in ALL:
+        if not wanted or fn.__name__ in wanted:
+            write(fn.__name__, fn())

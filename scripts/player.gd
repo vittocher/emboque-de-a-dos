@@ -104,6 +104,8 @@ var _taut: bool = false         # colgando en el aire con la cuerda tensa → p�
 var _swing_radius: float = 0.0
 var _swing_omega: float = 0.0   # velocidad angular (rad/s); + = hacia la derecha abajo
 var _launched: bool = false     # conserva el impulso tras soltarse de la cuerda
+var _wind := Vector2.ZERO       # aceleración del viento de este tick (WindZone.add_wind)
+var _wind_cap := 0.0
 var _squash_tween: Tween
 
 @onready var _visual: Node2D = $Visual
@@ -136,6 +138,7 @@ func _process_platformer(delta: float) -> void:
 	# Gravedad.
 	if not is_on_floor():
 		velocity.y += _gravity * delta
+	_apply_wind(delta)
 
 	# Salto (solo desde el suelo).
 	if not aiming and is_on_floor() and Input.is_action_just_pressed(input_prefix + "_jump"):
@@ -199,6 +202,24 @@ func _apply_launch_air_control(direction: float, delta: float) -> bool:
 		velocity.x = move_toward(velocity.x, direction * speed, launch_air_drag * delta)
 		return true
 	return false
+
+## Lo llama una WindZone cada tick de física mientras el jugador está adentro.
+func add_wind(accel: Vector2, max_speed: float) -> void:
+	_wind += accel
+	_wind_cap = maxf(_wind_cap, max_speed)
+
+## Empuje del viento: suma su aceleración, pero sin pasar de [member _wind_cap]
+## en la dirección del viento (si no, sube sin límite).
+func _apply_wind(delta: float) -> void:
+	if _wind == Vector2.ZERO:
+		return
+	var dir := _wind.normalized()
+	velocity += _wind * delta
+	var along := velocity.dot(dir)
+	if along > _wind_cap:
+		velocity -= dir * (along - _wind_cap)
+	_wind = Vector2.ZERO
+	_wind_cap = 0.0
 
 # --- Balanceo (péndulo) ---
 
