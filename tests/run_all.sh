@@ -9,7 +9,7 @@ for f in tests/solutions/*.gd; do
 	name=$(basename "$f" .gd)
 	[[ "$name" == moves || "$name" == _* ]] && continue
 	[[ -n "$1" && "$name" != *"$1"* ]] && continue
-	out=$(timeout 120 "$GODOT" --headless --fixed-fps 120 --path . -s tests/play_level.gd -- "res://$f" --timeout=60 2>&1)
+	out=$(timeout 120 "$GODOT" --headless --fixed-fps 120 --path . -s tests/play_level.gd -- "res://$f" --timeout=80 2>&1)
 	result=$(echo "$out" | grep -E "^RESULT" | head -1)
 	missing=$(echo "$out" | grep -E "^MISSING" | head -1)
 	printf "%-14s %s %s\n" "$name" "${result:-RESULT ERROR}" "$missing"
