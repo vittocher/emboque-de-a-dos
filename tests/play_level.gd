@@ -13,6 +13,10 @@ extends SceneTree
 ##   --shots=DIR     guarda una captura cada --shot-every s (sin --headless)
 ##   --shot-every=S  (default 1)
 ##   --var=NOMBRE=VALOR  variables para el plan (ctx.vars), útil para barridos
+## Para grabar (tráiler, con --write-movie de Godot; ver trailer/README.md):
+##   --linger=S      al terminar sigue S s más (el closeup y el cartel de victoria)
+##   --lang=CÓDIGO   idioma del juego ("es", "en")
+##   --music=V       volumen de la música (0 = muda, para montarla aparte)
 ##
 ## Imprime al final una línea:  RESULT WIN|DEATH|TIMEOUT t=… collected=a/b ...
 ##
@@ -59,6 +63,7 @@ var _shot_every := 1.0
 var _shot_acc := 0.0
 var _shot_n := 0
 var _done := false
+var _linger := 0.0
 var _win_manager: Node
 
 const FRICTION := 2600.0
@@ -84,6 +89,12 @@ func _initialize() -> void:
 			_shots_dir = a.get_slice("=", 1)
 		elif a.begins_with("--shot-every="):
 			_shot_every = float(a.get_slice("=", 1))
+		elif a.begins_with("--linger="):
+			_linger = float(a.get_slice("=", 1))
+		elif a.begins_with("--lang="):
+			root.get_node("SettingsManager").set_language(a.get_slice("=", 1))
+		elif a.begins_with("--music="):
+			root.get_node("SettingsManager").set_music_volume(float(a.get_slice("=", 1)))
 		elif a.begins_with("--var="):
 			var kv := a.trim_prefix("--var=")
 			vars[kv.get_slice("=", 0)] = kv.get_slice("=", 1)
@@ -198,6 +209,9 @@ func _finish(result: String) -> void:
 	for a in ACTIONS:
 		for who in ["p1", "p2"]:
 			Input.action_release(who + "_" + a)
+	if _linger > 0.0:
+		# Grabando: se deja correr el final (closeup en cámara lenta + cartel).
+		await create_timer(_linger, true, false, true).timeout
 	Engine.time_scale = 1.0
 	quit(0 if result == "WIN" else 1)
 

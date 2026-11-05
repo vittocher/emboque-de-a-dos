@@ -202,8 +202,11 @@ default_bus_layout.tres  Buses de audio Master / Music / SFX (ver "Volumen y bus
 tools/convertir_video.bat|.sh  Convierte el video de la intro a video/intro.ogv (ver "Intro (video)").
 tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python tools/generate_sfx.py [nombres]`
                    (sin nombres, todos; con nombres, solo esos, p. ej. `plate gate wind`).
-tests/             Bot de pruebas (ver "Bot de pruebas"): play_level.gd, run_all.sh, solutions/<nivel>.gd.
-                   Excluido del export (export_presets: exclude_filter "tests/*").
+tests/             Bot de pruebas (ver "Bot de pruebas"): play_level.gd, run_all.sh, solutions/<nivel>.gd,
+                   rec_map.gd (graba el mapa para el tráiler). Excluido del export (exclude_filter "tests/*").
+trailer/           Tráiler: trailer_es.mp4 / trailer_en.mp4 + cómo rehacerlo (make_trailer.sh: el bot juega y el
+                   Movie Maker de Godot graba; cards.py hace las tarjetas; edit.py monta al ritmo de la cueca).
+                   Tiene .gdignore y está fuera del export. Ver trailer/README.md.
 GUIA_ASSETS.md     Guía para diseño: qué archivo reemplazar para cambiar cada sprite/sonido en TODOS los niveles.
 EmboqueDA2 Concepto.pdf  Documento de concepto del juego.
 ```
@@ -599,6 +602,7 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 - Del equipo: `level_2` ("La T") y `level_4` ("Escalones", rehecho sobre level_base) están en el mapa (fin de las ramas de peligros y de cajas); `main`, `level_3` y las pruebas siguen en el repo pero fuera del mapa.
 
 **Menús y presentación**
+- **Tráiler** en español e inglés (`trailer/`), regenerable con un comando cuando cambie el arte.
 - **Intro:** video de la historia al arrancar (`video/intro.ogv`), se salta con cualquier tecla, fundidos de entrada/salida; en web pide una tecla antes para que suene.
 - **Idiomas:** español e inglés (todo el texto en `i18n/textos.csv`, imágenes con texto por idioma), selector en el menú principal, Ajustes y pausa; agregar un idioma = una columna.
 - **Menús:** principal (portada, botones de madera, botón de idioma; sin Salir), mapa de niveles ramificado con progreso, ajustes con el tema de madera (y borrar progreso), pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
@@ -668,6 +672,10 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 ### Presentación y sonido
 
 - **Video convertido con `tools/convertir_video.sh`** (fuente 1920×1080 a 60 fps con audio, 12 s): sale Theora 1280×720 30 fps + Vorbis 44,1 kHz estéreo; en la intro avanza a velocidad real (6,08 s a los 6 s) y al terminar (12,5 s) pasa solo al menú; resto del test de la intro igual. PASS 21/21.
+- **Tráiler** (`trailer/`): grabado con `--write-movie` + el bot (13 niveles + el mapa, en es y en), 72 s
+  con cortes en los tiempos de la cueca (~112 BPM; la entrada de la banda en el logo), textos que entran
+  deslizándose y los efectos del juego mezclados encima. Revisado cuadro a cuadro. El bot del final se pasa
+  del aterrizaje grabando a 30 fps (se usan solo sus primeros segundos).
 - **Intro (video)** (escritorio con Xvfb + export web en Chromium headless, con un .ogv de prueba): arranca como escena principal, video sonando y cueca callada; una tecla en los primeros 0,35 s no salta; mensaje visible con el texto pedido; el video llena 1280×720 (16:9) y uno 4:3 queda centrado con franjas (960×720 en x=160); tecla → fundido → menú; la cueca vuelve con fundido (−36 dB → 0 dB); volver al menú desde otra escena no repite fundido ni reinicia la música; al terminar el video pasa solo al menú; clic también salta; sin video va directo al menú con música. PASS 20/20. En web: aviso "para comenzar" → video → menú, con salida de audio medida (AnalyserNode): aviso 0,0000, video 0,074, menú (cueca) 0,158; el .ogv entra al .pck. Botón Ajustes con brillo fantasma al llegar al menú (bug previo del layout, ver Lecciones) corregido: sin mouse encima no brilla, con el mouse encima sí, y sigue al mouse.
 
 - **Animaciones provisorias + toques** (capturas con Xvfb en caja_1/tronco_3): estados push/jump/fall/idle con su cuadro; inclinación al empujar; aplastón al aterrizar con los pies en el piso. El bot sigue ganando igual (son solo visuales). PASS.
