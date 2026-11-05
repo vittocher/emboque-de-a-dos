@@ -648,6 +648,9 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 
 ### Objetos y zonas
 
+- **Export web con idiomas** (Chromium headless, Playwright): el navegador en inglés arranca el juego en inglés
+  (idioma del sistema); el botón de idioma cambia todo a español (portada, botones); mapa, nivel y pausa (imagen en
+  español) siguen el idioma; sin errores en consola. PASS.
 - **Ajustes con el tema de madera** (Xvfb, es/en): se ve como el panel de la pausa; borrar progreso: 1 clic pide
   confirmar ("¿Seguro? Presiona otra vez"), el 2.º borra (completados 25 → 0), sin 2.º clic se desarma a los 3 s. PASS.
 - **Revisión de bugs (fixes verificados):** ganado + tocar una zona de muerte → no recarga ni suena y llega a la

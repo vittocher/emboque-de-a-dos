@@ -77,6 +77,9 @@ func _load_video() -> VideoStream:
 ## convertirlo (Godot solo reproduce Ogg Theora).
 func _conversion_hint() -> String:
 	var dir := video_path.get_base_dir()
+	# Solo sirve a quien desarrolla (en el juego exportado la carpeta ni existe).
+	if not OS.has_feature("editor") or not DirAccess.dir_exists_absolute(dir):
+		return ""
 	for file in DirAccess.get_files_at(dir):
 		if file.get_extension().to_lower() in ["mp4", "mov", "webm", "mkv", "avi", "m4v"]:
 			return " Hay un %s en %s: conviértelo a .ogv con tools/convertir_video.bat (ver video/README.md)." \
