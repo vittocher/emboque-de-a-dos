@@ -82,6 +82,8 @@ func reset_progress() -> void:
 	_highscores.clear()
 	_completed.clear()
 	_totals.clear()
+	last_level_id = ""
+	last_first_clear = false
 	_save()
 
 func _load() -> void:

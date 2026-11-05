@@ -11,6 +11,9 @@ SETTINGS_FULLSCREEN,Pantalla completa,Fullscreen
 SETTINGS_ENABLE,Activar,On
 SETTINGS_LANGUAGE,Idioma,Language
 SETTINGS_RESET,Restaurar valores,Restore defaults
+SETTINGS_ERASE,Borrar progreso,Erase progress
+SETTINGS_ERASE_SURE,¿Seguro? Presiona otra vez,Sure? Press again
+SETTINGS_ERASED,Progreso borrado,Progress erased
 PAUSE_RESUME,Continuar,Resume
 PAUSE_RESTART,Reiniciar nivel,Restart level
 PAUSE_MAIN_MENU,Menú principal,Main menu
