@@ -15,8 +15,8 @@ position = Vector2(110, 200)
 position = Vector2(1170, 200)
 
 [node name="Floor" parent="." instance=ExtResource("2_block")]
-position = Vector2(640, 680)
-size = Vector2(1280, 80)
+position = Vector2(640, 625)
+size = Vector2(1280, 190)
 
 [node name="Caca" parent="." instance=ExtResource("5_caca")]
 position = Vector2(640, 515)
