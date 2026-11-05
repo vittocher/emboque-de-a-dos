@@ -31,6 +31,9 @@ var _highscores: Dictionary = {}
 # level_id -> máximo de coleccionables juntados en una victoria (int). Persistido.
 # Que la clave exista = el nivel está completado.
 var _completed: Dictionary = {}
+# level_id -> total de coleccionables del nivel (se anota al ganarlo). Persistido:
+# así el mapa no necesita cargar las escenas para saberlo (era lento).
+var _totals: Dictionary = {}
 
 func _ready() -> void:
 	_load()
@@ -50,6 +53,7 @@ func report_win(level_id: String, level_name: String, score: int,
 	if last_is_record:
 		_highscores[level_id] = score
 	_completed[level_id] = maxi(collected, best_collected(level_id))
+	_totals[level_id] = total
 	_save()
 	return last_is_record
 
@@ -64,6 +68,10 @@ func is_completed(level_id: String) -> bool:
 func best_collected(level_id: String) -> int:
 	return int(_completed.get(level_id, 0))
 
+## Total de coleccionables del nivel, si ya se ganó alguna vez (si no, 0).
+func collectible_total(level_id: String) -> int:
+	return int(_totals.get(level_id, 0))
+
 func completed_count() -> int:
 	return _completed.size()
 
@@ -71,6 +79,7 @@ func completed_count() -> int:
 func reset_progress() -> void:
 	_highscores.clear()
 	_completed.clear()
+	_totals.clear()
 	_save()
 
 func _load() -> void:
@@ -83,11 +92,11 @@ func _load() -> void:
 	if config.has_section("completed"):
 		for key in config.get_section_keys("completed"):
 			_completed[key] = int(config.get_value("completed", key, 0))
-	# Partidas guardadas antes de que existiera "completed": un récord implica
-	# que el nivel se ganó.
-	for key in _highscores:
-		if not _completed.has(key):
-			_completed[key] = 0
+	if config.has_section("totals"):
+		for key in config.get_section_keys("totals"):
+			_totals[key] = int(config.get_value("totals", key, 0))
+	# Ojo: un récord de una partida vieja (antes del mapa) NO cuenta como nivel
+	# completado: si no, un nivel quedaba abierto saltándose el árbol.
 
 func _save() -> void:
 	var config := ConfigFile.new()
@@ -95,4 +104,6 @@ func _save() -> void:
 		config.set_value("highscores", key, _highscores[key])
 	for key in _completed:
 		config.set_value("completed", key, _completed[key])
+	for key in _totals:
+		config.set_value("totals", key, _totals[key])
 	config.save(SCORES_PATH)

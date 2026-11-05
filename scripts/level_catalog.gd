@@ -97,8 +97,11 @@ static func number_of(id: String) -> int:
 			return i + 1
 	return 0
 
+## Abierto si se completaron los niveles de los que depende (no basta con haberlo
+## completado: así una partida vieja o un cambio del árbol no deja niveles
+## abiertos fuera de orden).
 static func is_unlocked(id: String) -> bool:
-	if ScoreBoard.unlock_all or ScoreBoard.is_completed(id):
+	if ScoreBoard.unlock_all:
 		return true
 	return _requirements_met(id, "")
 
@@ -127,6 +130,7 @@ static func next_of(id: String) -> Array[String]:
 	return result
 
 ## Total de coleccionables de un nivel, contados en su escena sin instanciarla.
+## Carga la escena entera (lento): el mapa usa ScoreBoard.collectible_total.
 static func collectible_count(scene_path: String) -> int:
 	if not ResourceLoader.exists(scene_path):
 		return 0

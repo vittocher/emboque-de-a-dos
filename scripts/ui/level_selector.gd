@@ -52,7 +52,7 @@ func _build() -> void:
 		var node := NODE_SCENE.instantiate() as LevelNode
 		_nodes.add_child(node)
 		node.position = level.pos - Vector2(LevelNode.SIZE, LevelNode.SIZE) * 0.5
-		var total := LevelCatalog.collectible_count(level.scene)
+		var total := ScoreBoard.collectible_total(level.id)
 		var got_all := total > 0 and ScoreBoard.best_collected(level.id) >= total
 		node.setup(level.id, LevelCatalog.number_of(level.id), LevelCatalog.is_unlocked(level.id),
 			ScoreBoard.is_completed(level.id), got_all, level.get("special", false))
@@ -171,7 +171,7 @@ func _on_focused(id: String) -> void:
 	if not _exists(id):
 		_details.text = "Próximamente"
 		return
-	var total := LevelCatalog.collectible_count(level.scene)
+	var total := ScoreBoard.collectible_total(id)
 	var parts: Array[String] = []
 	if ScoreBoard.is_completed(id):
 		parts.append("Récord: %d" % ScoreBoard.get_highscore(id))
@@ -179,8 +179,6 @@ func _on_focused(id: String) -> void:
 			parts.append("Sopaipillas: %d / %d" % [ScoreBoard.best_collected(id), total])
 	else:
 		parts.append("Sin completar")
-		if total > 0:
-			parts.append("%d sopaipillas" % total)
 	_details.text = "   ·   ".join(parts)
 
 func _on_chosen(id: String) -> void:
