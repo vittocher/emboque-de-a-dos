@@ -1,0 +1,73 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="PackedScene" path="res://scenes/moving_platform.tscn" id="4_mp"]
+[ext_resource type="PackedScene" path="res://scenes/both_death_zone.tscn" id="5_fire"]
+[ext_resource type="PackedScene" path="res://scenes/bowl.tscn" id="6_bowl"]
+[ext_resource type="PackedScene" path="res://scenes/pressure_plate.tscn" id="7_plate"]
+
+[node name="Movil3" instance=ExtResource("1_base")]
+
+[node name="Player1" parent="."]
+position = Vector2(80, 380)
+
+[node name="Player2" parent="."]
+position = Vector2(1200, 380)
+
+[node name="GroundLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(150, 660)
+size = Vector2(300, 120)
+
+[node name="GroundRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(1130, 660)
+size = Vector2(300, 120)
+
+[node name="PitFloor" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 705)
+size = Vector2(680, 30)
+
+[node name="PitFire" parent="." instance=ExtResource("5_fire")]
+position = Vector2(640, 676)
+scale = Vector2(6.8, 0.9)
+
+[node name="TowerLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(510, 480)
+size = Vector2(140, 360)
+
+[node name="TowerRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(770, 480)
+size = Vector2(140, 360)
+
+[node name="Bowl" parent="." instance=ExtResource("6_bowl")]
+position = Vector2(640, 430)
+width = 116.0
+
+[node name="ElevatorLeft" parent="." instance=ExtResource("4_mp")]
+position = Vector2(370, 610)
+size = Vector2(120, 20)
+travel = Vector2(0, -300)
+channel = 1
+
+[node name="ElevatorRight" parent="." instance=ExtResource("4_mp")]
+position = Vector2(910, 610)
+size = Vector2(120, 20)
+travel = Vector2(0, -300)
+channel = 0
+
+[node name="PlateForRight" parent="." instance=ExtResource("7_plate")]
+position = Vector2(150, 600)
+
+[node name="PlateForLeft" parent="." instance=ExtResource("7_plate")]
+position = Vector2(810, 300)
+channel = 1
+
+[node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(370, 420)
+
+[node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(910, 420)
+
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(640, 440)

@@ -1,0 +1,60 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="PackedScene" path="res://scenes/wind_zone.tscn" id="4_wind"]
+[ext_resource type="PackedScene" path="res://scenes/bowl.tscn" id="5_bowl"]
+[ext_resource type="PackedScene" path="res://scenes/emboque_death_zone.tscn" id="6_caca"]
+
+[node name="Viento2" instance=ExtResource("1_base")]
+
+[node name="Player1" parent="."]
+position = Vector2(150, 220)
+
+[node name="Player2" parent="."]
+position = Vector2(1130, 220)
+
+[node name="GroundLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(320, 570)
+size = Vector2(640, 300)
+
+[node name="GroundRightA" parent="." instance=ExtResource("2_block")]
+position = Vector2(670, 570)
+size = Vector2(60, 300)
+
+[node name="Pit" parent="." instance=ExtResource("2_block")]
+position = Vector2(760, 690)
+size = Vector2(120, 60)
+
+[node name="GroundRightB" parent="." instance=ExtResource("2_block")]
+position = Vector2(1060, 570)
+size = Vector2(440, 300)
+
+[node name="Caca" parent="." instance=ExtResource("6_caca")]
+position = Vector2(760, 645)
+scale = Vector2(1.2, 1.0)
+
+[node name="Bowl" parent="." instance=ExtResource("5_bowl")]
+position = Vector2(760, 470)
+width = 120.0
+
+[node name="WallTop" parent="." instance=ExtResource("2_block")]
+position = Vector2(650, 30)
+size = Vector2(20, 660)
+
+[node name="Wind" parent="." instance=ExtResource("4_wind")]
+position = Vector2(520, 380)
+size = Vector2(320, 80)
+direction = Vector2(1, 0)
+strength = 2600.0
+player_factor = 0.15
+
+[node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(250, 385)
+
+[node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(1000, 385)
+
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(700, 395)

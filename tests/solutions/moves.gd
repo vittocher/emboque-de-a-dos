@@ -27,3 +27,16 @@ static func swing_launch(i: int, dir: int, pump: float, release_x: float, stop_x
 ## Va y vuelve para balancear el extremo que cuelga (hasta ganar o [param times] veces).
 static func nudge(i: int, home_x: float, back: float, times: int = 6) -> Array:
 	return [["jiggle", home_x, back, times]]
+
+## Lanzar (niveles con LevelRules.throw_enabled): acorta al mínimo, toma el
+## extremo (tirar otra vez), empieza a apuntar y lo lanza cuando la mira pasa
+## por [param deg] grados (subiendo). El jugador mira hacia dir.
+static func throw_at(i: int, dir: int, deg: float) -> Array:
+	return [["rope", 60, 1], ["wait", 0.2], ["tap", "pull"],
+		["until", func(c): return c.e(i)._throw_state == 1, 1.0],
+		["tap", "right" if dir > 0 else "left"], ["wait", 0.1], ["tap", "throw"],
+		["until", func(c): return c.e(i)._throw_state == 2, 1.0],
+		["until", func(c):
+			var a: float = pingpong(c.e(i)._aim_time * c.e(i).aim_sweep_speed_deg, c.e(i).aim_max_angle_deg)
+			return a >= deg - 0.5, 3.0],
+		["tap", "throw"]]

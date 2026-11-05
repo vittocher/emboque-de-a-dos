@@ -1,0 +1,71 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="PackedScene" path="res://scenes/wind_zone.tscn" id="4_wind"]
+[ext_resource type="PackedScene" path="res://scenes/both_death_zone.tscn" id="5_fire"]
+
+[node name="Viento3" instance=ExtResource("1_base")]
+
+[node name="Player1" parent="."]
+position = Vector2(150, 380)
+
+[node name="Player2" parent="."]
+position = Vector2(1130, 380)
+
+[node name="GroundLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(150, 660)
+size = Vector2(300, 120)
+
+[node name="GroundRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(1130, 660)
+size = Vector2(300, 120)
+
+[node name="PitFloorLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(370, 705)
+size = Vector2(140, 30)
+
+[node name="PitFloorRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(910, 705)
+size = Vector2(140, 30)
+
+[node name="FireLeft" parent="." instance=ExtResource("5_fire")]
+position = Vector2(370, 676)
+scale = Vector2(1.4, 0.9)
+
+[node name="FireRight" parent="." instance=ExtResource("5_fire")]
+position = Vector2(910, 676)
+scale = Vector2(1.4, 0.9)
+
+[node name="TowerLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(530.5, 460)
+size = Vector2(181, 520)
+
+[node name="TowerRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(749.5, 460)
+size = Vector2(181, 520)
+
+[node name="ShaftFloor" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 470)
+size = Vector2(38, 500)
+
+[node name="WindLeft" parent="." instance=ExtResource("4_wind")]
+position = Vector2(370, 390)
+size = Vector2(140, 500)
+
+[node name="WindRight" parent="." instance=ExtResource("4_wind")]
+position = Vector2(910, 390)
+size = Vector2(140, 500)
+
+[node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(370, 360)
+
+[node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(910, 360)
+
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(500, 150)
+
+[node name="Collectible4" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(780, 150)
