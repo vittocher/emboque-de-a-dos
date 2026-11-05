@@ -30,6 +30,7 @@ var _streams := {}
 var _pool: Array[AudioStreamPlayer] = []
 var _next_steal := 0
 var _last_frame := {}  # sonido → tick de física en que sonó
+var _last_preview_ms := -1000
 
 func _ready() -> void:
 	for sound: StringName in SOUNDS:
@@ -41,6 +42,8 @@ func _ready() -> void:
 	for i in POOL_SIZE:
 		var player := AudioStreamPlayer.new()
 		player.bus = SettingsManager.SFX_BUS
+		# También en la pausa (la muestra del volumen de efectos en Ajustes).
+		player.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(player)
 		_pool.append(player)
 
@@ -61,6 +64,15 @@ func play(sound: StringName, pitch: float = 1.0, volume_db: float = 0.0) -> void
 	player.volume_db = base_volume(sound) + volume_db
 	player.play()
 	played.emit(sound)
+
+## Muestra corta para oír el volumen de efectos al moverlo en Ajustes (como
+## mucho una cada 0,15 s mientras se arrastra el slider).
+func preview() -> void:
+	var now := Time.get_ticks_msec()
+	if now - _last_preview_ms < 150:
+		return
+	_last_preview_ms = now
+	play(&"jump")
 
 ## El stream de un efecto (para loops que maneja su dueño, como la caja).
 func get_stream(sound: StringName) -> AudioStream:

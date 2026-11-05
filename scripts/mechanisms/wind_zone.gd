@@ -33,7 +33,7 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	collision_layer = 0
-	collision_mask = 2 | 4 | 8  # jugadores + extremos
+	collision_mask = 2 | 4 | 8 | 32  # jugadores + extremos + cajas
 	monitorable = false
 	var stream := Sfx.get_stream(&"wind")
 	if stream != null:

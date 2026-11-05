@@ -40,6 +40,8 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	sync_to_physics = true
+	# test_move (no aplastar al bajar) solo mira a los jugadores.
+	collision_mask = 2
 	_start = position
 	if channel >= 0:
 		add_to_group(Channel.LISTENERS)
@@ -66,10 +68,20 @@ func _physics_process(delta: float) -> void:
 			return
 		target = _start + (travel if _to_end else Vector2.ZERO)
 	var step := (target - position).limit_length(speed * delta)
+	# Bajando: si hay un jugador debajo, espera (no lo aplasta contra el piso).
+	# Los extremos y las cajas son cuerpos rígidos: la plataforma los aparta.
+	# Subiendo lleva a los que van encima, como siempre.
+	if step.y > 0.0 and _blocked_below(step):
+		return
 	position += step
 	if channel < 0 and position.distance_to(target) < 0.01:
 		_to_end = not _to_end
 		_wait = wait_time
+
+func _blocked_below(step: Vector2) -> bool:
+	var col := KinematicCollision2D.new()
+	return test_move(global_transform, step, col) and col.get_collider() is CharacterBody2D \
+		and col.get_normal().y < -0.5
 
 func _apply() -> void:
 	var cs := get_node_or_null("CollisionShape2D") as CollisionShape2D

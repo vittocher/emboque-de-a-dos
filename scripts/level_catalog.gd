@@ -141,25 +141,3 @@ static func next_of(id: String) -> Array[String]:
 		if id in level.get("from", []):
 			result.append(level.id)
 	return result
-
-## Total de coleccionables de un nivel, contados en su escena sin instanciarla.
-## Carga la escena entera (lento): el mapa usa ScoreBoard.collectible_total.
-static func collectible_count(scene_path: String) -> int:
-	if not ResourceLoader.exists(scene_path):
-		return 0
-	var scene := load(scene_path) as PackedScene
-	if scene == null:
-		return 0
-	return _count_collectibles(scene.get_state())
-
-static func _count_collectibles(state: SceneState) -> int:
-	var count := 0
-	for i in state.get_node_count():
-		var inst := state.get_node_instance(i)
-		if inst != null and inst.resource_path == "res://scenes/collectible.tscn":
-			count += 1
-	# Escena heredada (p. ej. de level_base): sumar lo que traiga la base.
-	var base := state.get_base_scene_state()
-	if base != null:
-		count += _count_collectibles(base)
-	return count

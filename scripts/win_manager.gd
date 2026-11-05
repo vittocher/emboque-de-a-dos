@@ -154,6 +154,7 @@ func _win() -> void:
 	if _won:
 		return
 	_won = true
+	LevelFlow.mark_won(get_tree())
 	if _label != null:
 		_label.visible = true
 	# Registrar el resultado (nivel completado, highscore y datos para la

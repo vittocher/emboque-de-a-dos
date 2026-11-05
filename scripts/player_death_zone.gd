@@ -18,12 +18,13 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
 func _on_body_entered(body: Node) -> void:
-	if _fired:
+	# Ya embocado (o reiniciándose por otra zona): no se muere más.
+	if _fired or LevelFlow.is_over(get_tree()):
 		return
 	_fired = true
 	triggered.emit(body)
 	Sfx.play(&"die")
 	if reload_on_death:
-		# Diferido: body_entered es un callback de física; recargar (liberar
-		# CollisionObjects) en medio de él está prohibido en Godot.
-		get_tree().call_deferred("reload_current_scene")
+		# Diferido (body_entered es un callback de física) y una sola vez aunque
+		# se toquen varias zonas en el mismo instante.
+		LevelFlow.restart(get_tree())

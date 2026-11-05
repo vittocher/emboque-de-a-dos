@@ -44,6 +44,7 @@ func _on_music_volume_changed(value: float) -> void:
 
 func _on_sfx_volume_changed(value: float) -> void:
 	_settings.set_sfx_volume(value)
+	Sfx.preview()
 
 func _on_fullscreen_toggled(pressed: bool) -> void:
 	_settings.set_fullscreen(pressed)

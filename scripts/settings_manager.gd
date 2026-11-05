@@ -97,7 +97,12 @@ func _apply_settings() -> void:
 	_apply_bus_volume("Master", master_volume)
 	_apply_bus_volume(MUSIC_BUS, music_volume)
 	_apply_bus_volume(SFX_BUS, sfx_volume)
-	_apply_window_mode()
+	# En web el navegador solo deja entrar a pantalla completa tras un clic o
+	# tecla: el juego arranca en ventana (se activa desde Ajustes).
+	if OS.has_feature("web"):
+		fullscreen = false
+	else:
+		_apply_window_mode()
 	if language == "" or not Languages.available().has(language):
 		language = Languages.system_default()
 	TranslationServer.set_locale(language)
@@ -162,6 +167,8 @@ func _start_music() -> void:
 	_music_player = AudioStreamPlayer.new()
 	_music_player.stream = stream
 	_music_player.bus = MUSIC_BUS
+	# Sigue sonando en la pausa (si no, el volumen de música no se oye al ajustarlo).
+	_music_player.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_music_player)
 	# Diferido: si la escena de arranque es la intro, alcanza a pedir silencio
 	# (stop_music) antes de que suene el primer instante de la cueca.

@@ -145,7 +145,7 @@ func _input(event: InputEvent) -> void:
 func _is_skip_event(event: InputEvent) -> bool:
 	if event is InputEventKey:
 		return event.pressed and not event.echo
-	if event is InputEventMouseButton or event is InputEventJoypadButton:
+	if event is InputEventMouseButton or event is InputEventJoypadButton or event is InputEventScreenTouch:
 		return event.pressed
 	return false
 

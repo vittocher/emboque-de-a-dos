@@ -155,6 +155,8 @@ scripts/
   level_rules.gd   Nodo (class_name LevelRules, grupo "level_rules") con las mecánicas opcionales de un
                    nivel: casilla throw_enabled. Nivel sin el nodo = todo lo opcional apagado. También
                    THROW_COLOR (verde de la mecánica en los menús) y scene_throw_enabled(escena).
+  level_flow.gd    class LevelFlow: estado del nivel en curso (meta en la escena): ganado (ya no se muere ni
+                   junta) y reiniciándose (una sola recarga aunque se toquen varias zonas a la vez).
   player_death_zone.gd   Al entrar un jugador (mask=2) → reinicia el nivel. Señal triggered; export reload_on_death.
   emboque_death_zone.gd  Al entrar un extremo (mask=12 = campana 4 + palito 8) → reinicia. (Scripts separados a propósito.)
   hazard_art.gd    @tool, class HazardArt: arte animado de una zona de peligro (ver both_death_zone.tscn).
@@ -241,7 +243,7 @@ Para poner el arte definitivo: reemplazar los hijos de `Visual/Art` por el dibuj
 
 `Area2D` que al ser tocadas (`body_entered`) recargan el nivel. El **filtro por máscara** decide a quién matan: jugadores = `mask 2`; emboque = `mask 12`. Hay **dos scripts separados** (jugador / emboque) para poder darles mecánicas distintas a futuro; la zona "ambos" los **compone** (dos `Area2D` hijas, una con cada script) y tiene su propio arte (fuego). Cada script setea su `collision_mask` en `_ready`, expone `signal triggered(body)` y `@export reload_on_death` (ponerlo en `false` en tests para no recargar). Guard `_fired` evita disparos repetidos.
 
-La recarga se hace con `get_tree().call_deferred("reload_current_scene")`: **recargar dentro de `body_entered` (callback de física) está prohibido** en Godot (libera CollisionObjects a mitad del callback) — hay que diferirlo. Nota: los niveles reales instancian `WinManager` (victoria) y `ui/pause_menu.tscn` (pausa) además de las zonas; `test_death.tscn` los tiene los tres.
+La recarga se hace con `LevelFlow.restart(tree)` (diferida: **recargar dentro de `body_entered`, un callback de física, está prohibido** en Godot, libera CollisionObjects a mitad del callback; y una sola vez aunque se toquen dos zonas en el mismo instante). **Desde que se emboca** (`LevelFlow.mark_won`, lo llama el WinManager) las zonas ya no matan ni los coleccionables suman: si no, caer al fuego en los 2,5 s del cartel de victoria recargaba el nivel en vez de ir a la pantalla de victoria. Nota: los niveles reales instancian `WinManager` (victoria) y `ui/pause_menu.tscn` (pausa) además de las zonas; `test_death.tscn` los tiene los tres.
 
 J1 = **campana**, J2 = **palito** (asignados en cada nivel vía `end_scene` + `end_kind` de cada `Emboque`).
 
@@ -353,8 +355,10 @@ de inicio y amarra al jugador, ver Lecciones) y los `test_*`. `level_2` ("La T")
   extremo o una caja debajo (su `collision_mask` incluye todo eso para que `test_move` los vea). Sonido `gate`.
 - **Plataforma móvil (`MovingPlatform`)**: AnimatableBody2D con `size`, `travel`, `speed`, `wait_time`. Sin canal
   (`channel = -1`) va y viene sola; con canal va a la punta mientras está activo y vuelve (ascensor). Rieles
-  punteados (top_level) muestran el recorrido. Lleva jugadores; los extremos apoyados resbalan.
-- **Viento (`WindZone`)**: Area2D con `size`, `direction`, `strength` (aceleración sobre extremos y cajas; la
+  punteados (top_level) muestran el recorrido. Lleva jugadores; los extremos apoyados resbalan. **No aplasta**:
+  bajando, si hay un jugador debajo espera (su `collision_mask` = 2 solo para ese `test_move`; extremos y cajas
+  los aparta la física).
+- **Viento (`WindZone`)**: Area2D con `size`, `direction`, `strength` (aceleración sobre extremos y cajas, mask 46; la
   gravedad es 980) y `player_factor` (fracción para jugadores, con tope `player_max_speed`; vía
   `Player.add_wind`). Con viento hacia arriba los extremos suben como un **volantín**: hay que soltar cuerda.
   `player_factor = 0` → solo afecta a los extremos. Sonido `wind` en loop (AudioStreamPlayer2D).
@@ -556,6 +560,15 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
   en eso.
 - **Un AnimatableBody2D que se mueve solo "ve" lo que está en su `collision_mask`**: la compuerta, con la máscara
   de fábrica (terreno), aplastaba al jugador contra el piso. Con la máscara completa espera.
+- **Un `AudioStreamPlayer` se pausa con el árbol** (`get_tree().paused`): la música vive en un autoload pero igual
+  se callaba en el menú de pausa (y el slider de música no se oía). La música y el pool de `Sfx` van con
+  `process_mode = ALWAYS`; al mover el volumen de efectos suena una muestra (`Sfx.preview`).
+- **Mostrar valores en un slider dispara `value_changed`**: al abrir Ajustes de la pausa se guardaba todo de
+  nuevo (y sonaba la muestra). Para mostrar, `set_value_no_signal` / `set_pressed_no_signal`.
+- **Lo que un nodo acumula por tick tiene que vaciarse en todos los estados**: el viento sobre el jugador se
+  acumulaba mientras colgaba de un gancho (solo se aplicaba y vaciaba en el modo plataformas) y al soltarse
+  llegaba de golpe.
+- **En web la pantalla completa necesita un gesto**: al arrancar no se aplica la guardada (queda en ventana).
 - Godot re-guarda escenas/`project.godot` al abrirlos (puede cambiar `uid`/`load_steps` u omitir valores por default); es esperado.
 - **Tras reimportar, muchos `.import` aparecen "modificados" en `git status` sin cambios reales** (`git diff` vacío): Godot los escribe con fin de línea LF y el repo usa `core.autocrlf`. Descartarlos con `git status --porcelain | grep '^ M .*\.import$' | cut -c4- | xargs git checkout --` (ojo: `git diff --name-only` no los lista porque el diff está vacío). Los `.import` de archivos nuevos o movidos sí hay que commitearlos.
 - **Arte hecho en paralelo por dos personas se pisa en el merge sin conflicto de texto:** pasó con los jugadores (sprites `Abierto`/`Cruzado` de una rama + `Sprite` animado de otra, los dos visibles). Tras un merge, correr y mirar cada nivel; todo el arte va en `assets/` para que se note cuando alguien ya tomó un asset.
@@ -632,6 +645,10 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 
 ### Objetos y zonas
 
+- **Revisión de bugs (fixes verificados):** ganado + tocar una zona de muerte → no recarga ni suena y llega a la
+  victoria; dos zonas en el mismo instante → una sola recarga; música sigue en la pausa (avanza 0,65 s en 0,6 s
+  reales); abrir Ajustes de la pausa no suena ni guarda; mover Efectos da una muestra; plataforma bajando sobre un
+  jugador se detiene 1 px sobre su cabeza sin moverlo. PASS 9/9. `run_all.sh` 25/25 después de los cambios.
 - **Zonas de muerte:** detección, aislamiento por máscara (la de jugador no mata al emboque y viceversa), zona "ambos". PASS. Tras ponerles arte (HazardArt) se volvió a verificar que siguen disparando.
 - **Caja empujable:** asentarse, empuje parejo, frenar al soltar, muro, pararse encima, pasajero, golpe de campana, empujes opuestos, caída de borde, pila. PASS.
 

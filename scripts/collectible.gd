@@ -20,7 +20,7 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
 func _on_body_entered(body: Node2D) -> void:
-	if _collected or not (body is Player or body is RopeEnd):
+	if _collected or not (body is Player or body is RopeEnd) or LevelFlow.is_won(get_tree()):
 		return
 	var score_manager := get_tree().get_first_node_in_group("score_manager") as ScoreManager
 	if score_manager == null:

@@ -137,6 +137,9 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if _hooked and _taut:
 		_pushing = false
+		# Colgando, el viento no empuja al jugador (y no se acumula para después).
+		_wind = Vector2.ZERO
+		_wind_cap = 0.0
 		_process_swing(delta)
 	else:
 		_process_platformer(delta)

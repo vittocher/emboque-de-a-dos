@@ -79,10 +79,11 @@ func _back_from_settings() -> void:
 func _show_settings() -> void:
 	buttons.visible = false
 	settings_box.visible = true
-	settings_master_volume.value = _settings.master_volume
-	settings_music_volume.value = _settings.music_volume
-	settings_sfx_volume.value = _settings.sfx_volume
-	settings_fullscreen.button_pressed = _settings.fullscreen
+	# Sin señal: mostrar los valores no debe volver a guardarlos ni sonar.
+	settings_master_volume.set_value_no_signal(_settings.master_volume)
+	settings_music_volume.set_value_no_signal(_settings.music_volume)
+	settings_sfx_volume.set_value_no_signal(_settings.sfx_volume)
+	settings_fullscreen.set_pressed_no_signal(_settings.fullscreen)
 	settings_back_button.grab_focus()
 
 func _on_master_volume_changed(value: float) -> void:
@@ -93,6 +94,7 @@ func _on_music_volume_changed(value: float) -> void:
 
 func _on_sfx_volume_changed(value: float) -> void:
 	_settings.set_sfx_volume(value)
+	Sfx.preview()
 
 func _on_fullscreen_toggled(enabled: bool) -> void:
 	_settings.set_fullscreen(enabled)
