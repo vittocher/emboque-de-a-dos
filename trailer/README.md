@@ -26,7 +26,7 @@ minuto); la entrada de la banda coincide con el logo.
 | 0:40 | Volantín (viento) | COMO UN VOLANTÍN |
 | 0:44 | Escalones: emboque en cámara lenta | ¡EMBOQUE! |
 | 0:51 | Tarjeta: la idea en 3 frases | "...que solo se resuelve de a dos" |
-| 0:57 | Mapa de niveles | 28 NIVELES |
+| 0:57 | Mapa de niveles | 29 NIVELES |
 | 1:01 | Cortes rápidos (cajas, buzón, remonte, final) | — |
 | 1:05 | Cierre: logo, "Cooperativo local · 2 jugadores · 1 teclado" | PRÓXIMAMENTE |
 
