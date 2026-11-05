@@ -78,11 +78,13 @@ const LEVELS: Array[Dictionary] = [
 		"pos": Vector2(976, 374), "from": ["viento_1"]},
 	{"id": "viento_3", "scene": "res://scenes/levels/viento_3.tscn",
 		"pos": Vector2(1064, 406), "from": ["viento_2"]},
+	{"id": "viento_4", "scene": "res://scenes/levels/viento_4.tscn",
+		"pos": Vector2(1150, 440), "from": ["viento_3"]},
 	# --- Final: se abre con 4 de los 6 finales de rama ---
 	{"id": "final", "scene": "res://scenes/levels/final.tscn",
 		"pos": Vector2(700, 112), "need": 4, "special": true, "rope": false,
 		"hint": "MAP_HINT_FINAL",
-		"from": ["level_2", "level_4", "lanzar_4", "placa_4", "movil_3", "viento_3"]},
+		"from": ["level_2", "level_4", "lanzar_4", "placa_4", "movil_3", "viento_4"]},
 ]
 
 ## Clave de traducción del nombre del nivel (i18n/textos.csv): "LEVEL_TRONCO_1".

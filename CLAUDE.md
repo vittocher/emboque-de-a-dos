@@ -82,8 +82,8 @@ scenes/
   levels/level_base.tscn  Escena BASE de todo nivel nuevo (se hereda: New Inherited Scene). Trae Background,
                        Camera2D, WallLeft/WallRight, Player1/2 (z 1), WinManager, CloseupManager, Emboque1/2 (z 1),
                        ScoreManager, UI (ScoreLabel/WinLabel), TerrainArt y PauseMenu, en el orden correcto.
-  levels/*.tscn        Los 25 niveles nuevos del mapa (heredan la base): tronco_1..4, peligro_1..3, caja_1..3,
-                       placa_1..4, movil_1..3, lanzar_1..4, viento_1..3, final. Cada uno descrito en su solución
+  levels/*.tscn        Los 26 niveles nuevos del mapa (heredan la base): tronco_1..4, peligro_1..3, caja_1..3,
+                       placa_1..4, movil_1..3, lanzar_1..4, viento_1..4, final. Cada uno descrito en su solución
                        tests/solutions/<nivel>.gd. El árbol está en scripts/level_catalog.gd.
   block.tscn           Bloque de terreno (StaticBody2D, block.gd) con `size` editable: piso, plataforma o muro.
                        TerrainArt lo viste solo. Con él se traza todo nivel nuevo.
@@ -329,10 +329,10 @@ Como la progresión del concepto: un árbol de niveles que se desbloquean al com
 (nodo dorado y más grande), `rope: false` (sin cuerdas en el mapa) y `hint` (texto mientras está bloqueado).
 El número del nivel es su orden en la lista. `WinManager` toma el id y el nombre del catálogo.
 
-Árbol actual (27 niveles): **tronco** 1–4 (lo básico, sin objetos: caminar, largo de cuerda, ganchos, cuenco)
+Árbol actual (28 niveles): **tronco** 1–4 (lo básico, sin objetos: caminar, largo de cuerda, ganchos, cuenco)
 → desde el 4 se abren **peligros** (púas, caca, brasas, y "La T" = `level_2` del equipo), **cajas** (3 + "Escalones" = `level_4` del equipo) y
 **lanzar** (3 + "Buzón": lanzar el extremo por una ranura a una placa). Sub-ramas de mecánicas nuevas: **placas/compuertas** (desde caja 2; la 4.ª, "Relevo", con ganchos: cada uno abre la puerta del columpio del otro), **plataformas móviles**
-(desde peligro 2) y **viento** (desde lanzar 2). El **final** se abre con 4 de los 6 finales de rama. Cada
+(desde peligro 2) y **viento** (desde lanzar 2; la 4.ª, "Remonte": la corriente sube el extremo hasta un gancho inalcanzable y se trepa la cuerda). El **final** se abre con 4 de los 6 finales de rama. Cada
 rama empieza introduciendo su mecánica en un caso simple y sube la dificultad. El mapa no nombra las
 mecánicas (minimalista): se descubren jugando. El primer nivel con lanzar trae un cartel con los controles.
 
@@ -551,6 +551,9 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **Los extremos ruedan y resbalan** (roce 0,05; la campana es redonda): no se quedan quietos en una placa
   plana (usar un rebaje) ni en una plataforma que se mueve. Al bajarse de un ascensor, el extremo que quedó
   arriba se va con él y tira al jugador.
+- **En una corriente vertical el extremo sube derecho sobre la mano** (no hacia el gancho): un gancho que se
+  alcanza con viento va justo encima de donde se para el jugador, y la corriente con margen hacia afuera (si el
+  extremo sale por el borde, cae y se va lejos).
 - **Las placas las pisan también los extremos**: el extremo que cuelga detrás de un jugador puede activar una
   placa sin querer (pasó en movil_3); dejar espacio alrededor de las placas.
 - **Muros sobre un cuenco: dejar ≥ 60 px entre el borde de abajo del muro y el cuenco**, o lo parten en dos y
@@ -591,7 +594,7 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 **Objetos y niveles**
 - **Zonas de muerte** (jugador / emboque / ambos), **caja empujable**, **coleccionables + puntaje** (también los recoge el emboque).
 - **Mecánicas nuevas:** placas de presión, compuertas, plataformas móviles/ascensores, corrientes de aire (volantín), cuenco/embudo como meta.
-- **27 niveles en un mapa ramificado** (tronco + 6 ramas + final), todos ganados por el bot de pruebas. Escena base heredable y bloques con `size`.
+- **28 niveles en un mapa ramificado** (tronco + 6 ramas + final), todos ganados por el bot de pruebas. Escena base heredable y bloques con `size`.
 - Del equipo: `level_2` ("La T") y `level_4` ("Escalones", rehecho sobre level_base) están en el mapa (fin de las ramas de peligros y de cajas); `main`, `level_3` y las pruebas siguen en el repo pero fuera del mapa.
 
 **Menús y presentación**
@@ -680,7 +683,7 @@ No toma al acortar hasta el mínimo; toma con pulsación nueva; en la mano va si
 
 Rojo mata al jugador y no al emboque; naranja mata a ambos; el muro no se salta por arriba; extremos y jugadores recogen. Rutas: J1 baja con cuidado a la izquierda del rojo, engancha el gancho de abajo (tirar al mínimo, soltar un poco y volver a tirar) y se balancea hasta la T en 10/12 combinaciones largo/ángulo; J2 acorta la cuerda, corre a la izquierda, el palito engancha el gancho derecho y salta a la T en 4/4 ángulos; con la cuerda a 170 el palito roza el bloque naranja; desde la T los extremos cuelgan bajo el muro, se juntan a 5 px y recogen los 2 coleccionables de abajo.
 
-### Niveles del mapa (bot, `tests/run_all.sh`) — 27/27 ganados
+### Niveles del mapa (bot, `tests/run_all.sh`) — 28/28 ganados
 
 Cada nivel se gana con el plan de `tests/solutions/<nivel>.gd` (además se barrieron parámetros: largo de cuerda,
 ángulo de lanzamiento, bombeo, punto de salto; y se probaron "controles" que deben fallar). Resumen:
@@ -700,6 +703,7 @@ Cada nivel se gana con el plan de `tests/solutions/<nivel>.gd` (además se barri
 | lanzar_1..3 | 6–10 s | lanzar_3: sin acortar al soltarse, el extremo cuelga al fuego |
 | lanzar_4 Buzón | 14 s | lanzar a 12° o más (desde 250 px) pega sobre la ranura: la compuerta de J2 no abre; gana lanzando de 130 a 310 px y con 0–8° |
 | viento_1..3 | 5–10 s | — |
+| viento_4 Remonte | 12 s | pararse 50 px al lado del gancho → el extremo sube derecho y no engancha; gana en 8 de 9 variantes (bombeo 0,9–1,6, posición ±12 px, punto de salto) |
 | final | 10–13 s | frenar fuera de ~465–470 en el bot → fuego (el humano corrige en el aire) |
 
 También: mapa (desbloqueo, foco inicial en lo recién desbloqueado, F9), flujo completo menú → mapa → nivel →
