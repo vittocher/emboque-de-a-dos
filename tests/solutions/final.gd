@@ -18,7 +18,7 @@ static func side(i: int, d: int, ctx) -> Array:
 		["until", func(c): return c.p(i)._swing_omega * d < -0.3, 4.0],
 		["until", func(c): return c.p(i)._swing_omega * d > 0.0 and (c.p(i).global_position.x - x.call(400)) * d > 0.0, 6.0],
 		["tap", "jump"], ["press", dir],
-		["until", func(c): return (c.p(i).global_position.x - x.call(ctx.var_f("brake", 465))) * d >= 0.0 or c.p(i).is_on_floor(), 3.0],
+		["until", func(c): return (c.p(i).global_position.x - x.call(ctx.var_f("brake", 470))) * d >= 0.0 or c.p(i).is_on_floor(), 3.0],
 		["release", dir], ["press", "left" if d == 1 else "right"],
 		["until", func(c): return c.p(i).is_on_floor() or c.p(i).velocity.x * d <= 0.0, 3.0],
 		["release", "left" if d == 1 else "right"], ["wait_floor"], ["rope", 60], ["walk_to", x.call(ctx.var_f("stand", 616)), 3], ["wait", 0.6],

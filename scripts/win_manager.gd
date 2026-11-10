@@ -55,6 +55,10 @@ class_name WinManager
 @export var burst_scene: PackedScene = preload("res://scenes/fx/emboque_burst.tscn")
 ## Confetti + chispas en pantalla, desde las esquinas de abajo.
 @export var confetti_scene: PackedScene = preload("res://scenes/fx/win_confetti.tscn")
+## Silencio antes del golpe: la música se corta cuando faltan estos segundos
+## REALES para el click (el palito ya entró y corre capture_time). Si el palito se
+## sale antes de ganar, la música vuelve.
+@export var silence_lead: float = 0.2
 
 @export_group("Resultado")
 ## Id estable del nivel para el highscore (ej. "level_1"). Si queda vacío, se
@@ -72,6 +76,7 @@ var _campana: Emboque
 var _label: CanvasItem
 var _hold: float = 0.0
 var _won: bool = false
+var _impact_silence: bool = false
 
 func _ready() -> void:
 	var a := get_node_or_null(emboque_a) as Emboque
@@ -97,6 +102,7 @@ func _physics_process(delta: float) -> void:
 	# Con un extremo en la mano no vale: embocar es con la cuerda, no a mano.
 	if _palito.is_held() or _campana.is_held():
 		_hold = 0.0
+		_set_impact_silence(false)
 		return
 
 	# Geometría en mundo.
@@ -141,8 +147,11 @@ func _physics_process(delta: float) -> void:
 		if _hold >= capture_time:
 			_win()
 			_celebrate(pal, camp, cavity)
+		elif (capture_time - _hold) / maxf(Engine.time_scale, 0.0001) <= silence_lead:
+			_set_impact_silence(true)
 	else:
 		_hold = 0.0
+		_set_impact_silence(false)
 
 ## Ya embocado: la punta dentro de la cavidad o a menos de lock_radius de ella.
 func _is_locked(pal: RopeEnd, tip: Vector2, cavity: Vector2) -> bool:
@@ -186,10 +195,27 @@ func _win() -> void:
 	await get_tree().create_timer(restart_delay, true, false, true).timeout
 	get_tree().change_scene_to_file(victory_scene)
 
+## Corta (o devuelve) la música justo antes del click (TensionFx, vía CloseupManager).
+func _set_impact_silence(on: bool) -> void:
+	if on == _impact_silence:
+		return
+	_impact_silence = on
+	var closeup := get_tree().get_first_node_in_group("closeup_manager") as CloseupManager
+	if closeup != null:
+		closeup.set_impact_silence(on)
+
 ## Animación del emboque: piezas pegadas, "click" de cámara y partículas.
 func _celebrate(pal: RopeEnd, camp: RopeEnd, cavity: Vector2) -> void:
 	if stick_on_win:
 		_stick(pal, camp)
+	# Sonidos (registrados en Sfx): el click del emboque, el brillo de las
+	# partículas doradas y el pop del confetti desde las esquinas.
+	Sfx.play(&"emboque_click")
+	if burst_scene != null:
+		Sfx.play(&"sparkle")
+	if confetti_scene != null:
+		# Un poco después del click: se oye primero el click solo, y la suma no satura.
+		get_tree().create_timer(0.06, true, false, true).timeout.connect(Sfx.play.bind(&"confetti_pop"))
 	var closeup := get_tree().get_first_node_in_group("closeup_manager") as CloseupManager
 	if closeup != null:
 		closeup.punch()

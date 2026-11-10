@@ -85,6 +85,7 @@ escena y tocando cada `CPUParticles2D` en el Inspector (cantidad, velocidad, col
 | Qué | Escena | Notas |
 |---|---|---|
 | Destello y estrellitas doradas alrededor del emboque | `scenes/fx/emboque_burst.tscn` | `Flash` (destello inicial), `Burst` (estallido), `Sparkle` (destellos que quedan). La forma de estrella está en `shaders/destello.gdshader` (rayos, tamaño del centro). |
+| Subida de tensión (antes de embocar) | `scenes/fx/tension_fx.tscn` | En el Inspector de la raíz: en cuánto cae el silencio antes del golpe (la música se corta de golpe justo antes del click; cuánto antes se ajusta en `silence_lead` del `WinManager`), cuánto bajan los demás efectos, fuerza de la viñeta (oscurecer bordes) y color/tamaño/latido del halo dorado de los extremos. |
 | Confetti y chispas en pantalla | `scenes/fx/win_confetti.tscn` | Salen de las esquinas de abajo (`ConfettiLeft/Right`, `SparksLeft/Right`). Colores del confetti: `Color Initial Ramp` (hoy bandera chilena + dorado). Para usar un dibujo propio de papelito o chispa, ponerlo en `Texture` (blanco: se tiñe solo). |
 
 El "click" de zoom de la cámara y las piezas pegadas se ajustan en el Inspector del `CloseupManager` (grupo
@@ -128,6 +129,9 @@ nombre → archivo + volumen). Reemplazar el archivo con el mismo nombre (WAV u 
 | `plate.wav` | Placa de presión (al pisar y al soltar, más agudo) |
 | `gate.wav` | Compuerta que se mueve |
 | `wind.wav` | Loop de las corrientes de aire |
+| `emboque_click.wav` | Al embocar: el "click" del palito entrando en la campana |
+| `sparkle.wav` | Al embocar: brillo sutil de las partículas doradas |
+| `confetti_pop.wav` | Al embocar: pop del confetti desde las esquinas |
 | `audio/cueca.ogg` | Música |
 
 Los efectos actuales son placeholders sintetizados con `tools/generate_sfx.py`.

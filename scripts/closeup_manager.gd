@@ -20,7 +20,7 @@ class_name CloseupManager
 ## Multiplicador de zoom en el closeup máximo (>1 = más cerca).
 @export var max_zoom: float = 2.0
 ## Escala de tiempo en el closeup máximo (1 = normal, menor = más lento).
-@export var min_time_scale: float = 0.25
+@export var min_time_scale: float = 0.15
 ## Tono de la música en el closeup máximo (1 = sin cambio; menos = más lenta y
 ## grave). Sigue a la cámara lenta: entra y sale con el mismo suavizado.
 @export var music_min_pitch: float = 0.7
@@ -39,6 +39,11 @@ class_name CloseupManager
 ## segundos (reales); el encuadre del closeup se mantiene.
 @export var slow_release_time: float = 0.12
 
+@export_group("Tensión")
+## Subida de tensión con el zoom (silencio antes del golpe, viñeta, halo en los
+## extremos). Vacío = sin ella. Se ajusta en esa escena.
+@export var tension_scene: PackedScene = preload("res://scenes/fx/tension_fx.tscn")
+
 var _camera: Camera2D
 var _a: Emboque
 var _b: Emboque
@@ -49,6 +54,7 @@ var _punch: float = 0.0  # zoom extra del click (lo anima punch())
 var _punch_tween: Tween
 var _slow: float = 1.0  # cuánto de la cámara lenta se aplica (0 tras embocar)
 var _slow_tween: Tween
+var _tension: TensionFx
 
 func _enter_tree() -> void:
 	add_to_group("closeup_manager")
@@ -60,6 +66,9 @@ func _ready() -> void:
 	if _camera != null:
 		_home_pos = _camera.global_position
 		_home_zoom = _camera.zoom
+	if tension_scene != null:
+		_tension = tension_scene.instantiate() as TensionFx
+		add_child(_tension)
 
 func _process(delta: float) -> void:
 	if _camera == null or _a == null or _b == null:
@@ -86,6 +95,8 @@ func _process(delta: float) -> void:
 	_camera.zoom = zoom
 	_camera.global_position = _clamp_to_level(_home_pos.lerp(mid, _t), zoom)
 	_apply_slowdown()
+	if _tension != null:
+		_tension.update(_t, unscaled, _a, _b)
 
 func _apply_slowdown() -> void:
 	Engine.time_scale = lerpf(1.0, min_time_scale, _t * _slow)
@@ -93,7 +104,14 @@ func _apply_slowdown() -> void:
 
 ## Termina la cámara lenta y la alteración de la música (al embocar; lo llama el
 ## WinManager). No vuelve a activarse en este nivel.
+## Silencio antes del golpe (lo dispara el WinManager justo antes del click).
+func set_impact_silence(on: bool) -> void:
+	if _tension != null:
+		_tension.set_silent(on)
+
 func end_slowdown() -> void:
+	if _tension != null:
+		_tension.release()
 	if _slow_tween != null:
 		_slow_tween.kill()
 	_slow_tween = create_tween().set_ignore_time_scale(true)

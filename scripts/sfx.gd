@@ -22,6 +22,10 @@ const SOUNDS := {
 	&"plate": ["res://audio/sfx/plate.wav", -6.0],
 	&"gate": ["res://audio/sfx/gate.wav", -8.0],
 	&"wind": ["res://audio/sfx/wind.wav", -14.0],
+	# Animación del emboque (WinManager._celebrate).
+	&"emboque_click": ["res://audio/sfx/emboque_click.wav", 1.0],
+	&"sparkle": ["res://audio/sfx/sparkle.wav", -15.0],
+	&"confetti_pop": ["res://audio/sfx/confetti_pop.wav", -7.0],
 }
 ## Cuántos efectos pueden sonar a la vez.
 const POOL_SIZE := 12

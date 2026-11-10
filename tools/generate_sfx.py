@@ -205,7 +205,76 @@ def wind():
     return x[:loop]
 
 
-ALL = (step, jump, die, hook, swing, box_push, grab, throw, plate, gate, wind)
+def highpass(x, cutoff):
+    return x - lowpass(x, cutoff)
+
+
+def emboque_click():
+    # El palito entra en la campana: "cli-click" de juguete de madera. Un ataque
+    # seco + resonancias de madera hueca, y un segundo click más chico 22 ms
+    # después (el palito que se asienta al fondo).
+    def clack(t, gain):
+        hit = highpass(rng.uniform(-1, 1, len(t)), 2500) * np.exp(-t / 0.0015)
+        wood = (
+            np.sin(2 * np.pi * 1050 * t) * np.exp(-t / 0.035)
+            + 0.7 * np.sin(2 * np.pi * 2350 * t) * np.exp(-t / 0.02)
+            + 0.35 * np.sin(2 * np.pi * 3900 * t) * np.exp(-t / 0.01)
+            + 0.6 * np.sin(2 * np.pi * 420 * t) * np.exp(-t / 0.05)
+        )
+        return (hit * 0.9 + wood) * gain
+
+    t = time(0.3)
+    x = clack(t, 1.0)
+    d = int(SR * 0.022)
+    x[d:] += clack(t[: len(t) - d], 0.55)
+    # Un brillo muy corto encima: que se sienta como un "logro".
+    x += 0.18 * np.sin(2 * np.pi * 1760 * t) * np.exp(-t / 0.12) * attack(len(t), 0.003)
+    # Saturación suave: más cuerpo y volumen percibido con el mismo pico (que no
+    # sature la mezcla al sonar sobre los tambores).
+    x = np.tanh(x / np.max(np.abs(x)) * 3.0)
+    return x * attack(len(t), 0.0005)
+
+
+def sparkle():
+    # Brillo sutil de las partículas doradas: campanitas agudas (pentatónica alta)
+    # que aparecen al azar, más seguidas al principio, y un soplo de aire agudo.
+    t = time(1.3)
+    x = np.zeros(len(t))
+    notes = (2093.0, 2349.3, 2637.0, 3136.0, 3520.0, 4186.0)
+    starts = np.sort(rng.uniform(0, 1, 11) ** 1.8 * 0.85)
+    for k, s in enumerate(starts):
+        i = int(s * SR)
+        tt = t[: len(t) - i]
+        f = notes[rng.integers(len(notes))] * rng.uniform(0.995, 1.005)
+        decay = rng.uniform(0.1, 0.22)
+        ting = (np.sin(2 * np.pi * f * tt) + 0.25 * np.sin(2 * np.pi * 2 * f * tt)) * np.exp(-tt / decay)
+        x[i:] += ting * attack(len(tt), 0.002) * (1.0 - 0.6 * s) * rng.uniform(0.6, 1.0)
+    air = bandpass(rng.uniform(-1, 1, len(t)), 6500, q=1.2) * np.exp(-t / 0.35) * 0.25
+    return (x + air) * np.clip((t[-1] - t) / 0.1, 0, 1)
+
+
+def confetti_pop():
+    # Lanzador de confetti: "pop" seco (ruido + golpe grave) desde cada esquina
+    # (dos pops casi juntos) y el papel que cruje mientras vuela.
+    def pop(t):
+        burst = bandpass(rng.uniform(-1, 1, len(t)), 1300, q=0.9) * np.exp(-t / 0.012)
+        thump = np.sin(sweep_phase(np.linspace(140, 60, len(t)))) * np.exp(-t / 0.035) * 0.8
+        return burst * 1.6 + thump
+
+    t = time(0.75)
+    x = pop(t)
+    d = int(SR * 0.035)
+    x[d:] += 0.8 * pop(t[: len(t) - d])
+    # Crujido de papel: ruido agudo en granos al azar, que se apaga.
+    grains = (rng.uniform(0, 1, len(t)) < 0.004).astype(float)
+    grains = lowpass(grains, 300) * 40
+    rustle = bandpass(rng.uniform(-1, 1, len(t)), 4200, q=1.0) * np.clip(grains, 0, 1)
+    rustle *= np.clip((t - 0.02) / 0.05, 0, 1) * np.exp(-t / 0.3) * 0.5
+    return (x + rustle) * attack(len(t), 0.0005)
+
+
+ALL = (step, jump, die, hook, swing, box_push, grab, throw, plate, gate, wind,
+       emboque_click, sparkle, confetti_pop)
 
 if __name__ == "__main__":
     import sys

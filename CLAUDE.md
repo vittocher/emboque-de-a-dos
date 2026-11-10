@@ -99,6 +99,8 @@ scenes/
   wind_zone.tscn       Corriente de aire (Area2D) con rayitas de aire (CPUParticles2D) y sonido en loop.
   fx/emboque_burst.tscn  Celebración del emboque (ver "Animación del emboque"): destello + estrellitas doradas
                        (CPUParticles2D con destello.gdshader); el WinManager lo pega a la campana.
+  fx/tension_fx.tscn     Subida de tensión al acercarse los extremos (TensionFx, la crea el CloseupManager):
+                       silencio antes del golpe, viñeta (vineta.gdshader) y halo dorado en los extremos.
   fx/win_confetti.tscn   CanvasLayer con confetti (colores de la bandera + dorado, confeti.gdshader) y chispas
                        que salen de las esquinas de abajo hacia el centro y arriba.
 
@@ -166,10 +168,12 @@ scripts/
   win_manager.gd   Magnetismo (curva de distancia + ángulo, y trabado al embocar) + victoria (palito dentro de campana)
                    + animación del emboque (piezas pegadas, click de cámara, partículas).
   closeup_manager.gd Closeup de cámara + slowdown (Engine.time_scale) al acercarse los extremos; reutilizable;
-                   reinicia time_scale en _exit_tree. Cámara lenta al 0,25 (`min_time_scale`) y la música
+                   reinicia time_scale en _exit_tree. Cámara lenta al 0,15 (`min_time_scale`) y la música
                    más lenta y grave a la par (`music_min_pitch` 0,7, vía SettingsManager.set_music_pitch;
                    normal en la pausa y al salir). Al embocar, end_slowdown() los devuelve a lo normal en
                    0,12 s (el encuadre sigue). punch() = "click" de zoom al embocar (grupo "closeup_manager").
+  tension_fx.gd    class TensionFx: subida de tensión (ver "Animación del emboque"). update(t) cada cuadro,
+                   release() al embocar.
   win_fx.gd        class WinFx: raíz de las escenas fx/: dispara sus partículas, las corre en tiempo real
                    (ignora la cámara lenta) y se borra sola.
   level_rules.gd   Nodo (class_name LevelRules, grupo "level_rules") con las mecánicas opcionales de un
@@ -203,6 +207,8 @@ scripts/
                    imagen localizada (ver "Idiomas").
                    stop_music() / play_music(fade) (la intro calla la cueca mientras corre el video).
                    set_music_pitch(p): tono/velocidad de la música (lo usa la cámara lenta del closeup).
+                   set_music_duck(db) / set_sfx_duck(db): bajada temporal de los buses Music / SFX sin tocar el
+                   volumen de Ajustes (el silencio antes del golpe, TensionFx).
   score_board.gd   AUTOLOAD (ScoreBoard): datos de la última victoria entre escenas + highscore por nivel +
                    niveles COMPLETADOS (y máximo de sopaipillas) en user://scores.cfg. De eso depende el
                    desbloqueo del mapa. `unlock_all` (solo desarrollo, F9 en el mapa) desbloquea todo.
@@ -221,9 +227,11 @@ shaders/           madera_boton.gdshader (madera procedural de los botones del m
                    contraste + contorno que late (la caja empujable; sin contorno, en los personajes). fondo.gdshader: el
                    fondo con menos protagonismo. destello.gdshader (estrella de luz para partículas) y
                    confeti.gdshader (papelito que gira en 3D fingido): los de la animación del emboque.
+                   vineta.gdshader: viñeta de pantalla completa (subida de tensión).
 video/             intro.ogv (Ogg Theora: el único formato de video de Godot) + README.md con cómo convertirlo.
 audio/             cueca.ogg (música, la pone SettingsManager) y sfx/: efectos placeholder (WAV 22 kHz mono):
-                   step, jump, die, hook, swing, box_push (loop), grab, throw.
+                   step, jump, die, hook, swing, box_push (loop), grab, throw, plate, gate, wind (loop) y los
+                   de la animación del emboque: emboque_click, sparkle, confetti_pop.
 i18n/              textos.csv: TODOS los textos del juego, una columna por idioma (ver "Idiomas").
 default_bus_layout.tres  Buses de audio Master / Music / SFX (ver "Volumen y buses de audio"). Obligatorio para web.
 tools/convertir_video.bat|.sh  Convierte el video de la intro a video/intro.ogv (ver "Intro (video)").
@@ -269,6 +277,9 @@ Para poner el arte definitivo: reemplazar los hijos de `Visual/Art` por el dibuj
 | `box_push` | `push_box.gd` | Loop mientras la caja se desliza por el piso (empujada o golpeada); volumen según velocidad. |
 | `grab` | `emboque.gd` `_grab` | Al tomar el emboque en la mano. |
 | `throw` | `emboque.gd` `_throw` | Al lanzar el emboque. |
+| `emboque_click` | `win_manager.gd` `_celebrate` | Al embocar: "cli-click" de madera (el palito entra y se asienta), saturado suave para sonar fuerte sin subir el pico (+1 dB base). |
+| `sparkle` | `win_manager.gd` `_celebrate` | Al embocar, con las partículas doradas: campanitas agudas sutiles (−15 dB). |
+| `confetti_pop` | `win_manager.gd` `_celebrate` | Al embocar, con el confetti: dos pops (una esquina cada uno) y papel que cruje. Suena 0,06 s después del click (se oye el click solo y la suma no satura). |
 
 `Sfx.play` ignora el mismo sonido repetido en el mismo tick de física (p. ej. las dos partes de una zona "ambos"). Emite `played(nombre)` (útil para tests).
 
@@ -518,6 +529,23 @@ Al ganar (grupo "Celebración" del Inspector del WinManager):
   la campana aplica en su `_integrate_forces` también la cuerda del palito (ancla y largo que el Emboque le sigue
   pasando), en el punto donde está el palito, así el par cuelga de las dos cuerdas. Un extremo pegado no se
   puede tomar ni enganchar.
+- **Subida de tensión** (`tension_scene` del CloseupManager = `fx/tension_fx.tscn`, `TensionFx`): con la misma
+  cercanía del zoom (parte con el zoom-in):
+  - **Silencio antes del golpe:** NO es paulatino: la música suena normal todo el acercamiento y cae de golpe
+    a −60 dB (muda) en `silence_drop_time` (0,06 s) justo antes del click: lo dispara el **WinManager** cuando,
+    con el palito ya adentro y corriendo `capture_time`, faltan `silence_lead` (0,2 s REALES) para ganar
+    (`CloseupManager.set_impact_silence` → `TensionFx.set_silent`). Los demás efectos bajan 14 dB
+    (`sfx_duck_db`), vía `SettingsManager.set_music_duck` / `set_sfx_duck` (no tocan el volumen de Ajustes). Si el
+    palito se sale antes de ganar, la música vuelve en 0,3 s. Al embocar los efectos vuelven al instante (el
+    click suena pleno en el silencio) y la música espera 0,4 s y vuelve rápido, en 0,3 s (`music_return_time`;
+    0 = en un solo cuadro). (Se descartaron: bajar la
+    música a medida que se acercan, y cortarla por distancia a 30 px: se cortaba demasiado antes.)
+  - **Viñeta** que oscurece los bordes (`vignette_strength` 0,7).
+  - **Halo dorado** aditivo (anillo, casi transparente al centro, 40 px) que late en el palito y la campana, más
+    rápido al acercarse.
+
+  Al embocar (`release()`, lo llama `end_slowdown`) viñeta y halo se apagan en 0,3 s. En la pausa todo suena
+  normal. Se probó también un "riser" (zumbido que subía de tono) y se sacó. Todo se ajusta en esa escena.
 - **Fin de la cámara lenta**: `CloseupManager.end_slowdown()` devuelve el time_scale y el tono de la música a 1
   en `slow_release_time` (0,12 s reales) y no vuelven a bajar en ese nivel; el encuadre del closeup se mantiene.
 - **Click de cámara**: `CloseupManager.punch()` suma un zoom extra (`punch_zoom` 0,3) que entra en `punch_in_time`
@@ -525,7 +553,9 @@ Al ganar (grupo "Celebración" del Inspector del WinManager):
   multiplica sobre el zoom del closeup.
 - **Partículas doradas** (`burst_scene` = `fx/emboque_burst.tscn`): destello, estallido de estrellitas y
   destellos que siguen a la campana ~1,6 s. **Confetti + chispas** (`confetti_scene` = `fx/win_confetti.tscn`):
-  desde las dos esquinas de abajo hacia el centro y arriba; va en un CanvasLayer justo antes de la `UI` (pasa
+  desde las dos esquinas de abajo hacia el centro y arriba, saliendo durante ~1,5 s (confetti: 120 por esquina,
+  `explosiveness` 0,45; chispas: 90, vida 1,5 s, `explosiveness` 0), antes de que a los 2,5 s se pase a la
+  pantalla de victoria; va en un CanvasLayer justo antes de la `UI` (pasa
   por detrás del cartel y debajo de la pausa). Las dos escenas (`WinFx`) corren a velocidad real aunque el
   closeup tenga la cámara lenta, y se borran solas.
 
@@ -678,6 +708,9 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
   `custom_samplers.has(...)` y dibuja mal. Usar una macro (`#define`), como `silueta.gdshader`.
 - Godot re-guarda escenas/`project.godot` al abrirlos (puede cambiar `uid`/`load_steps` u omitir valores por default); es esperado.
 - **Tras reimportar, muchos `.import` aparecen "modificados" en `git status` sin cambios reales** (`git diff` vacío): Godot los escribe con fin de línea LF y el repo usa `core.autocrlf`. Descartarlos con `git status --porcelain | grep '^ M .*\.import$' | cut -c4- | xargs git checkout --` (ojo: `git diff --name-only` no los lista porque el diff está vacío). Los `.import` de archivos nuevos o movidos sí hay que commitearlos.
+- **Reverb y otros efectos de audio, horneados en el WAV, no como efectos de bus:** en la web el audio se
+  reproduce por "samples" y los efectos de bus pueden no aplicarse (además de que los buses creados en runtime
+  dejaban todo mudo).
 - **Los tiempos de los planes del bot (`wait`, `hold`, `pump`, timeouts de `until`) son tiempo REAL**, como los de
   una persona: si los extremos se cruzan a mitad de camino, la cámara lenta del closeup los acorta en tiempo de
   juego. Al hacer la cámara lenta más fuerte (0,35 → 0,25) fallaron `movil_4` (la espera antes de bajar el extremo
@@ -700,7 +733,7 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 - **Tomar y lanzar el emboque** (por nivel, `LevelRules`), con mira en ping-pong y vuelo recto. Se usa en lanzar_1..4 y en el final.
 - **Magnetismo con curva + trabado:** suave a distancia, resorte fuerte una vez embocado.
 - **Closeup + cámara lenta** al acercarse los extremos (estilo Peggle).
-- **Animación del emboque:** magnetismo más sutil, piezas pegadas al embocar, click de zoom, partículas doradas y
+- **Animación del emboque:** subida de tensión (silencio antes del golpe, viñeta, halo), magnetismo más sutil, piezas pegadas al embocar, click de zoom, partículas doradas y
   confetti + chispas desde las esquinas de abajo.
 
 **Objetos y niveles**
@@ -723,7 +756,7 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 - **Intro:** video de la historia al arrancar (`video/intro.ogv`), se salta con cualquier tecla, fundidos de entrada/salida; en web pide una tecla antes para que suene.
 - **Idiomas:** español e inglés (todo el texto en `i18n/textos.csv`, imágenes con texto por idioma), selector en el menú principal, Ajustes y pausa; agregar un idioma = una columna.
 - **Menús:** principal (portada, botones de madera, botón de idioma; sin Salir), mapa de niveles ramificado con progreso, ajustes con el tema de madera (y borrar progreso), pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
-- **Audio:** autoload `Sfx` con 11 efectos placeholder, música (cueca, sigue en la pausa) y volumen por categoría (General / Música / Efectos, con muestra al mover Efectos).
+- **Audio:** autoload `Sfx` con 14 efectos placeholder (incluye click, brillo y pop de confetti del emboque), música (cueca, sigue en la pausa) y volumen por categoría (General / Música / Efectos, con muestra al mover Efectos).
 - **Arte (`assets/`):** jugadores animados (idle / caminata a 10 FPS / THROW al apuntar), palito, campana y cuerda, cajas, zonas de muerte animadas (fuego / púas / caca), sopaipillas, ganchos, terreno (piso por piezas + pared) y fondo.
 
 Pendiente:
@@ -820,7 +853,17 @@ quedaban justo en el borde: `viento_2` (cuerda de J1 200 → 215; gana con 210�
 gana con 100–110 y 125–140). `run_all.sh`: 28/29 (`placa_3` sigue con su TIMEOUT previo).
 Cámara lenta más fuerte (0,35 → 0,25) + música: en tronco_1 el time_scale baja suave hasta 0,25 y el tono de la
 música lo sigue hasta 0,70; en la pausa vuelve a 1,00 y al reanudar a 0,70; al salir del nivel, time_scale y tono
-en 1,00. Al embocar (end_slowdown): time_scale 0,25 → 0,41 → 0,61 → 0,82 → 1,00 y tono 0,70 → 1,00 en 16 ticks
+en 1,00. Sonidos (bot en tronco_1, registrando `Sfx.played`): al embocar suenan `emboque_click` y `sparkle` y, 0,06 s
+después, `confetti_pop`. Los WAV sin saturar ni NaN (pico −3 dB); el click lleva saturación suave (+6 dB de
+volumen percibido con el mismo pico). Se probó y se sacó una subida de tensión con tambores (bombo y tom con
+reverb, ritmo según la distancia): se va a volver a iterar. Subida de tensión (TensionFx, tronco_1 y tronco_4): la música
+sigue en su volumen de Ajustes mientras se acercan y se corta justo antes del click: en tronco_1, tronco_4 y
+peligro_2 empieza a caer 0,192 s (reales) antes del click, está muda (−60 dB) 0,05 s después y el click suena
+tras ~0,14 s de silencio; tras el click la música sigue muda 0,4 s y vuelve en 0,3 s; los efectos bajan a −14 dB a la par; viñeta 0 → 0,70; halo de 24 a 40 px latiendo.
+Cámara lenta más fuerte (0,25 → 0,15): `run_all.sh` 27/29 → `final` volvió a caer al fuego con `brake` 465 (gana
+con 458–462 y 468–472: se dejó 470) → 28/29 (`placa_3`, falla previa). Al embocar: efectos en 0 dB en el mismo tick del click; viñeta y halo en 0 a los 0,3 s; la música sigue
+muda 0,4 s y vuelve a su volumen a los ~1,6 s. En la pausa, música y efectos sin bajada. Capturas (tronco_1,
+tronco_4): bordes oscuros y halo ceñido a los extremos. Al embocar (end_slowdown): time_scale 0,25 → 0,41 → 0,61 → 0,82 → 1,00 y tono 0,70 → 1,00 en 16 ticks
 (~0,13 s), con el click de zoom a la vez (2,0 → 2,6 → 2,0) y el encuadre del closeup intacto. Ajustes del bot: `movil_4` (esperas de `drop` 0,6/0,4/0,6/0,5 → 1,0/0,6/1,2/0,8; gana con largos 160–180)
 y `final` (`brake` 470 → 465). `run_all.sh`: 28/29 (`placa_3`).
 
@@ -854,7 +897,7 @@ Cada nivel se gana con el plan de `tests/solutions/<nivel>.gd` (además se barri
 | lanzar_4 Buzón | 14 s | lanzar a 12° o más (desde 250 px) pega sobre la ranura: la compuerta de J2 no abre; gana lanzando de 130 a 310 px y con 0–8° |
 | viento_1..3 | 5–10 s | — |
 | viento_4 Remonte | 12 s | pararse 50 px al lado del gancho → el extremo sube derecho y no engancha; gana en 8 de 9 variantes (bombeo 0,9–1,6, posición ±12 px, punto de salto) |
-| final | 10–13 s | frenar fuera de ~464–466 en el bot → fuego (el humano corrige en el aire); con la cámara lenta en 0,35 la ventana era 465–470 |
+| final | 10–15 s | el punto de frenado del bot es delicado y depende de la cámara lenta (0,35: 465–470; 0,25: 464–466; 0,15: 458–462 y 468–472, se usa 470) → si no, fuego (el humano corrige en el aire) |
 
 También: mapa (desbloqueo, foco inicial en lo recién desbloqueado, F9), flujo completo menú → mapa → nivel →
 victoria → Continuar → mapa con el siguiente desbloqueado (PASS); compuerta no aplasta; capturas de cada nivel
