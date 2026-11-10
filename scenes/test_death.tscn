@@ -56,10 +56,12 @@ color = Color(0.4, 0.35, 0.3, 1)
 polygon = PackedVector2Array(-20, -600, 20, -600, 20, 600, -20, 600)
 
 [node name="Player1" parent="." instance=ExtResource("1_player")]
+z_index = 1
 position = Vector2(400, 460)
 input_prefix = "p1"
 
 [node name="Player2" parent="." instance=ExtResource("1_player")]
+z_index = 1
 position = Vector2(880, 410)
 input_prefix = "p2"
 
@@ -70,12 +72,14 @@ emboque_b = NodePath("../Emboque2")
 win_label = NodePath("../UI/WinLabel")
 
 [node name="Emboque1" parent="." instance=ExtResource("2_emboque")]
+z_index = 1
 anchor_node = NodePath("../Player1/RopeAnchor")
 input_prefix = "p1"
 end_scene = ExtResource("3_campana")
 end_kind = "campana"
 
 [node name="Emboque2" parent="." instance=ExtResource("2_emboque")]
+z_index = 1
 anchor_node = NodePath("../Player2/RopeAnchor")
 input_prefix = "p2"
 end_scene = ExtResource("4_palito")

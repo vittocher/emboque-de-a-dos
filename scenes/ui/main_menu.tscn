@@ -1,11 +1,11 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cpoxdfrvq3f1x"]
 
-[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_menu"]
+[ext_resource type="Script" uid="uid://bs3tkyl6ng0eo" path="res://scripts/ui/main_menu.gd" id="1_menu"]
 [ext_resource type="Texture2D" uid="uid://b3om0k3bvxk3c" path="res://assets/ui/portada.png" id="2_portada"]
 [ext_resource type="PackedScene" path="res://scenes/ui/boton_madera.tscn" id="3_boton"]
-[ext_resource type="Script" path="res://scripts/ui/localized_texture_rect.gd" id="4_loc"]
+[ext_resource type="Script" uid="uid://cr4hbhi1o8bft" path="res://scripts/ui/localized_texture_rect.gd" id="4_loc"]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=2076185438]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -14,8 +14,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="Background" type="TextureRect" parent="."]
-script = ExtResource("4_loc")
+[node name="Background" type="TextureRect" parent="." unique_id=1922995020]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -25,28 +24,31 @@ grow_vertical = 2
 texture = ExtResource("2_portada")
 expand_mode = 1
 stretch_mode = 6
+script = ExtResource("4_loc")
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Center" type="CenterContainer" parent="." unique_id=687033324]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 1.0
+offset_right = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="Center"]
+[node name="VBox" type="VBoxContainer" parent="Center" unique_id=1672701372]
 layout_mode = 2
 theme_override_constants/separation = 18
 
-[node name="PlayButton" parent="Center/VBox" instance=ExtResource("3_boton")]
+[node name="PlayButton" parent="Center/VBox" unique_id=628638890 instance=ExtResource("3_boton")]
 layout_mode = 2
 text = "MENU_PLAY"
 
-[node name="SettingsButton" parent="Center/VBox" instance=ExtResource("3_boton")]
+[node name="SettingsButton" parent="Center/VBox" unique_id=129822819 instance=ExtResource("3_boton")]
 layout_mode = 2
 text = "MENU_SETTINGS"
 
-[node name="LanguageButton" parent="." instance=ExtResource("3_boton")]
+[node name="LanguageButton" parent="." unique_id=1398317482 instance=ExtResource("3_boton")]
 custom_minimum_size = Vector2(190, 52)
 layout_mode = 1
 anchors_preset = 1

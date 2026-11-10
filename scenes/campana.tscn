@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/rope_end.gd" id="1_end"]
 [ext_resource type="Texture2D" path="res://assets/emboque/campana.png" id="2_tex"]
+[ext_resource type="Script" path="res://scripts/drop_shadow.gd" id="drop_shadow"]
+[ext_resource type="Script" path="res://scripts/contact_shadow.gd" id="contact_shadow"]
 
 [sub_resource type="RectangleShape2D" id="Rect_spine"]
 size = Vector2(6, 24)
@@ -94,3 +96,14 @@ monitoring = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HookSensor"]
 shape = SubResource("Circle_hook")
+
+[node name="DropShadow" type="Node2D" parent="Sprite"]
+script = ExtResource("drop_shadow")
+
+[node name="ContactShadow" type="Node2D" parent="."]
+script = ExtResource("contact_shadow")
+width = 26.0
+height = 7.0
+opacity = 0.45
+max_distance = 50.0
+fade_distance = 50.0

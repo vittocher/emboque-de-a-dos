@@ -23,8 +23,8 @@ static func side(i: int, d: int, ctx) -> Array:
 
 ## Igual que en Escalones: acortar, pasar sobre la ranura y soltar cuerda.
 static func drop(i: int, back_dir: int, ctx) -> Array:
-	return [["rope", 60, 1], ["wait", 0.6], ["walk_to", 640.0 - back_dir * 34.0, 3], ["wait", 0.4],
-		["walk_to", 640.0, 2], ["wait", 0.6], ["rope", ctx.var_f("r%d" % i, 170)], ["wait", 0.5],
+	return [["rope", 60, 1], ["wait", 1.0], ["walk_to", 640.0 - back_dir * 34.0, 3], ["wait", 0.6],
+		["walk_to", 640.0, 2], ["wait", 1.2], ["rope", ctx.var_f("r%d" % i, 170)], ["wait", 0.8],
 		["walk_to", 640.0 + back_dir * 18.0, 3]]
 
 static func plan(ctx) -> Dictionary:

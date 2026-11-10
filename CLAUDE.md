@@ -8,11 +8,11 @@ Puzzle **cooperativo local de 2 jugadores** (estilo *Fireboy & Watergirl*) en **
 
 ## Setup
 
-- **Godot 4.7.2**. Linux: `~/Godot/Godot_v4.7.2-stable_linux.x86_64`. Windows: `C:\Users\vitto\OneDrive\Desktop\Godot\Godot_v4.7.2-stable_win64(_console).exe`.
+- **Godot 4.7.2**. Linux: `~/Godot/Godot_v4.7.2-stable_linux.x86_64`. Windows: `C:\Users\vitto\Desktop\Godot\Godot_v4.7.2-stable_win64(_console).exe`.
 - Escena de arranque: `scenes/ui/main_menu.tscn`. Para probar gameplay, abrir un nivel y usar **F6**.
 - Resolución base 1280×720, stretch `canvas_items` + `keep`. Física a **120 Hz**.
 
-- **Editor:** Godot **4.7.2** (ejecutable en `C:\Users\vitto\OneDrive\Desktop\Godot\Godot_v4.7.2-stable_win64.exe`; la variante `..._console.exe` sirve para CLI headless). En esa misma carpeta también está el 4.6 (versión previa). `config/features` en `project.godot` = `4.7`.
+- **Editor:** Godot **4.7.2** (ejecutable en `C:\Users\vitto\Desktop\Godot\Godot_v4.7.2-stable_win64.exe`; la variante `..._console.exe` sirve para CLI headless). En esa misma carpeta también está el 4.6 (versión previa). `config/features` en `project.godot` = `4.7`.
 - **Abrir:** importar el `project.godot` de esta carpeta desde el Project Manager, o **F5** para jugar.
 - **Escena de arranque:** `res://scenes/ui/intro.tscn` (video de intro, se salta con cualquier tecla → menú `ui/main_menu.tscn`). Los niveles son `main.tscn` (Nivel 1), `level_2`…`level_4` y los `test_*` (ver Arquitectura). Durante el desarrollo, abrir un nivel y correr con **F6** (ejecutar escena actual) para saltarse el menú.
 - **Resolución base:** 1280×720 (16:9). Stretch `canvas_items` + aspect `keep` (default en Godot 4, por eso el editor lo omite del archivo). No pixel-art; se adapta a cualquier tamaño de embed sin deformar.
@@ -20,7 +20,7 @@ Puzzle **cooperativo local de 2 jugadores** (estilo *Fireboy & Watergirl*) en **
 ### Validación headless (sin abrir el editor)
 
 ```bash
-GODOT="/c/Users/vitto/OneDrive/Desktop/Godot/Godot_v4.7.2-stable_win64_console.exe"
+GODOT="/c/Users/vitto/Desktop/Godot/Godot_v4.7.2-stable_win64_console.exe"
 # Importar recursos (obligatorio tras agregar/mover archivos; ponerle timeout, a veces se cuelga):
 timeout 150 "$GODOT" --headless --import --path .
 # Correr N frames de la escena de arranque y filtrar errores:
@@ -97,6 +97,10 @@ scenes/
   gate.tscn            Compuerta que se desliza (AnimatableBody2D).
   moving_platform.tscn Plataforma móvil / ascensor (AnimatableBody2D) con rieles punteados.
   wind_zone.tscn       Corriente de aire (Area2D) con rayitas de aire (CPUParticles2D) y sonido en loop.
+  fx/emboque_burst.tscn  Celebración del emboque (ver "Animación del emboque"): destello + estrellitas doradas
+                       (CPUParticles2D con destello.gdshader); el WinManager lo pega a la campana.
+  fx/win_confetti.tscn   CanvasLayer con confetti (colores de la bandera + dorado, confeti.gdshader) y chispas
+                       que salen de las esquinas de abajo hacia el centro y arriba.
 
   player.tscn          CharacterBody2D 40×64 + RopeAnchor (Marker2D, "la mano") + arte en Visual/Art: Sprite
                        (AnimatedSprite2D, ver "Arte del jugador"). Body/Eye = placeholders ocultos.
@@ -116,13 +120,17 @@ scenes/
                           ancho en cuadros tan altos como la zona, sin deformarse con la escala de la instancia.
                           Los Polygon2D de color (rojo / morado / naranja) quedaron ocultos.
   push_box.tscn        Caja empujable (RigidBody2D 64×64, capa 6, rotación bloqueada). Reutilizable en cualquier nivel.
-                       Arte: Sprite con assets/props/caja/caja.png (320×320 a escala 0.2); placeholders ocultos.
+                       Arte: Sprite con assets/props/caja/caja.png (320×320 a escala 0.2) + material resaltar.gdshader
+                   (madera más cálida y saturada + contorno dorado que late: se distingue del terreno y se
+                   entiende que se mueve); placeholders ocultos.
   collectible.tscn     Area2D recolectable (sopaipilla animada, assets/props/puntos, 2 frames a 6 FPS; rombo oculto):
                        lo toca un jugador o un extremo del emboque (mask 14) → suma puntos y se destruye.
                        La cuerda no recoge (es solo una Line2D).
   closeup_manager.tscn Efecto reutilizable: closeup + cámara lenta al acercarse los extremos (instanciar por nivel).
   background.tscn      Fondo del nivel: Sprite2D con assets/entorno/fondo/paredazul.png (1280×720 a escala 1,
                        centrado en (640,360), z_index -100). En el mundo, así acompaña el zoom del closeup.
+                       Material fondo.gdshader: desenfoque suave, menos contraste y saturación, viñeta (para
+                       que personajes y objetos se lean primero). La textura necesita mipmaps (import).
   terrain_art.tscn     Arte del terreno (TerrainArt): instanciado una vez por nivel, cubre cada StaticBody2D con
                        forma rectangular usando assets/entorno/colision/: horizontales = piso armado con piso_left +
                        piso_neutral (repetido) + piso_right, o piso.png si cabe una sola tabla; verticales =
@@ -154,9 +162,16 @@ scripts/
                    tomar / apuntar / lanzar el extremo (si el nivel lo permite) y dibuja la mira punteada.
   rope_end.gd      RigidBody2D del extremo (palito/campana): restricción de cuerda en _integrate_forces;
                    set_held (en la mano: congelado y sin colisiones) y start/end_flight (vuelo sin gravedad).
-  win_manager.gd   Magnetismo (curva de distancia + ángulo, y trabado al embocar) + victoria (palito dentro de campana).
+                   attach_to (al embocar: el palito va montado en la campana, ver "Animación del emboque").
+  win_manager.gd   Magnetismo (curva de distancia + ángulo, y trabado al embocar) + victoria (palito dentro de campana)
+                   + animación del emboque (piezas pegadas, click de cámara, partículas).
   closeup_manager.gd Closeup de cámara + slowdown (Engine.time_scale) al acercarse los extremos; reutilizable;
-                   reinicia time_scale en _exit_tree.
+                   reinicia time_scale en _exit_tree. Cámara lenta al 0,25 (`min_time_scale`) y la música
+                   más lenta y grave a la par (`music_min_pitch` 0,7, vía SettingsManager.set_music_pitch;
+                   normal en la pausa y al salir). Al embocar, end_slowdown() los devuelve a lo normal en
+                   0,12 s (el encuadre sigue). punch() = "click" de zoom al embocar (grupo "closeup_manager").
+  win_fx.gd        class WinFx: raíz de las escenas fx/: dispara sus partículas, las corre en tiempo real
+                   (ignora la cámara lenta) y se borra sola.
   level_rules.gd   Nodo (class_name LevelRules, grupo "level_rules") con las mecánicas opcionales de un
                    nivel: casilla throw_enabled. Nivel sin el nodo = todo lo opcional apagado. También
                    THROW_COLOR (verde de la mecánica en los menús) y scene_throw_enabled(escena).
@@ -164,7 +179,11 @@ scripts/
                    junta) y reiniciándose (una sola recarga aunque se toquen varias zonas a la vez).
   player_death_zone.gd   Al entrar un jugador (mask=2) → reinicia el nivel. Señal triggered; export reload_on_death.
   emboque_death_zone.gd  Al entrar un extremo (mask=12 = campana 4 + palito 8) → reinicia. (Scripts separados a propósito.)
-  hazard_art.gd    @tool, class HazardArt: arte animado de una zona de peligro (ver both_death_zone.tscn).
+  hazard_art.gd    @tool, class HazardArt: arte animado de una zona de peligro (ver both_death_zone.tscn) +
+                   su brillo (fuego rojo, caca verde) o su sombra con forma (púas).
+  visual_fx.gd     class VisualFx: capas de z de sombras/brillos y helpers (soft_box, silhouette_material).
+  drop_shadow.gd   @tool, class DropShadow: hijo de un Sprite2D/AnimatedSprite2D/Line2D → su sombra difusa.
+  contact_shadow.gd class ContactShadow: hijo de un cuerpo → mancha en el piso bajo él (rayo hacia abajo).
   terrain_art.gd   @tool, class TerrainArt: arte del terreno (ver terrain_art.tscn).
   collectible.gd   Area2D: al tocarlo un jugador o un extremo, busca el ScoreManager (grupo "score_manager"),
                    suma `points` y queue_free.
@@ -183,6 +202,7 @@ scripts/
   languages.gd     class Languages: idiomas disponibles, nombre de cada uno, traducción desde código estático e
                    imagen localizada (ver "Idiomas").
                    stop_music() / play_music(fade) (la intro calla la cueca mientras corre el video).
+                   set_music_pitch(p): tono/velocidad de la música (lo usa la cámara lenta del closeup).
   score_board.gd   AUTOLOAD (ScoreBoard): datos de la última victoria entre escenas + highscore por nivel +
                    niveles COMPLETADOS (y máximo de sopaipillas) en user://scores.cfg. De eso depende el
                    desbloqueo del mapa. `unlock_all` (solo desarrollo, F9 en el mapa) desbloquea todo.
@@ -195,7 +215,12 @@ scripts/
 assets/            TODO el arte (sprites, fondos, UI), por tema: jugadores/, emboque/, entorno/, hazards/, props/, ui/.
                    No crear otras carpetas de imágenes. Las subcarpetas alternativos/ guardan arte que hoy no se usa
                    (poses y extremos de una versión anterior), por si se retoma.
-shaders/           madera_boton.gdshader (madera procedural de los botones del menú principal).
+shaders/           madera_boton.gdshader (madera procedural de los botones del menú principal); silueta.gdshader
+                   (sombra/brillo con la forma de un sprite) y caja_suave.gdshader (sombra/luz difusa de un
+                   rectángulo). Ver "Sombras y brillos". resaltar.gdshader: ajuste HSV (tono/saturación/brillo) +
+                   contraste + contorno que late (la caja empujable; sin contorno, en los personajes). fondo.gdshader: el
+                   fondo con menos protagonismo. destello.gdshader (estrella de luz para partículas) y
+                   confeti.gdshader (papelito que gira en 3D fingido): los de la animación del emboque.
 video/             intro.ogv (Ogg Theora: el único formato de video de Godot) + README.md con cómo convertirlo.
 audio/             cueca.ogg (música, la pone SettingsManager) y sfx/: efectos placeholder (WAV 22 kHz mono):
                    step, jump, die, hook, swing, box_push (loop), grab, throw.
@@ -264,6 +289,35 @@ Escena de arranque. Reproduce `video/intro.ogv` (export `video_path`) y luego pa
 - **Música:** la intro llama `SettingsManager.stop_music()` en `_ready`; `SettingsManager` arranca la cueca **diferida**, así ni un instante suena encima del video. El audio del video va al bus Master (`video_bus`).
 - **Proporción:** el video va dentro de un `AspectRatioContainer` cuyo `ratio` se ajusta al tamaño real del video → franjas negras si no es 16:9, sin deformarse.
 - **Web:** el navegador no deja sonar audio antes del primer gesto, así que en web primero se muestra "Presiona cualquier tecla para comenzar" (ese gesto desbloquea el audio) y recién ahí parte el video. El `.ogv` entra al export con `export_filter="all_resources"`.
+
+### Sombras y brillos (`VisualFx`, `DropShadow`, `ContactShadow`, shaders/)
+
+Para que terreno, objetos y peligros se despeguen del fondo, sin luces 2D (funciona igual en el renderer
+Compatibility de la web). Todo va en capas de **z absolutas** entre el fondo (-100) y el terreno (0), así una
+sombra solo oscurece el fondo: `Z_SHADOW` -50 (sombras), `Z_GLOW` -40 (luz de peligros), `Z_HALO` -30 (halo
+con forma) y `Z_LIGHT` 10 (la parte de la luz que tiñe al terreno y a los jugadores, `glow_front`). La luz
+viene de arriba a la izquierda: `VisualFx.LIGHT_OFFSET` = (5, 7).
+
+- **Terreno** (`TerrainArt`, grupo "Sombra"): por cada pieza un `ColorRect` con `caja_suave.gdshader` (sombra
+  corrida + oclusión alrededor). Sin sombra para piezas enteras fuera de la pantalla (WallLeft/WallRight).
+- **Objetos** (`DropShadow`, hijo del sprite en campana/palito/push_box/collectible/hook_point/
+  pressure_plate y de la cuerda en emboque): copia cada cuadro el dibujo (animación, flip) en un Sprite2D con
+  `silueta.gdshader`; para la cuerda, una Line2D con una banda difusa. Hereda transformación, visibilidad y
+  modulate (un extremo en la mano oculta la cuerda y su sombra). En los **jugadores** es suave a propósito
+  (alfa 0,35, `grow` 0,25): una versión más fuerte (0,6 / 0,6) se sacó por recargada.
+- **Personajes destacados:** el `Sprite` del jugador usa `resaltar.gdshader` sin contorno (saturación 1,2,
+  contraste 1,12) y el fondo (`background.tscn`) `fondo.gdshader` (desenfoque, contraste 0,6, saturación 0,75,
+  viñeta 0,3). Oscurecer el fondo empeoraba: las mangas y jeans (azul oscuro) se perdían.
+- **Sombra bajo el objeto** (`ContactShadow`, en player/campana/palito): rayo hacia abajo (terreno + cajas)
+  y una mancha ovalada en el primer piso que encuentra, más chica y clara con la altura (`fade_distance`).
+  En los **jugadores es permanente** (`min_strength` 0,65, `max_distance` 2000), como en los plataformeros
+  clásicos: en el aire marca dónde van a caer. Sin piso debajo (foso) no se dibuja. Va primero entre los hijos
+  del cuerpo: encima del terreno y debajo del dibujo, **siempre que el cuerpo tenga z mayor que el terreno**
+  (Player/Emboque con `z_index = 1`, como en level_base; se agregó a los niveles viejos main/level_2/level_3/
+  test_*).
+- **Peligros** (`HazardArt`): brillo = `caja_suave` aditivo con parpadeo/respiración; halo = cada cuadro
+  repetido con `silueta.gdshader` (las púas lo usan como sombra). El fuego y la caca no usan halo: sus PNG
+  tocan el borde y el halo dejaba manchas ahí.
 
 ### Coleccionables y puntaje (`collectible.gd` + `score_manager.gd`)
 
@@ -405,7 +459,7 @@ API para `WinManager`: `get_end()`, `get_end_position()`, `get_cavity_sensor()`.
 
 ### Victoria
 
-Si la punta del palito está a menos de `magnet_radius` (70) de la boca de la campana, `win_manager.gd` los atrae (`linear_accel` 900) y los alinea (`angular_gain` 2.5). Victoria = palito dentro del `CavitySensor` (respaldo: muy cerca y alineado). Muestra `WinLabel` y reinicia tras `restart_delay`.
+Si la punta del palito está a menos de `magnet_radius` (65) de la boca de la campana, `win_manager.gd` los atrae (`linear_accel` 750) y los alinea (`angular_gain` 2.1). Victoria = palito dentro del `CavitySensor` (respaldo: muy cerca y alineado). Muestra `WinLabel` y reinicia tras `restart_delay`.
 
 `emboque.gd` (coordinador) cada `_physics_process`:
 1. `_update_length` — `soltar`/`tirar` ajustan `rope_length` (clamp).
@@ -454,6 +508,26 @@ El extremo **en la mano no tiene colisiones** (`RopeEnd.set_held`: capa y másca
 ### Victoria y magnetismo (`win_manager.gd`)
 
 Identifica palito y campana por `end_kind`. Cada frame, si la punta del palito está a menos de `magnet_radius` de la boca de la campana, aplica magnetismo de **distancia** (fuerza que atrae la punta hacia la cavidad, y la campana hacia la punta) **y de ángulo** (alinea el eje del palito para que apunte a la cavidad, y gira la boca de la campana hacia la punta). Con la física resolviendo la colisión, el palito **entra por la boca**. La intensidad sigue una **curva** (`cercanía ^ falloff_exponent`, 3 por defecto): casi nada a distancia (a medio radio ≈12 %) y fuerte solo al final. **Trabado:** con el palito ya embocado (dentro del `CavitySensor` o su punta a menos de `lock_radius` = 18 px de la cavidad) el magnetismo pasa a un **resorte amortiguado** muy fuerte entre los dos extremos (`lock_strength`, `lock_damping`, tope `lock_max_accel`; fuerzas iguales y opuestas, así no arrastra al conjunto) + alineación rápida (`lock_angular_gain`): el emboque no se escapa ni tiembla (mediciones en "Registro de tests"). Con la victoria a los `capture_time` = 0,2 s de embocado, el trabado actúa solo ese instante. **Victoria** = el palito está dentro del `CavitySensor` de la campana (respaldo: muy cerca + bien alineado). Al ganar muestra `WinLabel`, registra el resultado en `ScoreBoard` (puntaje + highscore) y tras `restart_delay` salta a la **pantalla de victoria** (`victory_scene`, default `ui/victory.tscn`). **Va antes que los Emboque en el árbol** para que las fuerzas se integren el mismo frame. Exports para el resultado: `level_id` (clave estable del highscore; si queda vacío se deriva del nombre de archivo de la escena), `level_name` (nombre a mostrar).
+
+### Animación del emboque (`WinManager._celebrate`)
+
+Al ganar (grupo "Celebración" del Inspector del WinManager):
+- **Piezas pegadas** (`stick_on_win`): `RopeEnd.attach_to` deja al palito **montado** en la campana, con la
+  posición y el **ángulo relativo** exactos del momento de embocar: queda congelado y sin colisiones, y copia
+  `campana.global_transform * offset` en cada tick de física y en cada cuadro dibujado. Su cuerda no se pierde:
+  la campana aplica en su `_integrate_forces` también la cuerda del palito (ancla y largo que el Emboque le sigue
+  pasando), en el punto donde está el palito, así el par cuelga de las dos cuerdas. Un extremo pegado no se
+  puede tomar ni enganchar.
+- **Fin de la cámara lenta**: `CloseupManager.end_slowdown()` devuelve el time_scale y el tono de la música a 1
+  en `slow_release_time` (0,12 s reales) y no vuelven a bajar en ese nivel; el encuadre del closeup se mantiene.
+- **Click de cámara**: `CloseupManager.punch()` suma un zoom extra (`punch_zoom` 0,3) que entra en `punch_in_time`
+  (0,06 s) y vuelve en `punch_out_time` (0,22 s), en tiempo real (Tween con `set_ignore_time_scale`). Se
+  multiplica sobre el zoom del closeup.
+- **Partículas doradas** (`burst_scene` = `fx/emboque_burst.tscn`): destello, estallido de estrellitas y
+  destellos que siguen a la campana ~1,6 s. **Confetti + chispas** (`confetti_scene` = `fx/win_confetti.tscn`):
+  desde las dos esquinas de abajo hacia el centro y arriba; va en un CanvasLayer justo antes de la `UI` (pasa
+  por detrás del cartel y debajo de la pausa). Las dos escenas (`WinFx`) corren a velocidad real aunque el
+  closeup tenga la cámara lenta, y se borran solas.
 
 ### Pantalla de victoria y highscore (`victory.gd` + `score_board.gd`)
 
@@ -530,7 +604,7 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **UIDs:** no inventar `uid://...` a mano (Godot los rechaza como inválidos). Dejar que el editor los genere; en referencias `ext_resource` basta el `path`.
 - **Inferencia de tipos:** acceder a propiedades de un nodo tipado genéricamente (`Node2D`) devuelve Variant y rompe `:=`. Tipar con el `class_name` real (p. ej. `var e: Emboque`).
 - **Tunneling entre cuerpos delgados y rápidos:** un extremo veloz puede atravesar al otro. Protección actual: `continuous_cd = 2` (CCD cast-shape) + **física a 120 Hz**. **El tope de velocidad (`max_speed`) se QUITÓ** por decisión de diseño (el closeup ya frena el juego al acercarse). Si reaparece tunneling a velocidades altas, reconsiderar (subir ticks, engrosar paredes, o reintroducir un tope alto). Nota: `Engine.time_scale` NO reduce el avance por *tick* de física (solo hay menos ticks por segundo real), así que el slowdown no elimina el tunneling por sí solo.
-- **Tamaños de las colisiones** (el arte se escaló para calzar con ellas; si cambia una colisión, reajustar la escala de su sprite): jugador 40×64; palito 22×6; campana ~18×24 (paredes 6px, hoyo ~12px). Las partes son ~1/3 del jugador. Magnetismo: `magnet_radius=70`, `linear_accel=900`, `angular_gain=2.5`, `falloff_exponent=3`; trabado `lock_radius=18`, `lock_strength=400`, `lock_damping=30`, `lock_max_accel=6000`, `lock_angular_gain=15`. Todo es tuneable en el Inspector.
+- **Tamaños de las colisiones** (el arte se escaló para calzar con ellas; si cambia una colisión, reajustar la escala de su sprite): jugador 40×64; palito 22×6; campana ~18×24 (paredes 6px, hoyo ~12px). Las partes son ~1/3 del jugador. Magnetismo: `magnet_radius=65`, `linear_accel=750`, `angular_gain=2.1` (antes 70/900/2,5: se suavizó), `falloff_exponent=3`; trabado `lock_radius=18`, `lock_strength=400`, `lock_damping=30`, `lock_max_accel=6000`, `lock_angular_gain=15`. Todo es tuneable en el Inspector.
 - **Restricción de cuerda en RigidBody:** hacerla por **velocidad** en `_integrate_forces` (no fijando `transform.origin`), para no teletransportar a través de paredes. Definir `_integrate_forces` NO desactiva las colisiones (salvo `custom_integrator = true`).
 - **Formas cóncavas en 2D:** no existen como shape convexa única. La campana (C) se arma con **varios `CollisionShape2D` rectangulares** (convexos), no un polígono cóncavo.
 - **Al medir en tests una colisión con péndulo:** medir el **pico** (ej. máximo empuje), no el frame final — el péndulo/gravedad ya devolvió el cuerpo a su sitio y da un falso negativo.
@@ -591,8 +665,27 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
   acumulaba mientras colgaba de un gancho (solo se aplicaba y vaciaba en el modo plataformas) y al soltarse
   llegaba de golpe.
 - **En web la pantalla completa necesita un gesto**: al arrancar no se aplica la guardada (queda en ventana).
+- **El UV de un sprite llega recortado (clamp) a 0..1 al `fragment()`** (Sprite2D/AnimatedSprite2D dibujan con
+  `clip_uv`): un shader que agranda el cuadro en `vertex()` para dibujar afuera (sombra, halo) tiene que pasar su
+  UV por un `varying` propio, o fuera del dibujo repite el borde (rayas).
+- **En el `fragment()` de un shader de canvas, `COLOR` ya viene multiplicado por la textura** (en el UV
+  recortado): multiplicar por `COLOR` como si fuera el modulate aplica la textura dos veces (oscurece) y una
+  sombra fuera del dibujo queda recortada a su forma. El modulate se toma en `vertex()` (`varying v_modulate =
+  COLOR`).
+- **Godot no tiene ajuste HSV por píxel para texturas**: `modulate` solo multiplica RGB (tiñe/oscurece, no
+  satura ni gira el tono); `Image.adjust_bcs()` es en CPU. Para eso, `resaltar.gdshader`.
+- **No pasar `TEXTURE` como argumento a una función propia de un shader de canvas**: falla con el error
+  `custom_samplers.has(...)` y dibuja mal. Usar una macro (`#define`), como `silueta.gdshader`.
 - Godot re-guarda escenas/`project.godot` al abrirlos (puede cambiar `uid`/`load_steps` u omitir valores por default); es esperado.
 - **Tras reimportar, muchos `.import` aparecen "modificados" en `git status` sin cambios reales** (`git diff` vacío): Godot los escribe con fin de línea LF y el repo usa `core.autocrlf`. Descartarlos con `git status --porcelain | grep '^ M .*\.import$' | cut -c4- | xargs git checkout --` (ojo: `git diff --name-only` no los lista porque el diff está vacío). Los `.import` de archivos nuevos o movidos sí hay que commitearlos.
+- **Los tiempos de los planes del bot (`wait`, `hold`, `pump`, timeouts de `until`) son tiempo REAL**, como los de
+  una persona: si los extremos se cruzan a mitad de camino, la cámara lenta del closeup los acorta en tiempo de
+  juego. Al hacer la cámara lenta más fuerte (0,35 → 0,25) fallaron `movil_4` (la espera antes de bajar el extremo
+  por la ranura ya no alcanzaba para que se asentara; se alargó) y `final` (otro punto de frenado).
+- **`PinJoint2D` no sirve para soldar dos RigidBody2D:** con `angular_limit` 0..0 el ángulo relativo igual giraba
+  hasta 180° y con los jugadores tirando se separaban 57 px. Para unir dos cuerpos de forma exacta, uno va
+  montado en el otro (congelado, sin colisiones, copiando la transformación) y el que lleva aplica las fuerzas
+  del otro (ver `RopeEnd.attach_to`).
 - **Arte hecho en paralelo por dos personas se pisa en el merge sin conflicto de texto:** pasó con los jugadores (sprites `Abierto`/`Cruzado` de una rama + `Sprite` animado de otra, los dos visibles). Tras un merge, correr y mirar cada nivel; todo el arte va en `assets/` para que se note cuando alguien ya tomó un asset.
 
 ## Estado de desarrollo
@@ -607,12 +700,23 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 - **Tomar y lanzar el emboque** (por nivel, `LevelRules`), con mira en ping-pong y vuelo recto. Se usa en lanzar_1..4 y en el final.
 - **Magnetismo con curva + trabado:** suave a distancia, resorte fuerte una vez embocado.
 - **Closeup + cámara lenta** al acercarse los extremos (estilo Peggle).
+- **Animación del emboque:** magnetismo más sutil, piezas pegadas al embocar, click de zoom, partículas doradas y
+  confetti + chispas desde las esquinas de abajo.
 
 **Objetos y niveles**
 - **Zonas de muerte** (jugador / emboque / ambos), **caja empujable**, **coleccionables + puntaje** (también los recoge el emboque).
 - **Mecánicas nuevas:** placas de presión, compuertas, plataformas móviles/ascensores, corrientes de aire (volantín), cuenco/embudo como meta.
 - **29 niveles en un mapa ramificado** (tronco + 6 ramas + final), todos ganados por el bot de pruebas. Escena base heredable y bloques con `size`. Todas las ramas tienen 4 niveles.
 - Del equipo: `level_2` ("La T") y `level_4` ("Escalones", rehecho sobre level_base) están en el mapa (fin de las ramas de peligros y de cajas); `main`, `level_3` y las pruebas siguen en el repo pero fuera del mapa.
+
+**Presentación visual**
+- **Sombras y brillos:** sombra difusa + oclusión del terreno; sombra con la forma de extremos, cuerda,
+  cajas, sopaipillas, ganchos y placas; sombra permanente bajo los jugadores (en el aire marca dónde caen); fuego con brillo rojo que
+  parpadea, caca con brillo verde que respira, púas con sombra oscura. Ver "Sombras y brillos".
+- **Personajes que destacan del fondo:** fondo más plano y desenfocado con viñeta, personajes un poco más
+  saturados y con una sombra suave alrededor.
+- **Cajas resaltadas:** madera color miel + contorno dorado que late (`resaltar.gdshader`), para que se lean
+  como objetos con los que se interactúa y no como terreno.
 
 **Menús y presentación**
 - **Tráiler** en español e inglés (`trailer/`), regenerable con un comando cuando cambie el arte.
@@ -690,12 +794,35 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
   del aterrizaje grabando a 30 fps (se usan solo sus primeros segundos).
 - **Intro (video)** (escritorio con Xvfb + export web en Chromium headless, con un .ogv de prueba): arranca como escena principal, video sonando y cueca callada; una tecla en los primeros 0,35 s no salta; mensaje visible con el texto pedido; el video llena 1280×720 (16:9) y uno 4:3 queda centrado con franjas (960×720 en x=160); tecla → fundido → menú; la cueca vuelve con fundido (−36 dB → 0 dB); volver al menú desde otra escena no repite fundido ni reinicia la música; al terminar el video pasa solo al menú; clic también salta; sin video va directo al menú con música. PASS 20/20. En web: aviso "para comenzar" → video → menú, con salida de audio medida (AnalyserNode): aviso 0,0000, video 0,074, menú (cueca) 0,158; el .ogv entra al .pck. Botón Ajustes con brillo fantasma al llegar al menú (bug previo del layout, ver Lecciones) corregido: sin mouse encima no brilla, con el mouse encima sí, y sigue al mouse.
 
+- **Sombras y brillos** (capturas en Forward+ y en Compatibility, el renderer de la web; 12 niveles): terreno
+  con sombra y oclusión, sin franja oscura en los bordes de la pantalla; jugadores con sombra (con `grow`) y
+  mancha de contacto que sigue el piso; sombra probada aislada sobre fondo claro con caja y jugador a escala 0,2
+  y 0,6; fuego con brillo rojo sin rayas (tras pasar el UV por un varying), caca verde, púas con sombra. Sin
+  errores de shader. Cajas con `resaltar.gdshader` en caja_2 y level_4 (también en Compatibility): se
+  distinguen del terreno a simple vista. Bot: 28/29 ganados; `placa_3` da TIMEOUT **también sin estos cambios** (falla previa del bot).
 - **Animaciones provisorias + toques** (capturas con Xvfb en caja_1/tronco_3): estados push/jump/fall/idle con su cuadro; inclinación al empujar; aplastón al aterrizar con los pies en el piso. El bot sigue ganando igual (son solo visuales). PASS.
 - **Mirada + espejo + sonidos:** mirada/espejo, estados de animación, ~8 pasos/s, pasajero sin pasos, salto, enganche, whoosh por pasada, loop de la caja on/off, muerte sin sonido duplicado. PASS.
 - **Volumen por categoría:** buses creados y enviando a Master, los tres volúmenes no se pisan, persisten en `user://settings.cfg`, Sfx y la caja usan el bus SFX. PASS.
 - **Audio en el export web** (build exportado, navegador Edge headless controlado por DevTools, midiendo la señal que llega a la salida con un AnalyserNode; control: un tono de prueba da RMS 0,71): con los buses creados en runtime la salida era **0,0000** aun con el AudioContext activo tras el clic (mudo, igual que en Newgrounds); con `default_bus_layout.tres` la música da RMS ~0,1–0,2 tras el primer clic y 3 saltos en el Nivel 1 disparan 3 efectos. PASS. En el mismo build web, el menú principal sin Salir deja Jugar/Ajustes centrados.
 - **Menú de pausa (diseño del equipo):** cada uno de los 7 niveles tiene exactamente un PauseMenu; Esc pausa/reanuda; foco en Continuar; los 4 botones calzan con los pintados; hover mueve el foco; Ajustes muestra sliders y oculta botones; el slider cambia SettingsManager; Volver devuelve el foco a Ajustes; Continuar reanuda. PASS 43/43. Luego se agregó P como segunda tecla (acción `pause`): P pausa y reanuda, Esc también (en `level_3`). PASS.
 - **Arte (jugadores, cajas, zonas, sopaipillas, terreno, fondo, ganchos):** cada nivel cargado y capturado sin errores de script; animación de caminata a la frecuencia pedida (cambio de frame cada 12 ticks a 10 FPS con física a 120 Hz).
+
+### Animación del emboque
+
+Con el bot (tronco_1 + script que sigue tras ganar, en Forward+ y Compatibility): las piezas quedan pegadas
+con el ángulo relativo fijo (medido en cada cuadro dibujado durante 3 s, con los jugadores caminando en
+direcciones opuestas, en tronco_1, tronco_4 y peligro_2: variación del ángulo relativo 0,00° y separación
+punta–cavidad constante; con el PinJoint2D anterior el ángulo giraba hasta 180°); el click de cámara se ve (zoom extra y vuelta); destello y estrellitas doradas alrededor del
+emboque; confetti girando (el alto del papelito varía, `INSTANCE_CUSTOM` funciona en Compatibility) y chispas
+que llegan hacia el centro y arriba; todo a velocidad real con la cámara lenta. Magnetismo más suave
+(65/750/2,1): con 60/650/1,8 cinco planes del bot dejaban de embocar. Se ajustaron dos soluciones del bot que
+quedaban justo en el borde: `viento_2` (cuerda de J1 200 → 215; gana con 210–220) y `placa_1` (120 → 130;
+gana con 100–110 y 125–140). `run_all.sh`: 28/29 (`placa_3` sigue con su TIMEOUT previo).
+Cámara lenta más fuerte (0,35 → 0,25) + música: en tronco_1 el time_scale baja suave hasta 0,25 y el tono de la
+música lo sigue hasta 0,70; en la pausa vuelve a 1,00 y al reanudar a 0,70; al salir del nivel, time_scale y tono
+en 1,00. Al embocar (end_slowdown): time_scale 0,25 → 0,41 → 0,61 → 0,82 → 1,00 y tono 0,70 → 1,00 en 16 ticks
+(~0,13 s), con el click de zoom a la vez (2,0 → 2,6 → 2,0) y el encuadre del closeup intacto. Ajustes del bot: `movil_4` (esperas de `drop` 0,6/0,4/0,6/0,5 → 1,0/0,6/1,2/0,8; gana con largos 160–180)
+y `final` (`brake` 470 → 465). `run_all.sh`: 28/29 (`placa_3`).
 
 ### Lanzar el emboque (`test_throw.tscn`) — PASS 49/49
 
@@ -727,7 +854,7 @@ Cada nivel se gana con el plan de `tests/solutions/<nivel>.gd` (además se barri
 | lanzar_4 Buzón | 14 s | lanzar a 12° o más (desde 250 px) pega sobre la ranura: la compuerta de J2 no abre; gana lanzando de 130 a 310 px y con 0–8° |
 | viento_1..3 | 5–10 s | — |
 | viento_4 Remonte | 12 s | pararse 50 px al lado del gancho → el extremo sube derecho y no engancha; gana en 8 de 9 variantes (bombeo 0,9–1,6, posición ±12 px, punto de salto) |
-| final | 10–13 s | frenar fuera de ~465–470 en el bot → fuego (el humano corrige en el aire) |
+| final | 10–13 s | frenar fuera de ~464–466 en el bot → fuego (el humano corrige en el aire); con la cámara lenta en 0,35 la ventana era 465–470 |
 
 También: mapa (desbloqueo, foco inicial en lo recién desbloqueado, F9), flujo completo menú → mapa → nivel →
 victoria → Continuar → mapa con el siguiente desbloqueado (PASS); compuerta no aplasta; capturas de cada nivel

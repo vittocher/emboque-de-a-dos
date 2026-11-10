@@ -42,15 +42,53 @@ correr `godot --headless --import --path .`.
 
 Los cuadros se repiten a lo ancho de la zona sin deformarse (`HazardArt`).
 
+**Brillo y sombra de los peligros** (en el nodo `Art` de cada escena de arriba, grupos "Brillo" y "Halo" del
+Inspector): el fuego tiene un **brillo rojo** que parpadea y la caca uno **verde** que respira (`glow_color`: el
+alfa es la intensidad; `glow_radius`, `glow_flicker`, `glow_breathe`; `glow_front` = cuánto tiñe también al
+terreno y a los jugadores cercanos; `glow_core` = degradado: la luz vale `glow_core` × alfa en el centro de la
+zona y baja hasta 0 en el borde del radio, con la curva `glow_core_power`). Las púas tienen una **sombra oscura con su forma** (`halo_color`,
+`halo_blur`, `halo_grow`). Se ven en el editor al abrir un nivel.
+
+## Sombras (para que todo se despegue del fondo)
+
+Se calculan solas a partir del dibujo: al cambiar un PNG, su sombra cambia con él.
+
+- **Terreno:** cada bloque proyecta una sombra difusa hacia abajo a la derecha + un oscurecimiento parejo
+  alrededor (oclusión ambiental). Se ajusta en `scenes/terrain_art.tscn`, grupo "Sombra".
+- **Extremos, cuerda, cajas, sopaipillas, ganchos, placas:** un nodo `DropShadow` hijo del sprite copia el
+  dibujo, oscuro y difuminado (`shadow_offset`, `blur`, `color`, `grow`).
+- **Fondo:** se dibuja más plano, apenas desenfocado y con las esquinas más oscuras (material de
+  `scenes/background.tscn`: `blur`, `contrast`, `saturation`, `brightness`, `vignette`), para que los
+  personajes se lean primero. Un fondo nuevo pasa por el mismo filtro.
+- **Personajes:** un poco más saturados y contrastados (material del `Sprite` en `scenes/player.tscn`) y con
+  una sombra suave alrededor (`DropShadow`).
+- **Jugadores:** una sombra ovalada **permanente** en el piso bajo ellos (`ContactShadow` en
+  `scenes/player.tscn`): en el aire se achica y aclara, y marca dónde van a caer. Los extremos tienen una
+  igual, solo cuando están cerca del piso.
+
 ## Objetos
 
 | Qué | Archivo(s) | Escena | Notas |
 |---|---|---|---|
-| Caja | `assets/props/caja/caja.png` | `scenes/push_box.tscn` | 64×64 px en el juego. |
+| Caja | `assets/props/caja/caja.png` | `scenes/push_box.tscn` | 64×64 px en el juego. Se dibuja más cálida y con un contorno dorado que late (material del nodo `Sprite`: tono, saturación, brillo, contorno), para distinguirla del terreno. Si el arte nuevo ya se distingue solo, bajar esos valores. |
 | Gancho | `assets/props/enganche/hoyo.png` | `scenes/hook_point.tscn` | ~36 px. |
 | Sopaipilla (coleccionable; también en el mapa y la victoria) | `assets/props/puntos/sopaipilla_1..3.png` | `scenes/collectible.tscn` | |
 | Placa de presión | `assets/props/placa/placa_base.png` (base) y `placa_tapa.png` (tapa) | `scenes/pressure_plate.tscn` | La **tapa se tiñe** con el color del canal: dibujarla en gris claro/blanco. |
 | Rayitas de viento | `assets/props/viento/rafaga.png` | `scenes/wind_zone.tscn` | Blanca con transparencia; se tiñe y se mueve sola. |
+
+## Celebración del emboque
+
+Al embocar salen dos efectos de partículas, sin imágenes (formas dibujadas por shader): se ajustan abriendo la
+escena y tocando cada `CPUParticles2D` en el Inspector (cantidad, velocidad, colores en `Color Ramp` /
+`Color Initial Ramp`, tamaño en `Scale`).
+
+| Qué | Escena | Notas |
+|---|---|---|
+| Destello y estrellitas doradas alrededor del emboque | `scenes/fx/emboque_burst.tscn` | `Flash` (destello inicial), `Burst` (estallido), `Sparkle` (destellos que quedan). La forma de estrella está en `shaders/destello.gdshader` (rayos, tamaño del centro). |
+| Confetti y chispas en pantalla | `scenes/fx/win_confetti.tscn` | Salen de las esquinas de abajo (`ConfettiLeft/Right`, `SparksLeft/Right`). Colores del confetti: `Color Initial Ramp` (hoy bandera chilena + dorado). Para usar un dibujo propio de papelito o chispa, ponerlo en `Texture` (blanco: se tiñe solo). |
+
+El "click" de zoom de la cámara y las piezas pegadas se ajustan en el Inspector del `CloseupManager` (grupo
+"Click al embocar") y del `WinManager` (grupo "Celebración") de cada nivel.
 
 ## Menús
 

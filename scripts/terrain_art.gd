@@ -32,6 +32,20 @@ class_name TerrainArt
 ## Alto de la tabla de piso de arriba en los bloques gruesos (px).
 @export var floor_top_height: float = 24.0
 
+@export_group("Sombra")
+## Sombra difusa de cada pieza de terreno sobre el fondo (la despega de la pared).
+## Alfa 0 = sin sombra.
+@export var shadow_color := Color(0.0, 0.0, 0.0, 0.5)
+## Corrimiento de la sombra (px del mundo): hacia donde no viene la luz.
+@export var shadow_offset := VisualFx.LIGHT_OFFSET * 1.4
+## Difuminado de la sombra corrida (px).
+@export var shadow_radius := 16.0
+## Oscurecimiento parejo alrededor de todo el contorno (oclusión ambiental),
+## relativo a shadow_color (0 = nada).
+@export_range(0.0, 1.0) var ao_strength := 0.55
+## Ancho de ese oscurecimiento (px).
+@export var ao_radius := 9.0
+
 ## Prefijo de los nodos generados (no tienen owner: no se guardan en la escena).
 const ART_PREFIX := "TerrainArt_"
 
@@ -62,7 +76,8 @@ func _collect_shapes() -> Array[CollisionShape2D]:
 ## Lo que, si cambia, obliga a rehacer el arte (editor).
 func _compute_signature() -> Array:
 	var sig: Array = [floor_texture, floor_left, floor_middle, floor_right, wall_texture,
-			thick_floor_height, floor_top_height]
+			thick_floor_height, floor_top_height, shadow_color, shadow_offset, shadow_radius,
+			ao_strength, ao_radius]
 	for cs in _collect_shapes():
 		var body := cs.get_parent() as Node2D
 		sig.append([cs.get_instance_id(), (cs.shape as RectangleShape2D).size,
@@ -101,6 +116,7 @@ func _build(cs: CollisionShape2D) -> void:
 	tiles.rotation = cs.rotation
 	tiles.scale = Vector2.ONE / body.scale
 	body.add_child(tiles)
+	_add_shadow(tiles, size)
 	if not is_floor:
 		_tile(tiles, size, Vector2.ZERO, wall_texture, false)
 	elif size.y > thick_floor_height and wall_texture != null:
@@ -112,6 +128,29 @@ func _build(cs: CollisionShape2D) -> void:
 		_tile(tiles, top, Vector2(0, -(size.y - floor_top_height) * 0.5), floor_texture, true)
 	else:
 		_tile(tiles, size, Vector2.ZERO, floor_texture, true)
+
+## Sombra difusa de la pieza (en la capa de sombras: solo oscurece el fondo).
+func _add_shadow(tiles: Node2D, size: Vector2) -> void:
+	if shadow_color.a <= 0.0 or _off_screen(tiles, size):
+		return
+	# El corrimiento es en el mundo: se pasa al espacio de la pieza (puede estar
+	# rotada, como las tablas del cuenco).
+	var offset := tiles.get_global_transform().affine_inverse().basis_xform(shadow_offset)
+	var margin := maxf(shadow_radius, ao_radius) * 1.2 + shadow_offset.length()
+	VisualFx.soft_box(tiles, size, Vector2.ZERO, margin, VisualFx.Z_SHADOW, {
+		"tint": shadow_color,
+		"offset": offset,
+		"radius": shadow_radius,
+		"ao_strength": ao_strength,
+		"ao_radius": ao_radius,
+	}, "Shadow")
+
+## true si la pieza queda entera fuera de la pantalla a lo ancho (los muros
+## WallLeft/WallRight): su sombra solo oscurecería el borde de la imagen.
+func _off_screen(tiles: Node2D, size: Vector2) -> bool:
+	var width := float(ProjectSettings.get_setting("display/window/size/viewport_width", 1280))
+	var box := tiles.get_global_transform() * Rect2(-size * 0.5, size)
+	return box.end.x <= 0.0 or box.position.x >= width
 
 ## Llena un rectángulo de [param size] centrado en [param center] con la textura
 ## repetida en grilla (sin deformarse: el cuadro calza con el lado más corto y se

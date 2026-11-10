@@ -187,6 +187,13 @@ func stop_music() -> void:
 		_music_tween.kill()
 	_music_player.stop()
 
+## Tono/velocidad de la música (1 = normal; menos = más lenta y grave, como una
+## cinta frenada). Lo usa el CloseupManager para que la cámara lenta del emboque
+## también se escuche; al salir del nivel vuelve a 1.
+func set_music_pitch(pitch: float) -> void:
+	if _music_player != null:
+		_music_player.pitch_scale = clampf(pitch, 0.05, 4.0)
+
 ## Reinicia la música desde el principio, con fundido de entrada opcional.
 ## No hace nada si ya está sonando.
 func play_music(fade_in_time: float = 0.0) -> void:

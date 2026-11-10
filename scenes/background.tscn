@@ -1,8 +1,20 @@
 [gd_scene format=3]
 
 [ext_resource type="Texture2D" path="res://assets/entorno/fondo/paredazul.png" id="1_fondo"]
+[ext_resource type="Shader" path="res://shaders/fondo.gdshader" id="2_fondo"]
+
+[sub_resource type="ShaderMaterial" id="Mat_fondo"]
+shader = ExtResource("2_fondo")
+shader_parameter/blur = 1.5
+shader_parameter/contrast = 0.6
+shader_parameter/saturation = 0.75
+shader_parameter/brightness = 1.0
+shader_parameter/vignette = 0.3
+shader_parameter/vignette_start = 0.45
 
 [node name="Background" type="Sprite2D"]
 z_index = -100
+texture_filter = 4
+material = SubResource("Mat_fondo")
 position = Vector2(640, 360)
 texture = ExtResource("1_fondo")
