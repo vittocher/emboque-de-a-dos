@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/collectible.gd" id="1_collectible"]
 [ext_resource type="SpriteFrames" path="res://assets/props/puntos/sopaipilla_frames.tres" id="2_frames"]
+[ext_resource type="Script" path="res://scripts/drop_shadow.gd" id="drop_shadow"]
 
 [sub_resource type="CircleShape2D" id="Circle_collectible"]
 radius = 12.0
@@ -25,3 +26,6 @@ texture_filter = 4
 scale = Vector2(0.075, 0.075)
 sprite_frames = ExtResource("2_frames")
 autoplay = "default"
+
+[node name="DropShadow" type="Node2D" parent="Sprite"]
+script = ExtResource("drop_shadow")

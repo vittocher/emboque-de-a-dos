@@ -179,7 +179,7 @@ func _move_sliding(body: PhysicsBody2D, motion: Vector2) -> void:
 func _on_hook_sensor_area_entered(area: Area2D) -> void:
 	# El sensor solo detecta puntos de enganche (por su máscara de colisión).
 	# En la mano no engancha; lanzado sí (es la gracia de lanzar).
-	if not _hooked and _rehook_timer <= 0.0 and not is_held():
+	if not _hooked and _rehook_timer <= 0.0 and not is_held() and not _end.is_attached():
 		if _throw_state == ThrowState.FLYING:
 			_end_flight()
 		_hooked = true
@@ -232,7 +232,7 @@ func _update_throw(delta: float) -> void:
 		_carry(delta)
 
 func _can_grab() -> bool:
-	return not _hooked and rope_length <= min_length \
+	return not _hooked and not _end.is_attached() and rope_length <= min_length \
 		and _anchor.global_position.distance_to(_end.global_position) <= min_length + grab_tolerance
 
 func _grab() -> void:

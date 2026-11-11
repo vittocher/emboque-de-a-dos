@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/emboque.gd" id="1_emboque"]
 [ext_resource type="Texture2D" path="res://assets/emboque/cuerda.png" id="2_cuerda"]
+[ext_resource type="Script" path="res://scripts/drop_shadow.gd" id="drop_shadow"]
 
 [node name="Emboque" type="Node2D"]
 script = ExtResource("1_emboque")
@@ -12,3 +13,6 @@ texture_repeat = 2
 width = 4.0
 texture = ExtResource("2_cuerda")
 texture_mode = 1
+
+[node name="DropShadow" type="Node2D" parent="Rope"]
+script = ExtResource("drop_shadow")

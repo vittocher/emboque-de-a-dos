@@ -1,6 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/props/enganche/hoyo.png" id="1_hoyo"]
+[ext_resource type="Script" path="res://scripts/drop_shadow.gd" id="drop_shadow"]
 
 [sub_resource type="CircleShape2D" id="Circle_hook"]
 radius = 18.0
@@ -23,3 +24,6 @@ polygon = PackedVector2Array(0, -14, 12, -7, 12, 7, 0, 14, -12, 7, -12, -7)
 texture_filter = 4
 scale = Vector2(0.28, 0.28)
 texture = ExtResource("1_hoyo")
+
+[node name="DropShadow" type="Node2D" parent="Sprite"]
+script = ExtResource("drop_shadow")

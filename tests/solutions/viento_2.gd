@@ -8,7 +8,7 @@ const SCENE := "res://scenes/levels/viento_2.tscn"
 static func plan(ctx) -> Dictionary:
 	return {
 		"p1": [["wait_floor"], ["rope", 60], ["walk_to", ctx.var_f("x1", 560), 4], ["wait", 0.5],
-			["rope", ctx.var_f("r1", 200)], ["sync", "listos"], ["until", func(c): return c.won(), 8.0],
+			["rope", ctx.var_f("r1", 215)], ["sync", "listos"], ["until", func(c): return c.won(), 8.0],
 			["pump_end", 8.0, ctx.var_f("x1", 560), 20]],
 		"p2": [["wait_floor"], ["rope", 60], ["walk_to", 838, 3], ["wait", 0.5], ["rope", ctx.var_f("r2", 120)],
 			["sync", "listos"], ["until", func(c): return c.won(), 8.0], ["jiggle", 838, -10, 8]],

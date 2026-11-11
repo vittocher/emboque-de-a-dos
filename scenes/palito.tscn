@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/rope_end.gd" id="1_end"]
 [ext_resource type="Texture2D" path="res://assets/emboque/palito.png" id="2_tex"]
+[ext_resource type="Script" path="res://scripts/drop_shadow.gd" id="drop_shadow"]
+[ext_resource type="Script" path="res://scripts/contact_shadow.gd" id="contact_shadow"]
 
 [sub_resource type="RectangleShape2D" id="Rect_palito"]
 size = Vector2(22, 6)
@@ -48,3 +50,14 @@ monitoring = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HookSensor"]
 shape = SubResource("Circle_hook")
+
+[node name="DropShadow" type="Node2D" parent="Sprite"]
+script = ExtResource("drop_shadow")
+
+[node name="ContactShadow" type="Node2D" parent="."]
+script = ExtResource("contact_shadow")
+width = 24.0
+height = 6.0
+opacity = 0.4
+max_distance = 40.0
+fade_distance = 40.0

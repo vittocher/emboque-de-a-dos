@@ -21,7 +21,7 @@ PAUSE_BACK,Volver a pausa,Back to pause
 INTRO_SKIP,Presiona cualquier tecla para saltar,Press any key to skip
 INTRO_START,Presiona cualquier tecla para comenzar,Press any key to start
 HUD_POINTS,Puntos: %d,Points: %d
-WIN_TITLE,¡Emboque logrado!,Perfect catch!
+WIN_TITLE,¡Embocado!,Perfect catch!
 VICTORY_SCORE,Puntaje: %d,Score: %d
 VICTORY_NEW_RECORD,¡Nuevo récord!,New record!
 VICTORY_BEST,Mejor puntaje: %d,Best score: %d

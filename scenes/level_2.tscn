@@ -139,10 +139,12 @@ position = Vector2(320, 315)
 position = Vector2(868, 175)
 
 [node name="Player1" parent="." instance=ExtResource("1_player")]
+z_index = 1
 position = Vector2(147, 69)
 input_prefix = "p1"
 
 [node name="Player2" parent="." instance=ExtResource("1_player")]
+z_index = 1
 position = Vector2(1147, 69)
 input_prefix = "p2"
 
@@ -160,12 +162,14 @@ emboque_a = NodePath("../Emboque1")
 emboque_b = NodePath("../Emboque2")
 
 [node name="Emboque1" parent="." instance=ExtResource("2_emboque")]
+z_index = 1
 anchor_node = NodePath("../Player1/RopeAnchor")
 input_prefix = "p1"
 end_scene = ExtResource("5_campana")
 end_kind = "campana"
 
 [node name="Emboque2" parent="." instance=ExtResource("2_emboque")]
+z_index = 1
 anchor_node = NodePath("../Player2/RopeAnchor")
 input_prefix = "p2"
 end_scene = ExtResource("6_palito")

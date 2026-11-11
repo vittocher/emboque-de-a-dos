@@ -1,0 +1,114 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/win_fx.gd" id="1_c2w2v"]
+[ext_resource type="Shader" path="res://shaders/destello.gdshader" id="2_7d0h5"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_urmu3"]
+shader = ExtResource("2_7d0h5")
+shader_parameter/rays = 0.35
+shader_parameter/core_size = 0.3
+shader_parameter/halo = 0.6
+
+[sub_resource type="Gradient" id="Gradient_y1pju"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_xlv60"]
+gradient = SubResource("Gradient_y1pju")
+width = 48
+height = 48
+
+[sub_resource type="Curve" id="Curve_vsgxi"]
+_data = [Vector2(0, 0.3), 0.0, 0.0, 0, 0, Vector2(0.25, 1), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="Gradient" id="Gradient_kj2k3"]
+colors = PackedColorArray(1, 0.9, 0.55, 0.55, 1, 0.75, 0.25, 0)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8kejx"]
+shader = ExtResource("2_7d0h5")
+shader_parameter/rays = 0.9
+
+[sub_resource type="Curve" id="Curve_m3css"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.15), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Gradient" id="Gradient_0bgcy"]
+offsets = PackedFloat32Array(0, 0.25, 1)
+colors = PackedColorArray(1, 0.97, 0.75, 1, 1, 0.8, 0.3, 1, 1, 0.55, 0.1, 0)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ew3rf"]
+shader = ExtResource("2_7d0h5")
+shader_parameter/rays = 1.0
+
+[sub_resource type="Curve" id="Curve_kb4ss"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.3, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="Gradient" id="Gradient_lnj7d"]
+colors = PackedColorArray(1, 0.92, 0.6, 1, 1, 0.75, 0.25, 1)
+
+[node name="EmboqueBurst" type="Node2D" unique_id=232911986]
+z_index = 20
+z_as_relative = false
+script = ExtResource("1_c2w2v")
+emit_time = 1.6
+free_after = 3.5
+
+[node name="Flash" type="CPUParticles2D" parent="." unique_id=371785992]
+material = SubResource("ShaderMaterial_urmu3")
+emitting = false
+amount = 1
+texture = SubResource("GradientTexture2D_xlv60")
+lifetime = 0.35
+one_shot = true
+explosiveness = 1.0
+gravity = Vector2(0, 0)
+scale_amount_min = 2.2
+scale_amount_max = 2.2
+scale_amount_curve = SubResource("Curve_vsgxi")
+color_ramp = SubResource("Gradient_kj2k3")
+
+[node name="Burst" type="CPUParticles2D" parent="." unique_id=450138632]
+material = SubResource("ShaderMaterial_8kejx")
+emitting = false
+amount = 32
+texture = SubResource("GradientTexture2D_xlv60")
+lifetime = 0.9
+one_shot = true
+explosiveness = 0.95
+lifetime_randomness = 0.35
+emission_shape = 1
+emission_sphere_radius = 6.0
+direction = Vector2(0, -1)
+spread = 180.0
+gravity = Vector2(0, 90)
+initial_velocity_min = 80.0
+initial_velocity_max = 230.0
+angular_velocity_min = -180.0
+angular_velocity_max = 180.0
+damping_min = 160.0
+damping_max = 260.0
+angle_max = 45.0
+scale_amount_min = 0.25
+scale_amount_max = 0.45
+scale_amount_curve = SubResource("Curve_m3css")
+color_ramp = SubResource("Gradient_0bgcy")
+
+[node name="Sparkle" type="CPUParticles2D" parent="." unique_id=1972318404]
+material = SubResource("ShaderMaterial_ew3rf")
+emitting = false
+amount = 16
+texture = SubResource("GradientTexture2D_xlv60")
+lifetime = 0.7
+lifetime_randomness = 0.3
+emission_shape = 1
+emission_sphere_radius = 24.0
+direction = Vector2(0, -1)
+spread = 180.0
+gravity = Vector2(0, -25)
+initial_velocity_min = 5.0
+initial_velocity_max = 25.0
+scale_amount_min = 0.2
+scale_amount_max = 0.45
+scale_amount_curve = SubResource("Curve_kb4ss")
+color_ramp = SubResource("Gradient_lnj7d")

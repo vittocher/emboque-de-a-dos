@@ -11,11 +11,11 @@ class_name WinManager
 
 @export_group("Magnetismo")
 ## Radio (punta del palito ↔ boca de la campana) en que empieza la asistencia.
-@export var magnet_radius: float = 70.0
+@export var magnet_radius: float = 65.0
 ## Aceleración de atracción cuando están casi tocándose (px/s^2). Más bajo = más sutil.
-@export var linear_accel: float = 900.0
+@export var linear_accel: float = 750.0
 ## Ganancia de alineación angular (rad/s por rad de error, escalada por cercanía).
-@export var angular_gain: float = 2.5
+@export var angular_gain: float = 2.1
 ## Curva de la asistencia: fuerza = cercanía ^ exponente. 1 = lineal; más alto =
 ## casi nada a distancia y fuerte solo al final (3 → a medio radio, 12 %).
 @export var falloff_exponent: float = 3.0
@@ -47,6 +47,19 @@ class_name WinManager
 ## antes de saltar a la pantalla de victoria.
 @export var restart_delay: float = 2.5
 
+@export_group("Celebración")
+## Al embocar, el palito queda pegado dentro de la campana (misma posición y
+## ángulo relativo) mientras se muestra el cartel.
+@export var stick_on_win: bool = true
+## Partículas doradas alrededor del emboque (sigue a la campana).
+@export var burst_scene: PackedScene = preload("res://scenes/fx/emboque_burst.tscn")
+## Confetti + chispas en pantalla, desde las esquinas de abajo.
+@export var confetti_scene: PackedScene = preload("res://scenes/fx/win_confetti.tscn")
+## Silencio antes del golpe: la música se corta cuando faltan estos segundos
+## REALES para el click (el palito ya entró y corre capture_time). Si el palito se
+## sale antes de ganar, la música vuelve.
+@export var silence_lead: float = 0.2
+
 @export_group("Resultado")
 ## Id estable del nivel para el highscore (ej. "level_1"). Si queda vacío, se
 ## deriva del nombre de archivo de la escena.
@@ -63,6 +76,7 @@ var _campana: Emboque
 var _label: CanvasItem
 var _hold: float = 0.0
 var _won: bool = false
+var _impact_silence: bool = false
 
 func _ready() -> void:
 	var a := get_node_or_null(emboque_a) as Emboque
@@ -88,6 +102,7 @@ func _physics_process(delta: float) -> void:
 	# Con un extremo en la mano no vale: embocar es con la cuerda, no a mano.
 	if _palito.is_held() or _campana.is_held():
 		_hold = 0.0
+		_set_impact_silence(false)
 		return
 
 	# Geometría en mundo.
@@ -131,8 +146,12 @@ func _physics_process(delta: float) -> void:
 		_hold += delta
 		if _hold >= capture_time:
 			_win()
+			_celebrate(pal, camp, cavity)
+		elif (capture_time - _hold) / maxf(Engine.time_scale, 0.0001) <= silence_lead:
+			_set_impact_silence(true)
 	else:
 		_hold = 0.0
+		_set_impact_silence(false)
 
 ## Ya embocado: la punta dentro de la cavidad o a menos de lock_radius de ella.
 func _is_locked(pal: RopeEnd, tip: Vector2, cavity: Vector2) -> bool:
@@ -175,6 +194,52 @@ func _win() -> void:
 	# por la cámara lenta).
 	await get_tree().create_timer(restart_delay, true, false, true).timeout
 	get_tree().change_scene_to_file(victory_scene)
+
+## Corta (o devuelve) la música justo antes del click (TensionFx, vía CloseupManager).
+func _set_impact_silence(on: bool) -> void:
+	if on == _impact_silence:
+		return
+	_impact_silence = on
+	var closeup := get_tree().get_first_node_in_group("closeup_manager") as CloseupManager
+	if closeup != null:
+		closeup.set_impact_silence(on)
+
+## Animación del emboque: piezas pegadas, "click" de cámara y partículas.
+func _celebrate(pal: RopeEnd, camp: RopeEnd, cavity: Vector2) -> void:
+	if stick_on_win:
+		_stick(pal, camp)
+	# Sonidos (registrados en Sfx): el click del emboque, el brillo de las
+	# partículas doradas y el pop del confetti desde las esquinas.
+	Sfx.play(&"emboque_click")
+	if burst_scene != null:
+		Sfx.play(&"sparkle")
+	if confetti_scene != null:
+		# Un poco después del click: se oye primero el click solo, y la suma no satura.
+		get_tree().create_timer(0.06, true, false, true).timeout.connect(Sfx.play.bind(&"confetti_pop"))
+	var closeup := get_tree().get_first_node_in_group("closeup_manager") as CloseupManager
+	if closeup != null:
+		closeup.punch()
+		closeup.end_slowdown()
+	if burst_scene != null:
+		var burst := burst_scene.instantiate() as Node2D
+		camp.add_child(burst)
+		burst.global_position = cavity
+	if confetti_scene != null:
+		var confetti := confetti_scene.instantiate()
+		# Junto a la UI (antes que ella: el confetti pasa por detrás del cartel y
+		# debajo del menú de pausa).
+		var ui := _label.get_parent() if _label != null else null
+		if ui is CanvasLayer:
+			ui.add_sibling(confetti)
+			ui.get_parent().move_child(confetti, ui.get_index())
+		else:
+			get_parent().add_child(confetti)
+
+## Pega el palito a la campana tal como quedó embocado: misma posición y mismo
+## ángulo relativo, exactos (RopeEnd.attach_to: el palito va montado en la campana
+## y la campana cuelga de las dos cuerdas).
+func _stick(pal: RopeEnd, camp: RopeEnd) -> void:
+	pal.attach_to(camp)
 
 ## Id derivado del nombre de archivo de la escena (ej. "level_2"), como respaldo
 ## si no se configuró level_id en el Inspector.

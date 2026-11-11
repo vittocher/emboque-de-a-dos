@@ -1,0 +1,156 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/win_fx.gd" id="1_gctm5"]
+[ext_resource type="Shader" path="res://shaders/confeti.gdshader" id="2_pi6lm"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_qiex8"]
+shader = ExtResource("2_pi6lm")
+
+[sub_resource type="Gradient" id="Gradient_ejawj"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_guui1"]
+gradient = SubResource("Gradient_ejawj")
+width = 10
+height = 16
+
+[sub_resource type="Gradient" id="Gradient_ijev3"]
+offsets = PackedFloat32Array(0, 0.8, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="Gradient" id="Gradient_uqlaj"]
+interpolation_mode = 1
+offsets = PackedFloat32Array(0, 0.3, 0.55, 0.8)
+colors = PackedColorArray(0.86, 0.1, 0.16, 1, 0.97, 0.97, 0.97, 1, 0.1, 0.28, 0.82, 1, 1, 0.78, 0.18, 1)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_eiono"]
+blend_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_p6l4k"]
+offsets = PackedFloat32Array(0, 0.85, 1)
+colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0.6)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_gk40p"]
+gradient = SubResource("Gradient_p6l4k")
+width = 5
+height = 44
+fill_from = Vector2(0.5, 0)
+fill_to = Vector2(0.5, 1)
+
+[sub_resource type="Gradient" id="Gradient_n8yfu"]
+offsets = PackedFloat32Array(0, 0.6, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 0.85, 0.5, 0.9, 1, 0.5, 0.1, 0)
+
+[sub_resource type="Gradient" id="Gradient_akwiy"]
+colors = PackedColorArray(1, 0.98, 0.85, 1, 1, 0.7, 0.2, 1)
+
+[node name="WinConfetti" type="CanvasLayer" unique_id=1711109402]
+script = ExtResource("1_gctm5")
+emit_time = 0.0
+free_after = 4.5
+
+[node name="ConfettiLeft" type="CPUParticles2D" parent="." unique_id=1028036620]
+material = SubResource("ShaderMaterial_qiex8")
+position = Vector2(-10, 735)
+emitting = false
+amount = 120
+texture = SubResource("GradientTexture2D_guui1")
+lifetime = 2.8
+one_shot = true
+explosiveness = 0.45
+lifetime_randomness = 0.3
+emission_shape = 3
+emission_rect_extents = Vector2(12, 12)
+direction = Vector2(0.6, -0.8)
+spread = 20.0
+gravity = Vector2(0, 450)
+initial_velocity_min = 800.0
+initial_velocity_max = 1300.0
+angular_velocity_min = -540.0
+angular_velocity_max = 540.0
+damping_min = 330.0
+damping_max = 450.0
+angle_max = 360.0
+scale_amount_min = 0.8
+scale_amount_max = 1.3
+color_ramp = SubResource("Gradient_ijev3")
+color_initial_ramp = SubResource("Gradient_uqlaj")
+anim_offset_max = 1.0
+
+[node name="SparksLeft" type="CPUParticles2D" parent="." unique_id=563816070]
+material = SubResource("CanvasItemMaterial_eiono")
+position = Vector2(-10, 735)
+emitting = false
+amount = 90
+lifetime = 1.5
+texture = SubResource("GradientTexture2D_gk40p")
+one_shot = true
+explosiveness = 0.0
+lifetime_randomness = 0.35
+emission_shape = 3
+emission_rect_extents = Vector2(8, 8)
+particle_flag_align_y = true
+direction = Vector2(0.55, -0.83)
+spread = 14.0
+gravity = Vector2(0, 1100)
+initial_velocity_min = 1100.0
+initial_velocity_max = 1800.0
+damping_min = 200.0
+damping_max = 400.0
+scale_amount_min = 0.6
+scale_amount_max = 1.1
+color_ramp = SubResource("Gradient_n8yfu")
+color_initial_ramp = SubResource("Gradient_akwiy")
+
+[node name="ConfettiRight" type="CPUParticles2D" parent="." unique_id=1138696724]
+material = SubResource("ShaderMaterial_qiex8")
+position = Vector2(1290, 735)
+emitting = false
+amount = 120
+texture = SubResource("GradientTexture2D_guui1")
+lifetime = 2.8
+one_shot = true
+explosiveness = 0.45
+lifetime_randomness = 0.3
+emission_shape = 3
+emission_rect_extents = Vector2(12, 12)
+direction = Vector2(-0.6, -0.8)
+spread = 20.0
+gravity = Vector2(0, 450)
+initial_velocity_min = 800.0
+initial_velocity_max = 1300.0
+angular_velocity_min = -540.0
+angular_velocity_max = 540.0
+damping_min = 330.0
+damping_max = 450.0
+angle_max = 360.0
+scale_amount_min = 0.8
+scale_amount_max = 1.3
+color_ramp = SubResource("Gradient_ijev3")
+color_initial_ramp = SubResource("Gradient_uqlaj")
+anim_offset_max = 1.0
+
+[node name="SparksRight" type="CPUParticles2D" parent="." unique_id=1056571573]
+material = SubResource("CanvasItemMaterial_eiono")
+position = Vector2(1290, 735)
+emitting = false
+amount = 90
+lifetime = 1.5
+texture = SubResource("GradientTexture2D_gk40p")
+one_shot = true
+explosiveness = 0.0
+lifetime_randomness = 0.35
+emission_shape = 3
+emission_rect_extents = Vector2(8, 8)
+particle_flag_align_y = true
+direction = Vector2(-0.55, -0.83)
+spread = 14.0
+gravity = Vector2(0, 1100)
+initial_velocity_min = 1100.0
+initial_velocity_max = 1800.0
+damping_min = 200.0
+damping_max = 400.0
+scale_amount_min = 0.6
+scale_amount_max = 1.1
+color_ramp = SubResource("Gradient_n8yfu")
+color_initial_ramp = SubResource("Gradient_akwiy")

@@ -28,6 +28,8 @@ var _music_player: AudioStreamPlayer
 var _music_tween: Tween
 ## true mientras alguien (la intro) pidió silencio.
 var _music_held := false
+var _music_duck_db := 0.0  # bajada temporal de la música (subida de tensión del emboque)
+var _sfx_duck_db := 0.0    # bajada temporal de los efectos (ídem)
 
 func _ready() -> void:
 	_ensure_buses()
@@ -112,7 +114,12 @@ func _apply_bus_volume(bus_name: String, value: float) -> void:
 	if idx == -1:
 		return
 	# maxf evita -inf en linear_to_db(0), que silenciaría el bus para siempre.
-	AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(value, 0.0001)))
+	var db := linear_to_db(maxf(value, 0.0001))
+	if bus_name == MUSIC_BUS:
+		db += _music_duck_db
+	elif bus_name == SFX_BUS:
+		db += _sfx_duck_db
+	AudioServer.set_bus_volume_db(idx, db)
 
 func _apply_window_mode() -> void:
 	DisplayServer.window_set_mode(
@@ -186,6 +193,25 @@ func stop_music() -> void:
 	if _music_tween != null:
 		_music_tween.kill()
 	_music_player.stop()
+
+## Tono/velocidad de la música (1 = normal; menos = más lenta y grave, como una
+## cinta frenada). Lo usa el CloseupManager para que la cámara lenta del emboque
+## también se escuche; al salir del nivel vuelve a 1.
+func set_music_pitch(pitch: float) -> void:
+	if _music_player != null:
+		_music_player.pitch_scale = clampf(pitch, 0.05, 4.0)
+
+## Baja temporalmente la música (dB, 0 = normal) sin tocar el volumen elegido en
+## Ajustes: la usa la subida de tensión del emboque (TensionFx) para que el click
+## suene en el silencio. Se aplica sobre el bus Music.
+func set_music_duck(db: float) -> void:
+	_music_duck_db = minf(db, 0.0)
+	_apply_bus_volume(MUSIC_BUS, music_volume)
+
+## Igual que set_music_duck, para el bus de efectos (SFX).
+func set_sfx_duck(db: float) -> void:
+	_sfx_duck_db = minf(db, 0.0)
+	_apply_bus_volume(SFX_BUS, sfx_volume)
 
 ## Reinicia la música desde el principio, con fundido de entrada opcional.
 ## No hace nada si ya está sonando.
