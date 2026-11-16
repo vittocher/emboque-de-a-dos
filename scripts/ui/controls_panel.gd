@@ -28,37 +28,43 @@ const ROWS := [
 
 var _bold: FontVariation
 
+## Fuente por defecto en negrita (la de las etiquetas y textos de controles).
+static func bold_font() -> FontVariation:
+	var font := FontVariation.new()
+	font.base_font = ThemeDB.fallback_font
+	font.variation_embolden = 0.8
+	return font
+
+## Etiqueta "Jugador N" del color del jugador, como en la portada.
+static func make_tag(player_prefix: String, size: int, font: Font) -> Label:
+	var tag := Label.new()
+	tag.text = "CONTROLS_" + player_prefix.to_upper()
+	tag.uppercase = true
+	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var style := StyleBoxFlat.new()
+	style.bg_color = TAG_COLORS[player_prefix]
+	style.set_corner_radius_all(6)
+	style.content_margin_top = 3
+	style.content_margin_bottom = 3
+	tag.add_theme_stylebox_override("normal", style)
+	tag.add_theme_font_override("font", font)
+	tag.add_theme_font_size_override("font_size", size)
+	tag.add_theme_color_override("font_color", INK)
+	return tag
+
 func _ready() -> void:
-	_bold = FontVariation.new()
-	_bold.base_font = ThemeDB.fallback_font
-	_bold.variation_embolden = 0.8
+	_bold = ControlsPanel.bold_font()
 	var rules := LevelRules.of(get_tree())
 	var throw_enabled := rules != null and rules.throw_enabled
 	var list := VBoxContainer.new()
 	list.add_theme_constant_override("separation", 9)
 	list.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(list)
-	list.add_child(_make_tag())
+	list.add_child(ControlsPanel.make_tag(prefix, font_size, _bold))
 	for row: Array in ROWS:
 		if row[2] and not throw_enabled:
 			continue
 		list.add_child(_make_row(row[0], row[1], THROW_TEXT_COLOR if row[2] else TEXT_COLOR))
-
-func _make_tag() -> Control:
-	var tag := Label.new()
-	tag.text = "CONTROLS_" + prefix.to_upper()
-	tag.uppercase = true
-	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var style := StyleBoxFlat.new()
-	style.bg_color = TAG_COLORS[prefix]
-	style.set_corner_radius_all(6)
-	style.content_margin_top = 3
-	style.content_margin_bottom = 3
-	tag.add_theme_stylebox_override("normal", style)
-	tag.add_theme_font_override("font", _bold)
-	tag.add_theme_font_size_override("font_size", font_size)
-	tag.add_theme_color_override("font_color", INK)
-	return tag
 
 func _make_row(actions: Array, text_key: String, color: Color) -> Control:
 	var row := HBoxContainer.new()

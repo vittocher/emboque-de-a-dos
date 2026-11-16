@@ -5,12 +5,7 @@
 [ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
 [ext_resource type="PackedScene" path="res://scenes/hook_point.tscn" id="4_hook"]
 [ext_resource type="Script" path="res://scripts/level_rules.gd" id="5_rules"]
-
-[sub_resource type="LabelSettings" id="Settings_hint"]
-font_size = 20
-font_color = Color(0.95, 0.95, 0.9, 1)
-outline_size = 8
-outline_color = Color(0.05, 0.06, 0.12, 1)
+[ext_resource type="PackedScene" path="res://scenes/ui/level_hint.tscn" id="90_hint"]
 
 [node name="Lanzar1" instance=ExtResource("1_base")]
 
@@ -55,11 +50,20 @@ position = Vector2(810, 470)
 [node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
 position = Vector2(640, 500)
 
-[node name="Hint" type="Label" parent="UI"]
-anchors_preset = 10
-anchor_right = 1.0
-offset_top = 70.0
-offset_bottom = 130.0
-text = "HINT_GRAB_THROW"
-label_settings = SubResource("Settings_hint")
-horizontal_alignment = 1
+[node name="HintP1" parent="UI" instance=ExtResource("90_hint")]
+anchor_left = 0.25
+anchor_right = 0.25
+offset_top = 84.0
+offset_bottom = 84.0
+grow_horizontal = 2
+player = "p1"
+rows = PackedStringArray("@p1_throw HINT_THROW_GRAB", "@p1_throw HINT_THROW_AIM", "@p1_throw HINT_THROW_THROW")
+
+[node name="HintP2" parent="UI" instance=ExtResource("90_hint")]
+anchor_left = 0.75
+anchor_right = 0.75
+offset_top = 84.0
+offset_bottom = 84.0
+grow_horizontal = 2
+player = "p2"
+rows = PackedStringArray("@p2_throw HINT_THROW_GRAB", "@p2_throw HINT_THROW_AIM", "@p2_throw HINT_THROW_THROW")

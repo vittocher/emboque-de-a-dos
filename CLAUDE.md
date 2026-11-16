@@ -223,6 +223,10 @@ scripts/
                    desbloqueo del mapa. `unlock_all` (solo desarrollo, F9 en el mapa) desbloquea todo.
   sfx.gd           AUTOLOAD (Sfx): registro único de efectos de sonido (SOUNDS: nombre → ruta + volumen base),
                    pool de AudioStreamPlayer, play(nombre, pitch, volumen). Sobrevive a la recarga del nivel.
+  ui/level_hint.gd class LevelHint (escena ui/level_hint.tscn): cartel de controles DENTRO de un nivel, sobre madera,
+                   uno por jugador en su mitad de la pantalla (`player` p1/p2 = etiqueta). Cada fila de `rows` es
+                   "@accion texto": `@p1_release` = tecla del Input Map, `/` = barra, lo demás = clave de i18n.
+                   Lo usan tronco_2 (soltar/tirar cuerda) y lanzar_1 (recoger → apuntar → lanzar).
   ui/key_cap.gd    class KeyCap: tecla dibujada como en la portada; muestra la tecla de una `action` del Input Map
                    (flechas dibujadas con líneas: la fuente por defecto no trae ← → en la web).
   ui/wood_plaque.gd  class WoodPlaque: ColorRect con el shader de madera de los botones (madera_boton.gdshader):
@@ -418,7 +422,8 @@ El número del nivel es su orden en la lista. `WinManager` toma el id y el nombr
 **lanzar** (3 + "Buzón": lanzar el extremo por una ranura a una placa). Sub-ramas de mecánicas nuevas: **placas/compuertas** (desde caja 2; la 4.ª, "Relevo", con ganchos: cada uno abre la puerta del columpio del otro), **plataformas móviles**
 (desde peligro 2; la 4.ª, "Contratiempo": ascensores a contratiempo sobre el fuego) y **viento** (desde lanzar 2; la 4.ª, "Remonte": la corriente sube el extremo hasta un gancho inalcanzable y se trepa la cuerda). El **final** se abre con 4 de los 6 finales de rama. Cada
 rama empieza introduciendo su mecánica en un caso simple y sube la dificultad. El mapa no nombra las
-mecánicas (minimalista): se descubren jugando. El primer nivel con lanzar trae un cartel con los controles.
+mecánicas (minimalista): se descubren jugando. Los niveles que introducen un control traen un cartel
+(`LevelHint`) por jugador con sus teclas: tronco_2 (soltar / tirar cuerda) y lanzar_1 (lanzar).
 
 Mapa: nodos con el shader de madera de los botones (bloqueado = madera oscura sin número; disponible = anillo
 que late; completado = número dorado y una sopaipilla si se juntaron todas), cuerdas con la textura de la cuerda
@@ -864,6 +869,11 @@ Controles de la cuerda invertidos (soltar = T / `.`, tirar = R / `,`). En la por
 ojo: si se vuelven a cambiar, la portada hay que editarla, la pausa no). Pausa (Xvfb, tronco_1 y lanzar_1, es/en,
 también con Ajustes abierto): un panel por jugador en las franjas de los costados (18..266 y 1014..1262, alto 292 con
 lanzar), teclas leídas del Input Map (T/R y ./, ya invertidas), fila "Lanzar / recoger" solo en lanzar_1. PASS.
+
+Carteles de nivel (Xvfb, es/en): tronco_2 con un cartel por jugador ("T Soltar: estira la cuerda / R Tirar:
+retrae la cuerda" y lo mismo con . y , para J2) arriba de cada mitad, sin tapar el muro central ni el HUD; lanzar_1
+con "G/L Recoge el emboque a la mano · Otra vez: apunta · Y otra más: ¡lánzalo!" (reemplaza el texto plano
+anterior). Bot: tronco_2 y lanzar_1 ganados.
 
 ### HUD (pausa y puntaje)
 

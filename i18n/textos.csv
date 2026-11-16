@@ -30,6 +30,11 @@ CTRL_LET_OUT,Soltar cuerda,Let out rope
 CTRL_REEL_IN,Tirar cuerda,Reel in rope
 CTRL_UNHOOK,Desenganchar,Unhook
 CTRL_THROW,Lanzar / recoger,Throw / reel back
+HINT_LET_OUT,Soltar: estira la cuerda,Let out: lengthen the rope
+HINT_REEL_IN,Tirar: retrae la cuerda,Reel in: shorten the rope
+HINT_THROW_GRAB,Recoge el emboque a la mano,Reel the emboque into your hand
+HINT_THROW_AIM,Otra vez: apunta,Again: aim
+HINT_THROW_THROW,Y otra más: ¡lánzalo!,Once more: throw it!
 WIN_TITLE,¡Embocado!,Perfect catch!
 VICTORY_SCORE,Puntaje: %d,Score: %d
 VICTORY_NEW_RECORD,¡Nuevo récord!,New record!
@@ -43,7 +48,6 @@ MAP_RECORD,Récord: %d,Best: %d
 MAP_COLLECTED,Sopaipillas: %d / %d,Sopaipillas: %d / %d
 MAP_NOT_DONE,Sin completar,Not completed yet
 MAP_HINT_FINAL,Completa 4 caminos para abrirlo,Complete 4 paths to unlock it
-HINT_GRAB_THROW,"G / L: recoges el emboque a la mano; otra vez para apuntar y otra para lanzar.\nDespués de lanzar, G / L lo recoge de vuelta.","G / L: reel the emboque into your hand; again to aim, and again to throw.\nAfter a throw, G / L reels it back in."
 LEVEL_TRONCO_1,Primer emboque,First Catch
 LEVEL_TRONCO_2,Cuerda larga,Long Rope
 LEVEL_TRONCO_3,Colgados,Hanging Around
