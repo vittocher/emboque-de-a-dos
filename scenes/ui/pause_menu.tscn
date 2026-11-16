@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/pause_menu.webp" id="2_art"]
 [ext_resource type="Script" path="res://scripts/ui/localized_texture_rect.gd" id="3_loc"]
 [ext_resource type="Theme" path="res://scenes/ui/tema_madera.tres" id="4_theme"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_pause.tscn" id="5_hud"]
 
 [sub_resource type="StyleBoxEmpty" id="Style_none"]
 
@@ -64,6 +65,8 @@ shadow_size = 8
 
 [node name="PauseMenu" type="CanvasLayer"]
 script = ExtResource("1_pause")
+
+[node name="HudPause" parent="." instance=ExtResource("5_hud")]
 
 [node name="PausePanel" type="Control" parent="."]
 layout_mode = 3

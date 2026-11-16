@@ -152,6 +152,11 @@ scenes/
                          sliders dorados, checkbox (assets/ui/check_on|off.png), listas.
   ui/pause_menu.tscn     Menú de pausa (Esc / P), ÚNICO para todos los niveles: instanciarlo en cada nivel.
                          Diseño = imagen assets/ui/pause_menu.webp con botones invisibles encima (ver "Menú de pausa").
+                       Trae también el indicador HUD de pausa (ui/hud_pause.tscn), así está en todos los niveles.
+  ui/hud_pause.tscn      HUD, esquina superior izquierda: placa de madera con una tecla "P" + "PAUSA" (clave
+                         HUD_PAUSE). Va dentro del PauseMenu, que la oculta en pausa; con el mouse brilla y un clic pausa.
+  ui/hud_score.tscn      HUD, esquina superior derecha (ScoreHud): placa de madera con la sopaipilla + "Puntos: N";
+                         anclada a la derecha, crece hacia la izquierda y salta al sumar puntos (en tiempo real).
   ui/victory.tscn        Pantalla de victoria (estilo del menú): nivel, puntaje, sopaipillas juntadas, récord,
                          botones Reintentar y Continuar (vuelve al mapa, que anima lo desbloqueado).
 
@@ -191,8 +196,8 @@ scripts/
   terrain_art.gd   @tool, class TerrainArt: arte del terreno (ver terrain_art.tscn).
   collectible.gd   Area2D: al tocarlo un jugador o un extremo, busca el ScoreManager (grupo "score_manager"),
                    suma `points` y queue_free.
-  score_manager.gd Lleva el puntaje del nivel (y coleccionables juntados/totales) y actualiza un Label; lo
-                   oculta si el nivel no tiene coleccionables. Está en el grupo "score_manager".
+  score_manager.gd Lleva el puntaje del nivel (y coleccionables juntados/totales) y actualiza el indicador del HUD
+                   (ScoreHud o un Label: le pone `text`); lo oculta si el nivel no tiene coleccionables. Está en el grupo "score_manager".
   level_catalog.gd class LevelCatalog: la ÚNICA lista de niveles (id, escena, nombre, posición en el mapa,
                    de qué niveles depende). Desbloqueo, número de nivel, coleccionables por escena.
   block.gd / bowl.gd  Bloque de terreno con `size`; cuenco con `width`/`slope` (ambos @tool).
@@ -214,6 +219,8 @@ scripts/
                    desbloqueo del mapa. `unlock_all` (solo desarrollo, F9 en el mapa) desbloquea todo.
   sfx.gd           AUTOLOAD (Sfx): registro único de efectos de sonido (SOUNDS: nombre → ruta + volumen base),
                    pool de AudioStreamPlayer, play(nombre, pitch, volumen). Sobrevive a la recarga del nivel.
+  ui/wood_plaque.gd  class WoodPlaque: ColorRect con el shader de madera de los botones (madera_boton.gdshader):
+                   le pasa su tamaño y prende el brillo (`active`). Fondo de las placas del HUD.
   ui/*.gd          Lógica de los menús (navegación con change_scene_to_file); intro.gd (class IntroScreen) = la intro; victory.gd muestra puntaje + récord;
                    boton_madera.gd = el botón de madera; level_selector.gd = el mapa; level_node.gd = un nivel
                    del mapa; map_decor.gd = fondo del mapa y de la victoria.
@@ -592,13 +599,13 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 5. **`WinManager`** (`Node2D` + `win_manager.gd`), **antes** de los Emboque: `emboque_a`, `emboque_b`, `win_label`, y `level_id`/`level_name` (para el highscore y la pantalla de victoria — poner un id estable único por nivel, ej. `"level_3"` / `"Nivel 3"`).
 6. **`CloseupManager`** (instancia de `closeup_manager.tscn`): `camera_path = ../Camera2D`, `emboque_a`, `emboque_b`. Si el nivel NO es 1280×720, ajustar su `level_size` para el clamp de cámara.
 7. **`PauseMenu`**: instancia de `ui/pause_menu.tscn` (*Instantiate Child Scene*), al final del árbol para que se dibuje encima. **La pausa no es global: cada nivel debe tenerla.** No copiar el panel a mano: todos los niveles comparten esa escena, así un cambio de diseño llega a todos.
-8. **`UI`** (`CanvasLayer`, sin script) con `WinLabel` (`Label`, oculto; lo muestra el WinManager al ganar) y, si hay puntaje, `ScoreLabel`.
+8. **`UI`** (`CanvasLayer`, sin script) con `WinLabel` (`Label`, oculto; lo muestra el WinManager al ganar) y, si hay puntaje, `ScoreHud` (instancia de `ui/hud_score.tscn`).
 
 **Opcional (según el diseño del nivel):**
 
 - **`HookPoint`** (instancia de `hook_point.tscn`): puntos de enganche del entorno para rapel. Poner los que pida el puzzle.
 - **Zonas de muerte**: `player_death_zone` / `emboque_death_zone` / `both_death_zone`, escaladas/posicionadas. Reinician el nivel al contacto.
-- **Coleccionables + puntaje**: si se ponen `collectible.tscn`, agregar **también** un `ScoreManager` (con `score_label → ScoreLabel`) y un `ScoreLabel` en la UI. Van juntos o no van.
+- **Coleccionables + puntaje**: si se ponen `collectible.tscn`, agregar **también** un `ScoreManager` (con `score_label → ScoreHud`) y un `ScoreHud` (`ui/hud_score.tscn`) en la UI. Van juntos o no van.
 - **Cajas** (`push_box.tscn`): instanciar y ubicar apoyada en el piso (centro = techo del piso − 32). No necesita nada más. Para ajustar el peso ante los extremos, cambiar `mass`; para la rapidez de empuje, `push_speed`.
 - **`LevelRules`** (nodo con `level_rules.gd`): mecánicas opcionales del nivel. Hoy solo `throw_enabled` (tomar y lanzar el emboque). Un nivel sin este nodo no tiene ninguna.
 
@@ -609,7 +616,7 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - [ ] `WallLeft` / `WallRight` fuera de cámara.
 - [ ] `PauseMenu` instanciado, al final del árbol.
 - [ ] `WinManager` con `level_id` único y `level_name`; antes de los `Emboque`, como `CloseupManager`.
-- [ ] Coleccionables ⇒ `ScoreManager` + `ScoreLabel` (con contorno, como en `level_2`: `font_outline_color` + `outline_size = 10`).
+- [ ] Coleccionables ⇒ `ScoreManager` (con `score_label → ../UI/ScoreHud`) + `ScoreHud` (`ui/hud_score.tscn`) en la `UI`.
 - [ ] `Player2` sin `modulate`.
 - [ ] Entrada en `LevelCatalog.LEVELS` (posición en el mapa y de qué nivel depende).
 - [ ] Una solución en `tests/solutions/<nivel>.gd` que el bot gane (`tests/run_all.sh`).
@@ -755,6 +762,8 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 - **Tráiler** en español e inglés (`trailer/`), regenerable con un comando cuando cambie el arte.
 - **Intro:** video de la historia al arrancar (`video/intro.ogv`), se salta con cualquier tecla, fundidos de entrada/salida; en web pide una tecla antes para que suene.
 - **Idiomas:** español e inglés (todo el texto en `i18n/textos.csv`, imágenes con texto por idioma), selector en el menú principal, Ajustes y pausa; agregar un idioma = una columna.
+- **HUD de madera** (estilo de los botones del menú): indicador "P · PAUSA" arriba a la izquierda (en todos los
+  niveles, vía el PauseMenu; clic = pausar) y puntaje con la sopaipilla arriba a la derecha (salta al sumar).
 - **Menús:** principal (portada, botones de madera, botón de idioma; sin Salir), mapa de niveles ramificado con progreso, ajustes con el tema de madera (y borrar progreso), pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
 - **Audio:** autoload `Sfx` con 14 efectos placeholder (incluye click, brillo y pop de confetti del emboque), música (cueca, sigue en la pausa) y volumen por categoría (General / Música / Efectos, con muestra al mover Efectos).
 - **Arte (`assets/`):** jugadores animados (idle / caminata a 10 FPS / THROW al apuntar), palito, campana y cuerda, cajas, zonas de muerte animadas (fuego / púas / caca), sopaipillas, ganchos, terreno (piso por piezas + pared) y fondo.
@@ -839,6 +848,14 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 - **Audio en el export web** (build exportado, navegador Edge headless controlado por DevTools, midiendo la señal que llega a la salida con un AnalyserNode; control: un tono de prueba da RMS 0,71): con los buses creados en runtime la salida era **0,0000** aun con el AudioContext activo tras el clic (mudo, igual que en Newgrounds); con `default_bus_layout.tres` la música da RMS ~0,1–0,2 tras el primer clic y 3 saltos en el Nivel 1 disparan 3 efectos. PASS. En el mismo build web, el menú principal sin Salir deja Jugar/Ajustes centrados.
 - **Menú de pausa (diseño del equipo):** cada uno de los 7 niveles tiene exactamente un PauseMenu; Esc pausa/reanuda; foco en Continuar; los 4 botones calzan con los pintados; hover mueve el foco; Ajustes muestra sliders y oculta botones; el slider cambia SettingsManager; Volver devuelve el foco a Ajustes; Continuar reanuda. PASS 43/43. Luego se agregó P como segunda tecla (acción `pause`): P pausa y reanuda, Esc también (en `level_3`). PASS.
 - **Arte (jugadores, cajas, zonas, sopaipillas, terreno, fondo, ganchos):** cada nivel cargado y capturado sin errores de script; animación de caminata a la frecuencia pedida (cambio de frame cada 12 ticks a 10 FPS con física a 120 Hz).
+
+### HUD (pausa y puntaje)
+
+Con Xvfb y capturas (peligro_1, tronco_1, lanzar_1, level_2, level_3, main): indicador de pausa en (16,14) en todos
+los niveles (main incluido, sin puntaje); P lo oculta al pausar y vuelve al reanudar; clic en él pausa; Esc reanuda.
+Puntaje con borde derecho en x=1264 con "Puntos: 0", "100" y "2500" (crece hacia la izquierda); en inglés "PAUSE" /
+"Points: 2500"; la placa salta 1,13 → 1 en 0,3 s al sumar (escalar el ícono dentro del HBox no funcionaba: el
+contenedor reinicia la escala de sus hijos). PASS 24/24. Bot: tronco_1, peligro_1, level_2, lanzar_1 ganados.
 
 ### Animación del emboque
 
