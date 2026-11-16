@@ -20,10 +20,10 @@ class_name CloseupManager
 ## Multiplicador de zoom en el closeup máximo (>1 = más cerca).
 @export var max_zoom: float = 2.0
 ## Escala de tiempo en el closeup máximo (1 = normal, menor = más lento).
-@export var min_time_scale: float = 0.15
+@export var min_time_scale: float = 0.4
 ## Tono de la música en el closeup máximo (1 = sin cambio; menos = más lenta y
 ## grave). Sigue a la cámara lenta: entra y sale con el mismo suavizado.
-@export var music_min_pitch: float = 0.7
+@export var music_min_pitch: float = 0.85
 ## Velocidad de la transición (suavizado). Usa tiempo real (no afectado por el slowdown).
 @export var transition_speed: float = 6.0
 ## Tamaño del nivel (para no mostrar fuera de los bordes al hacer zoom).

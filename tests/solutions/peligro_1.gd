@@ -16,5 +16,5 @@ static func side(i: int, d: int, r: float) -> Array:
 		["walk_to", x.call(576)], ["rope", r], ["sync", "listos"]] + M.nudge(i, x.call(576), 25 * d, 10)
 
 static func plan(ctx) -> Dictionary:
-	var r: float = ctx.var_f("r", 180)
+	var r: float = ctx.var_f("r", 175)
 	return {"p1": side(1, 1, r), "p2": side(2, -1, r)}

@@ -177,8 +177,8 @@ scripts/
   win_manager.gd   Magnetismo (curva de distancia + ángulo, y trabado al embocar) + victoria (palito dentro de campana)
                    + animación del emboque (piezas pegadas, click de cámara, partículas).
   closeup_manager.gd Closeup de cámara + slowdown (Engine.time_scale) al acercarse los extremos; reutilizable;
-                   reinicia time_scale en _exit_tree. Cámara lenta al 0,15 (`min_time_scale`) y la música
-                   más lenta y grave a la par (`music_min_pitch` 0,7, vía SettingsManager.set_music_pitch;
+                   reinicia time_scale en _exit_tree. Cámara lenta al 0,4 (`min_time_scale`; antes 0,15, se suavizó) y la música
+                   más lenta y grave a la par (`music_min_pitch` 0,85, vía SettingsManager.set_music_pitch;
                    normal en la pausa y al salir). Al embocar, end_slowdown() los devuelve a lo normal en
                    0,12 s (el encuadre sigue). punch() = "click" de zoom al embocar (grupo "closeup_manager").
   tension_fx.gd    class TensionFx: subida de tensión (ver "Animación del emboque"). update(t) cada cuadro,
@@ -862,6 +862,15 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 - **Menú de pausa (diseño del equipo):** cada uno de los 7 niveles tiene exactamente un PauseMenu; Esc pausa/reanuda; foco en Continuar; los 4 botones calzan con los pintados; hover mueve el foco; Ajustes muestra sliders y oculta botones; el slider cambia SettingsManager; Volver devuelve el foco a Ajustes; Continuar reanuda. PASS 43/43. Luego se agregó P como segunda tecla (acción `pause`): P pausa y reanuda, Esc también (en `level_3`). PASS.
 - **Arte (jugadores, cajas, zonas, sopaipillas, terreno, fondo, ganchos):** cada nivel cargado y capturado sin errores de script; animación de caminata a la frecuencia pedida (cambio de frame cada 12 ticks a 10 FPS con física a 120 Hz).
 
+### Cámara lenta más sutil (0,15 → 0,4)
+
+`min_time_scale` 0,15 → 0,4 y `music_min_pitch` 0,7 → 0,85 (con los extremos juntos se mide time_scale 0,400 y
+tono 0,850). Los planes del bot usan esperas en tiempo real, así que tres se ajustaron: `peligro_1` (largo final
+180 → 175; gana con 170–190 salvo 180), `peligro_3` (la campana caía parada con la boca hacia el fondo del cuenco:
+espera previa 0,6 → 0,4 s, gana con 0,2–0,5; empujón final hacia el cuenco, porque hacia atrás el jugador choca con
+el escalón y el paso nunca terminaba; y J1 levanta y vuelve a dejar caer la campana si no emboca) y `final` (frenado
+470 → 480; gana con 465 y 473–490: ahora es más tolerante). `run_all.sh`: 28/29 (`placa_3`, falla previa).
+
 ### Controles en la portada y en la pausa
 
 Controles de la cuerda invertidos (soltar = T / `.`, tirar = R / `,`). En la portada (`assets/ui/portada.png` y
@@ -947,7 +956,7 @@ Cada nivel se gana con el plan de `tests/solutions/<nivel>.gd` (además se barri
 | lanzar_4 Buzón | 14 s | lanzar a 12° o más (desde 250 px) pega sobre la ranura: la compuerta de J2 no abre; gana lanzando de 130 a 310 px y con 0–8° |
 | viento_1..3 | 5–10 s | — |
 | viento_4 Remonte | 12 s | pararse 50 px al lado del gancho → el extremo sube derecho y no engancha; gana en 8 de 9 variantes (bombeo 0,9–1,6, posición ±12 px, punto de salto) |
-| final | 10–15 s | el punto de frenado del bot es delicado y depende de la cámara lenta (0,35: 465–470; 0,25: 464–466; 0,15: 458–462 y 468–472, se usa 470) → si no, fuego (el humano corrige en el aire) |
+| final | 10–15 s | el punto de frenado del bot depende de la cámara lenta (0,35: 465–470; 0,25: 464–466; 0,15: 458–462 y 468–472; 0,4: 465 y 473–490, se usa 480) → si no, fuego (el humano corrige en el aire) |
 
 También: mapa (desbloqueo, foco inicial en lo recién desbloqueado, F9), flujo completo menú → mapa → nivel →
 victoria → Continuar → mapa con el siguiente desbloqueado (PASS); compuerta no aplasta; capturas de cada nivel
