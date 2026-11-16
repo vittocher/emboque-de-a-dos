@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/controls_panel.gd" id="1_panel"]
+
+[sub_resource type="StyleBoxFlat" id="Style_wood_panel"]
+content_margin_left = 14.0
+content_margin_top = 12.0
+content_margin_right = 14.0
+content_margin_bottom = 14.0
+bg_color = Color(0.3, 0.17, 0.09, 0.96)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.82, 0.64, 0.28, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 8
+
+[node name="ControlsPanel" type="PanelContainer"]
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_wood_panel")
+script = ExtResource("1_panel")

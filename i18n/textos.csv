@@ -22,6 +22,14 @@ INTRO_SKIP,Presiona cualquier tecla para saltar,Press any key to skip
 INTRO_START,Presiona cualquier tecla para comenzar,Press any key to start
 HUD_POINTS,Puntos: %d,Points: %d
 HUD_PAUSE,Pausa,Pause
+CONTROLS_P1,Jugador 1,Player 1
+CONTROLS_P2,Jugador 2,Player 2
+CTRL_MOVE,Mover,Move
+CTRL_JUMP,Saltar,Jump
+CTRL_LET_OUT,Soltar cuerda,Let out rope
+CTRL_REEL_IN,Tirar cuerda,Reel in rope
+CTRL_UNHOOK,Desenganchar,Unhook
+CTRL_THROW,Lanzar / recoger,Throw / reel back
 WIN_TITLE,¡Embocado!,Perfect catch!
 VICTORY_SCORE,Puntaje: %d,Score: %d
 VICTORY_NEW_RECORD,¡Nuevo récord!,New record!
@@ -35,7 +43,7 @@ MAP_RECORD,Récord: %d,Best: %d
 MAP_COLLECTED,Sopaipillas: %d / %d,Sopaipillas: %d / %d
 MAP_NOT_DONE,Sin completar,Not completed yet
 MAP_HINT_FINAL,Completa 4 caminos para abrirlo,Complete 4 paths to unlock it
-HINT_GRAB_THROW,"Cuerda al mínimo y tirar otra vez: tomas el emboque.\nG / L: apuntar, y otra vez para lanzar.","Rope all the way in, then pull once more to grab the emboque.\nG / L: aim, then press again to throw."
+HINT_GRAB_THROW,"G / L: recoges el emboque a la mano; otra vez para apuntar y otra para lanzar.\nDespués de lanzar, G / L lo recoge de vuelta.","G / L: reel the emboque into your hand; again to aim, and again to throw.\nAfter a throw, G / L reels it back in."
 LEVEL_TRONCO_1,Primer emboque,First Catch
 LEVEL_TRONCO_2,Cuerda larga,Long Rope
 LEVEL_TRONCO_3,Colgados,Hanging Around
