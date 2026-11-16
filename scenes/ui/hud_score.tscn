@@ -1,0 +1,77 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud_score.gd" id="1_hud"]
+[ext_resource type="Shader" path="res://shaders/madera_boton.gdshader" id="2_shader"]
+[ext_resource type="Script" path="res://scripts/ui/wood_plaque.gd" id="3_plaque"]
+[ext_resource type="Texture2D" path="res://assets/props/puntos/sopaipilla_1.png" id="4_icon"]
+
+[sub_resource type="StyleBoxEmpty" id="Style_none"]
+
+[sub_resource type="ShaderMaterial" id="Mat_plaque"]
+resource_local_to_scene = true
+shader = ExtResource("2_shader")
+shader_parameter/rect_size = Vector2(190, 50)
+shader_parameter/active = 0.0
+shader_parameter/corner = 14.0
+shader_parameter/wood_dark = Color(0.24, 0.13, 0.07, 1)
+shader_parameter/wood_light = Color(0.52, 0.33, 0.17, 1)
+shader_parameter/gold = Color(0.98, 0.82, 0.3, 1)
+shader_parameter/gold_dim = Color(0.6, 0.43, 0.13, 1)
+
+[sub_resource type="FontVariation" id="Font_bold"]
+variation_embolden = 0.9
+
+[sub_resource type="LabelSettings" id="Settings_text"]
+font = SubResource("Font_bold")
+font_size = 22
+font_color = Color(1, 0.88, 0.5, 1)
+outline_size = 6
+outline_color = Color(0.03, 0.04, 0.1, 1)
+
+[node name="HudScore" type="PanelContainer"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -206.0
+offset_top = 14.0
+offset_right = -16.0
+offset_bottom = 64.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_none")
+script = ExtResource("1_hud")
+text = "Puntos: 0"
+
+[node name="Fondo" type="ColorRect" parent="."]
+material = SubResource("Mat_plaque")
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("3_plaque")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 5
+
+[node name="Row" type="HBoxContainer" parent="Margin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="TextureRect" parent="Margin/Row"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("4_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="Label" parent="Margin/Row"]
+layout_mode = 2
+size_flags_vertical = 4
+text = "Puntos: 0"
+label_settings = SubResource("Settings_text")

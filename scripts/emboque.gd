@@ -6,7 +6,8 @@ class_name Emboque
 ## real: se balancea, rota sobre sí mismo y colisiona con el otro extremo.
 ## La cuerda se dibuja como una línea visual que sigue al extremo.
 ## En niveles con LevelRules.throw_enabled el jugador además puede tomar el
-## extremo en la mano, apuntar y lanzarlo (ver "Tomar y lanzar").
+## extremo en la mano, apuntar y lanzarlo, y recogerlo rápido con la misma tecla
+## de lanzar (ver "Tomar y lanzar").
 
 ## Nodo del que cuelga la cuerda (la "mano" del jugador).
 @export var anchor_node: NodePath
@@ -42,11 +43,15 @@ class_name Emboque
 @export var aim_sweep_speed_deg: float = 60.0
 ## Holgura sobre min_length para poder tomar el extremo (px): no se toma a través de un muro.
 @export var grab_tolerance: float = 20.0
+## Recoger (lanzar con el extremo colgando o en vuelo): rapidez con que la cuerda
+## trae el extremo a la mano (px/s). Al llegar queda tomado.
+@export var reel_speed: float = 1100.0
 @export var aim_line_color: Color = Color(1, 1, 1, 0.85)
 @export var aim_line_width: float = 3.0
 @export var aim_dash_length: float = 10.0
 
-enum ThrowState { NONE, HELD, AIMING, FLYING }
+## REELING va al final: el bot de pruebas compara el estado por número.
+enum ThrowState { NONE, HELD, AIMING, FLYING, REELING }
 
 ## Dónde queda el extremo tomado, desde la mano (x hacia donde mira el jugador).
 ## Un poco más abajo que la mano para no tapar el ojo; sigue dentro del cuerpo.
@@ -55,6 +60,9 @@ const HOLD_OFFSET := Vector2(8, 10)
 const REEL_SHARPNESS := 30.0
 ## Margen de tiempo sobre lo que tarda el vuelo en llegar a max_length (s).
 const FLIGHT_TIMEOUT_MARGIN := 0.15
+## Recogiendo: si el extremo no se acerca en este tiempo (trabado tras un muro), se
+## deja de recoger y queda donde está (s).
+const REEL_STALL_TIME := 0.2
 
 @onready var _rope_line: Line2D = $Rope
 
@@ -74,6 +82,8 @@ var _throw_dir: Vector2 = Vector2.RIGHT
 var _flight_time: float = 0.0
 var _last_end_pos: Vector2 = Vector2.ZERO
 var _release_used: bool = false  # soltar se usó para dejar el extremo: no alarga hasta soltar la tecla
+var _reel_best_dist: float = 0.0
+var _reel_stall: float = 0.0
 
 func _ready() -> void:
 	_anchor = get_node_or_null(anchor_node) as Node2D
@@ -118,7 +128,9 @@ func _physics_process(delta: float) -> void:
 		_update_throw(delta)
 		if is_held():
 			return
-	_update_length(delta)
+	# Recogiendo, el largo lo maneja _update_reel.
+	if _throw_state != ThrowState.REELING:
+		_update_length(delta)
 
 	if _hooked:
 		if Input.is_action_just_pressed(input_prefix + "_down"):
@@ -133,7 +145,9 @@ func _physics_process(delta: float) -> void:
 	_end.hooked = _hooked
 	_end.hook_position = _hook_position
 
-	_limit_player()
+	# Recogiendo no se arrastra al jugador: el extremo viene a la mano, no al revés.
+	if _throw_state != ThrowState.REELING:
+		_limit_player()
 	_update_rope_visual()
 
 ## Alarga (soltar) o acorta (tirar) la cuerda de forma continua.
@@ -178,8 +192,10 @@ func _move_sliding(body: PhysicsBody2D, motion: Vector2) -> void:
 
 func _on_hook_sensor_area_entered(area: Area2D) -> void:
 	# El sensor solo detecta puntos de enganche (por su máscara de colisión).
-	# En la mano no engancha; lanzado sí (es la gracia de lanzar).
-	if not _hooked and _rehook_timer <= 0.0 and not is_held() and not _end.is_attached():
+	# En la mano no engancha; lanzado sí (es la gracia de lanzar). Recogiendo
+	# tampoco: se lo está trayendo de vuelta.
+	if not _hooked and _rehook_timer <= 0.0 and not is_held() and not _end.is_attached() \
+			and _throw_state != ThrowState.REELING:
 		if _throw_state == ThrowState.FLYING:
 			_end_flight()
 		_hooked = true
@@ -206,28 +222,39 @@ func _unhook() -> void:
 func is_held() -> bool:
 	return _throw_state == ThrowState.HELD or _throw_state == ThrowState.AIMING
 
-## Tomar: cuerda ya al mínimo + tirar otra vez. Tomado: soltar lo deja caer,
-## lanzar empieza a apuntar. Apuntando: lanzar otra vez lo lanza.
+## Tomar: cuerda ya al mínimo + tirar otra vez, o lanzar (lo recoge rápido desde
+## donde esté). Tomado: soltar lo deja caer, lanzar empieza a apuntar. Apuntando:
+## lanzar otra vez lo lanza. En vuelo: lanzar lo recoge. Así lanzar sola hace el
+## ciclo recoger → apuntar → lanzar.
 func _update_throw(delta: float) -> void:
+	var throw_pressed := Input.is_action_just_pressed(input_prefix + "_throw")
 	match _throw_state:
 		ThrowState.NONE:
 			if Input.is_action_just_pressed(input_prefix + "_pull") and _can_grab():
 				_grab()
+			elif throw_pressed and _can_reel():
+				_start_reel()
 		ThrowState.HELD:
 			if Input.is_action_just_pressed(input_prefix + "_release"):
 				_drop()
-			elif Input.is_action_just_pressed(input_prefix + "_throw"):
+			elif throw_pressed:
 				_start_aim()
 		ThrowState.AIMING:
 			if Input.is_action_just_pressed(input_prefix + "_release"):
 				_drop()
-			elif Input.is_action_just_pressed(input_prefix + "_throw"):
+			elif throw_pressed:
 				_throw()
 			else:
 				_aim_time += delta
 				queue_redraw()
 		ThrowState.FLYING:
-			_update_flight(delta)
+			if throw_pressed and _can_reel():
+				_end_flight()
+				_start_reel()
+			else:
+				_update_flight(delta)
+		ThrowState.REELING:
+			_update_reel(delta)
 	if is_held():
 		_carry(delta)
 
@@ -308,6 +335,50 @@ func _end_flight() -> void:
 	_throw_state = ThrowState.NONE
 	_end.end_flight()
 
+## Recoger: no enganchado (enganchado, la cuerda es del gancho: se trepa con tirar)
+## ni pegado al otro extremo (ya se embocó).
+func _can_reel() -> bool:
+	return not _hooked and not _end.is_attached()
+
+func _start_reel() -> void:
+	_throw_state = ThrowState.REELING
+	_reel_best_dist = _anchor.global_position.distance_to(_end.global_position)
+	_reel_stall = 0.0
+	Sfx.play(&"throw", 1.35, -4.0)
+
+## Acorta la cuerda rápido desde el largo ACTUAL (no desde rope_length: tras un
+## lanzamiento la cuerda está al máximo pero el extremo puede estar más cerca) y la
+## restricción de la cuerda trae el extremo, con colisiones. Llega a la mano →
+## queda tomado. Soltar lo cancela; si se traba, se deja de recoger.
+func _update_reel(delta: float) -> void:
+	var dist := _anchor.global_position.distance_to(_end.global_position)
+	if _hooked or _end.is_attached():
+		_throw_state = ThrowState.NONE
+		return
+	if Input.is_action_just_pressed(input_prefix + "_release"):
+		_stop_reel(dist)
+		_release_used = true
+		return
+	if dist <= min_length + grab_tolerance:
+		rope_length = min_length
+		_grab()
+		return
+	if dist < _reel_best_dist - 1.0:
+		_reel_best_dist = dist
+		_reel_stall = 0.0
+	else:
+		_reel_stall += delta
+		if _reel_stall > REEL_STALL_TIME:
+			_stop_reel(dist)
+			return
+	rope_length = maxf(min_length, minf(rope_length, dist) - reel_speed * delta)
+
+## Deja de recoger con la cuerda al largo actual: el extremo queda donde está, sin
+## tirón para el jugador.
+func _stop_reel(dist: float) -> void:
+	_throw_state = ThrowState.NONE
+	rope_length = clampf(dist, min_length, max_length)
+
 func _draw() -> void:
 	if _throw_state != ThrowState.AIMING:
 		return
@@ -321,8 +392,9 @@ func _update_rope_visual() -> void:
 	var b := _end.global_position
 	var dist := a.distance_to(b)
 	var slack := maxf(0.0, rope_length - dist)
-	# Lanzado sale recta, como un látigo.
-	var sag := 0.0 if _throw_state == ThrowState.FLYING else minf(slack * 0.5, 90.0)
+	# Lanzado sale recta, como un látigo; recogiendo, también va tensa.
+	var straight := _throw_state == ThrowState.FLYING or _throw_state == ThrowState.REELING
+	var sag := 0.0 if straight else minf(slack * 0.5, 90.0)
 	var mid := (a + b) * 0.5 + Vector2(0, sag)
 
 	var pts := PackedVector2Array()

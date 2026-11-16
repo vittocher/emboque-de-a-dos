@@ -4,6 +4,8 @@
 [ext_resource type="Texture2D" path="res://assets/ui/pause_menu.webp" id="2_art"]
 [ext_resource type="Script" path="res://scripts/ui/localized_texture_rect.gd" id="3_loc"]
 [ext_resource type="Theme" path="res://scenes/ui/tema_madera.tres" id="4_theme"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_pause.tscn" id="5_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/controls_panel.tscn" id="6_controls"]
 
 [sub_resource type="StyleBoxEmpty" id="Style_none"]
 
@@ -64,6 +66,8 @@ shadow_size = 8
 
 [node name="PauseMenu" type="CanvasLayer"]
 script = ExtResource("1_pause")
+
+[node name="HudPause" parent="." instance=ExtResource("5_hud")]
 
 [node name="PausePanel" type="Control" parent="."]
 layout_mode = 3
@@ -175,6 +179,32 @@ theme_override_styles/normal = SubResource("Style_none")
 theme_override_styles/hover = SubResource("Style_glow")
 theme_override_styles/pressed = SubResource("Style_glow_pressed")
 theme_override_styles/focus = SubResource("Style_glow")
+
+[node name="ControlsP1" parent="PausePanel" instance=ExtResource("6_controls")]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 18.0
+offset_top = -10.0
+offset_right = 266.0
+offset_bottom = 10.0
+grow_vertical = 2
+
+[node name="ControlsP2" parent="PausePanel" instance=ExtResource("6_controls")]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -266.0
+offset_top = -10.0
+offset_right = -18.0
+offset_bottom = 10.0
+grow_horizontal = 0
+grow_vertical = 2
+prefix = "p2"
 
 [node name="SettingsPanel" type="Panel" parent="PausePanel"]
 layout_mode = 0

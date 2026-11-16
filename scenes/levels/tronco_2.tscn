@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
 [ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
 [ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="PackedScene" path="res://scenes/ui/level_hint.tscn" id="90_hint"]
 
 [node name="Tronco2" instance=ExtResource("1_base")]
 
@@ -36,3 +37,21 @@ position = Vector2(780, 612)
 
 [node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
 position = Vector2(612, 480)
+
+[node name="HintP1" parent="UI" instance=ExtResource("90_hint")]
+anchor_left = 0.25
+anchor_right = 0.25
+offset_top = 84.0
+offset_bottom = 84.0
+grow_horizontal = 2
+player = "p1"
+rows = PackedStringArray("@p1_release HINT_LET_OUT", "@p1_pull HINT_REEL_IN")
+
+[node name="HintP2" parent="UI" instance=ExtResource("90_hint")]
+anchor_left = 0.75
+anchor_right = 0.75
+offset_top = 84.0
+offset_bottom = 84.0
+grow_horizontal = 2
+player = "p2"
+rows = PackedStringArray("@p2_release HINT_LET_OUT", "@p2_pull HINT_REEL_IN")

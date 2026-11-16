@@ -15,8 +15,8 @@ Puzzle cooperativo local para 2 jugadores: cada uno lleva media mitad de un embo
 
 | | Mover | Saltar | Soltar cuerda | Tirar cuerda | Desengancharse | Lanzar* |
 |---|---|---|---|---|---|---|
-| **Jugador 1** (campana) | `A` / `D` | `W` | `R` | `T` | `S` | `G` |
-| **Jugador 2** (palito) | `←` / `→` | `↑` | `,` | `.` | `↓` | `L` |
+| **Jugador 1** (campana) | `A` / `D` | `W` | `T` | `R` | `S` | `G` |
+| **Jugador 2** (palito) | `←` / `→` | `↑` | `.` | `,` | `↓` | `L` |
 
 \* Solo en los niveles marcados en verde en el selector. **Esc** o **P** pausa.
 

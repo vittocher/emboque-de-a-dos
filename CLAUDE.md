@@ -38,8 +38,8 @@ Redirigir la salida a un archivo y filtrar aparte evita cuelgues del pipe. Los a
 
 | | Mover | Saltar | Soltar cuerda | Tirar cuerda | Lanzar* |
 |---|---|---|---|---|---|
-| **J1** (`input_prefix = "p1"`) | `A` / `D` | `W` | `R` | `T` | `G` |
-| **J2** (`input_prefix = "p2"`) | `←` / `→` | `↑` | `,` | `.` | `L` |
+| **J1** (`input_prefix = "p1"`) | `A` / `D` | `W` | `T` | `R` | `G` |
+| **J2** (`input_prefix = "p2"`) | `←` / `→` | `↑` | `.` | `,` | `L` |
 
 \* Solo en niveles con la mecánica de lanzar activada (ver "Tomar y lanzar el emboque").
 
@@ -49,7 +49,7 @@ Las acciones siguen el patrón `<prefix>_<accion>`: `_left`, `_right`, `_jump`, 
 
 **Enganchado** (ver "Balanceo enganchado"): izquierda/derecha **bombean** el balanceo, `saltar` **se lanza** desde la cuerda (impulso del balanceo + salto), `abajo` (S / ↓) se **suelta** conservando la velocidad, `soltar` baja al jugador (rapel) y `tirar` lo sube.
 
-**Lanzar** (solo en algunos niveles): con la cuerda ya al mínimo, `tirar` otra vez **toma el emboque en la mano**; `lanzar` empieza a **apuntar** (línea punteada que va y vuelve de 0° a 60° hacia arriba; el jugador queda quieto y izquierda/derecha solo lo giran); `lanzar` otra vez lo **lanza** (la cuerda pasa al máximo). `soltar` lo deja caer (tomado o apuntando).
+**Lanzar** (solo en algunos niveles): `lanzar` con el extremo colgando, tirado o en vuelo lo **recoge** rápido a la mano (también se toma con la cuerda ya al mínimo y `tirar` otra vez); `lanzar` con el extremo en la mano empieza a **apuntar** (línea punteada que va y vuelve de 0° a 60° hacia arriba; el jugador queda quieto y izquierda/derecha solo lo giran); `lanzar` otra vez lo **lanza** (la cuerda pasa al máximo). Así la misma tecla hace el ciclo recoger → apuntar → lanzar. `soltar` lo deja caer (tomado o apuntando) o corta la recogida.
 
 ## Arquitectura
 
@@ -152,6 +152,15 @@ scenes/
                          sliders dorados, checkbox (assets/ui/check_on|off.png), listas.
   ui/pause_menu.tscn     Menú de pausa (Esc / P), ÚNICO para todos los niveles: instanciarlo en cada nivel.
                          Diseño = imagen assets/ui/pause_menu.webp con botones invisibles encima (ver "Menú de pausa").
+                       Trae también el indicador HUD de pausa (ui/hud_pause.tscn), así está en todos los niveles,
+                       y un ControlsPanel por jugador a los costados del tablero (J1 izquierda, J2 derecha).
+  ui/controls_panel.tscn ControlsPanel: controles de un jugador (`prefix` p1/p2) con el estilo de la portada (etiqueta
+                         del color del jugador + teclas crema, KeyCap) sobre madera. Teclas leídas del Input Map; la
+                         fila de lanzar solo si el nivel tiene LevelRules.throw_enabled.
+  ui/hud_pause.tscn      HUD, esquina superior izquierda: placa de madera con una tecla "P" + "PAUSA" (clave
+                         HUD_PAUSE). Va dentro del PauseMenu, que la oculta en pausa; con el mouse brilla y un clic pausa.
+  ui/hud_score.tscn      HUD, esquina superior derecha (ScoreHud): placa de madera con la sopaipilla + "Puntos: N";
+                         anclada a la derecha, crece hacia la izquierda y salta al sumar puntos (en tiempo real).
   ui/victory.tscn        Pantalla de victoria (estilo del menú): nivel, puntaje, sopaipillas juntadas, récord,
                          botones Reintentar y Continuar (vuelve al mapa, que anima lo desbloqueado).
 
@@ -191,8 +200,8 @@ scripts/
   terrain_art.gd   @tool, class TerrainArt: arte del terreno (ver terrain_art.tscn).
   collectible.gd   Area2D: al tocarlo un jugador o un extremo, busca el ScoreManager (grupo "score_manager"),
                    suma `points` y queue_free.
-  score_manager.gd Lleva el puntaje del nivel (y coleccionables juntados/totales) y actualiza un Label; lo
-                   oculta si el nivel no tiene coleccionables. Está en el grupo "score_manager".
+  score_manager.gd Lleva el puntaje del nivel (y coleccionables juntados/totales) y actualiza el indicador del HUD
+                   (ScoreHud o un Label: le pone `text`); lo oculta si el nivel no tiene coleccionables. Está en el grupo "score_manager".
   level_catalog.gd class LevelCatalog: la ÚNICA lista de niveles (id, escena, nombre, posición en el mapa,
                    de qué niveles depende). Desbloqueo, número de nivel, coleccionables por escena.
   block.gd / bowl.gd  Bloque de terreno con `size`; cuenco con `width`/`slope` (ambos @tool).
@@ -214,6 +223,14 @@ scripts/
                    desbloqueo del mapa. `unlock_all` (solo desarrollo, F9 en el mapa) desbloquea todo.
   sfx.gd           AUTOLOAD (Sfx): registro único de efectos de sonido (SOUNDS: nombre → ruta + volumen base),
                    pool de AudioStreamPlayer, play(nombre, pitch, volumen). Sobrevive a la recarga del nivel.
+  ui/level_hint.gd class LevelHint (escena ui/level_hint.tscn): cartel de controles DENTRO de un nivel, sobre madera,
+                   uno por jugador en su mitad de la pantalla (`player` p1/p2 = etiqueta). Cada fila de `rows` es
+                   "@accion texto": `@p1_release` = tecla del Input Map, `/` = barra, lo demás = clave de i18n.
+                   Lo usan tronco_2 (soltar/tirar cuerda) y lanzar_1 (recoger → apuntar → lanzar).
+  ui/key_cap.gd    class KeyCap: tecla dibujada como en la portada; muestra la tecla de una `action` del Input Map
+                   (flechas dibujadas con líneas: la fuente por defecto no trae ← → en la web).
+  ui/wood_plaque.gd  class WoodPlaque: ColorRect con el shader de madera de los botones (madera_boton.gdshader):
+                   le pasa su tamaño y prende el brillo (`active`). Fondo de las placas del HUD.
   ui/*.gd          Lógica de los menús (navegación con change_scene_to_file); intro.gd (class IntroScreen) = la intro; victory.gd muestra puntaje + récord;
                    boton_madera.gd = el botón de madera; level_selector.gd = el mapa; level_node.gd = un nivel
                    del mapa; map_decor.gd = fondo del mapa y de la victoria.
@@ -354,6 +371,7 @@ PauseMenu (CanvasLayer, pause_menu.gd, process_mode ALWAYS)
       FadeLeft/FadeRight  Degradados de 64 px del azul de fondo: esconden la costura con los costados.
       Buttons    ContinueButton / RestartButton / SettingsButton / MainMenuButton: botones SIN texto
                  encima de los pintados. Normal = invisible; foco/hover = borde dorado (Style_glow).
+    ControlsP1/P2  ControlsPanel a cada lado del tablero (en las franjas azules), centrados en vertical.
     SettingsPanel  Panel de madera (tema "Theme_wood") que tapa los 4 botones pintados al abrir Ajustes:
                    sliders General/Música/Efectos + pantalla completa + "Volver a pausa".
 ```
@@ -404,7 +422,8 @@ El número del nivel es su orden en la lista. `WinManager` toma el id y el nombr
 **lanzar** (3 + "Buzón": lanzar el extremo por una ranura a una placa). Sub-ramas de mecánicas nuevas: **placas/compuertas** (desde caja 2; la 4.ª, "Relevo", con ganchos: cada uno abre la puerta del columpio del otro), **plataformas móviles**
 (desde peligro 2; la 4.ª, "Contratiempo": ascensores a contratiempo sobre el fuego) y **viento** (desde lanzar 2; la 4.ª, "Remonte": la corriente sube el extremo hasta un gancho inalcanzable y se trepa la cuerda). El **final** se abre con 4 de los 6 finales de rama. Cada
 rama empieza introduciendo su mecánica en un caso simple y sube la dificultad. El mapa no nombra las
-mecánicas (minimalista): se descubren jugando. El primer nivel con lanzar trae un cartel con los controles.
+mecánicas (minimalista): se descubren jugando. Los niveles que introducen un control traen un cartel
+(`LevelHint`) por jugador con sus teclas: tronco_2 (soltar / tirar cuerda) y lanzar_1 (lanzar).
 
 Mapa: nodos con el shader de madera de los botones (bloqueado = madera oscura sin número; disponible = anillo
 que late; completado = número dorado y una sopaipilla si se juntaron todas), cuerdas con la textura de la cuerda
@@ -512,9 +531,10 @@ Estados en `emboque.gd` (`ThrowState`), sin tocar nada si la mecánica está apa
 | `NONE` | — | Cuerda normal. |
 | `HELD` (en la mano) | `tirar` recién apretado con la cuerda **ya** al mínimo **antes** de esa pulsación (acortar hasta el mínimo no lo toma solo), sin gancho y con el extremo a ≤ `min_length + grab_tolerance` de la mano (no se toma a través de un muro) | El extremo llega a la mano con un tirón corto y va pegado a ella (`HOLD_OFFSET`, debajo del ojo, girado hacia donde mira). Cuerda oculta; ni largo ni `_limit_player`. Se camina y salta normal. `soltar` → vuelve a colgar al mínimo (esa pulsación no alarga la cuerda). |
 | `AIMING` (apuntando) | `lanzar` en `HELD` | `player.aiming = true`: no camina ni salta, izquierda/derecha solo giran. Ángulo `pingpong(t·aim_sweep_speed_deg, aim_max_angle_deg)` hacia donde mira; `_draw()` hace la línea punteada desde la mano con largo = `max_length` (el alcance real). `soltar` lo deja caer. |
+| `REELING` (recogiendo) | `lanzar` en `NONE` o en `FLYING`, sin gancho ni emboque pegado | La cuerda se acorta a `reel_speed` (1100 px/s) **desde la distancia actual** y la restricción de la cuerda trae el extremo, con colisiones (no se teletransporta). Al llegar a `min_length + grab_tolerance` queda en `HELD`. No arrastra al jugador (sin `_limit_player`) ni engancha. `soltar` lo corta; si el extremo no se acerca en `REEL_STALL_TIME` (0,2 s, trabado tras un muro) se deja de recoger. En ambos casos la cuerda queda del largo actual (sin tirón). Va al final del enum: el bot compara el estado por número. |
 | `FLYING` (lanzado) | `lanzar` en `AIMING` | Parte **desde la mano** (su forma cabe dentro del jugador, nunca empieza dentro de un muro), `rope_length = max_length`, **sin gravedad** → viaja exacto por la línea punteada. Termina (vuelve la gravedad) al tensarse la cuerda, al chocar (avance real < la mitad de lo esperado), al engancharse o por tiempo. Se puede enganchar en vuelo (es la idea). |
 
-El extremo **en la mano no tiene colisiones** (`RopeEnd.set_held`: capa y máscara 0 + `freeze` kinematic): no empuja al otro extremo ni a cajas, no activa zonas de muerte del emboque y no engancha. Además `WinManager` y `CloseupManager` **ignoran** un extremo en la mano (`Emboque.is_held()`): embocar es con la cuerda, no metiendo el palito a mano. Tuning en el Inspector del Emboque, grupo "Lanzar": `throw_speed` (1400), `aim_max_angle_deg` (60), `aim_sweep_speed_deg` (60 = 1 s por pasada), `grab_tolerance`, y color/grosor/guion de la mira.
+El extremo **en la mano no tiene colisiones** (`RopeEnd.set_held`: capa y máscara 0 + `freeze` kinematic): no empuja al otro extremo ni a cajas, no activa zonas de muerte del emboque y no engancha. Además `WinManager` y `CloseupManager` **ignoran** un extremo en la mano (`Emboque.is_held()`): embocar es con la cuerda, no metiendo el palito a mano. Enganchado, `lanzar` no hace nada (la cuerda es del gancho: se trepa con `tirar`). Tuning en el Inspector del Emboque, grupo "Lanzar": `throw_speed` (1400), `reel_speed` (1100), `aim_max_angle_deg` (60), `aim_sweep_speed_deg` (60 = 1 s por pasada), `grab_tolerance`, y color/grosor/guion de la mira.
 
 ### Victoria y magnetismo (`win_manager.gd`)
 
@@ -592,13 +612,13 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 5. **`WinManager`** (`Node2D` + `win_manager.gd`), **antes** de los Emboque: `emboque_a`, `emboque_b`, `win_label`, y `level_id`/`level_name` (para el highscore y la pantalla de victoria — poner un id estable único por nivel, ej. `"level_3"` / `"Nivel 3"`).
 6. **`CloseupManager`** (instancia de `closeup_manager.tscn`): `camera_path = ../Camera2D`, `emboque_a`, `emboque_b`. Si el nivel NO es 1280×720, ajustar su `level_size` para el clamp de cámara.
 7. **`PauseMenu`**: instancia de `ui/pause_menu.tscn` (*Instantiate Child Scene*), al final del árbol para que se dibuje encima. **La pausa no es global: cada nivel debe tenerla.** No copiar el panel a mano: todos los niveles comparten esa escena, así un cambio de diseño llega a todos.
-8. **`UI`** (`CanvasLayer`, sin script) con `WinLabel` (`Label`, oculto; lo muestra el WinManager al ganar) y, si hay puntaje, `ScoreLabel`.
+8. **`UI`** (`CanvasLayer`, sin script) con `WinLabel` (`Label`, oculto; lo muestra el WinManager al ganar) y, si hay puntaje, `ScoreHud` (instancia de `ui/hud_score.tscn`).
 
 **Opcional (según el diseño del nivel):**
 
 - **`HookPoint`** (instancia de `hook_point.tscn`): puntos de enganche del entorno para rapel. Poner los que pida el puzzle.
 - **Zonas de muerte**: `player_death_zone` / `emboque_death_zone` / `both_death_zone`, escaladas/posicionadas. Reinician el nivel al contacto.
-- **Coleccionables + puntaje**: si se ponen `collectible.tscn`, agregar **también** un `ScoreManager` (con `score_label → ScoreLabel`) y un `ScoreLabel` en la UI. Van juntos o no van.
+- **Coleccionables + puntaje**: si se ponen `collectible.tscn`, agregar **también** un `ScoreManager` (con `score_label → ScoreHud`) y un `ScoreHud` (`ui/hud_score.tscn`) en la UI. Van juntos o no van.
 - **Cajas** (`push_box.tscn`): instanciar y ubicar apoyada en el piso (centro = techo del piso − 32). No necesita nada más. Para ajustar el peso ante los extremos, cambiar `mass`; para la rapidez de empuje, `push_speed`.
 - **`LevelRules`** (nodo con `level_rules.gd`): mecánicas opcionales del nivel. Hoy solo `throw_enabled` (tomar y lanzar el emboque). Un nivel sin este nodo no tiene ninguna.
 
@@ -609,7 +629,7 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - [ ] `WallLeft` / `WallRight` fuera de cámara.
 - [ ] `PauseMenu` instanciado, al final del árbol.
 - [ ] `WinManager` con `level_id` único y `level_name`; antes de los `Emboque`, como `CloseupManager`.
-- [ ] Coleccionables ⇒ `ScoreManager` + `ScoreLabel` (con contorno, como en `level_2`: `font_outline_color` + `outline_size = 10`).
+- [ ] Coleccionables ⇒ `ScoreManager` (con `score_label → ../UI/ScoreHud`) + `ScoreHud` (`ui/hud_score.tscn`) en la `UI`.
 - [ ] `Player2` sin `modulate`.
 - [ ] Entrada en `LevelCatalog.LEVELS` (posición en el mapa y de qué nivel depende).
 - [ ] Una solución en `tests/solutions/<nivel>.gd` que el bot gane (`tests/run_all.sh`).
@@ -730,7 +750,7 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 - **Extremos como emboque real:** palito y campana `RigidBody2D` que rotan y chocan entre sí; victoria = palito dentro de la campana. Partes a ~1/3 del jugador y física a 120 Hz contra el tunneling. Proyecto en Godot 4.7.2 (antes 4.6).
 - **Balanceo estilo DKC:** enganche instantáneo, péndulo propio del jugador, bombeo, salto desde la cuerda, soltarse con abajo, rapel, inclinación + squash/stretch.
 - **Animaciones** jump/fall/swing/push provisorias (cuadros existentes) + estirón al saltar, aplastón y golpe al aterrizar, inclinación al empujar.
-- **Tomar y lanzar el emboque** (por nivel, `LevelRules`), con mira en ping-pong y vuelo recto. Se usa en lanzar_1..4 y en el final.
+- **Tomar y lanzar el emboque** (por nivel, `LevelRules`), con mira en ping-pong y vuelo recto; la misma tecla lo recoge rápido a la mano. Se usa en lanzar_1..4 y en el final.
 - **Magnetismo con curva + trabado:** suave a distancia, resorte fuerte una vez embocado.
 - **Closeup + cámara lenta** al acercarse los extremos (estilo Peggle).
 - **Animación del emboque:** subida de tensión (silencio antes del golpe, viñeta, halo), magnetismo más sutil, piezas pegadas al embocar, click de zoom, partículas doradas y
@@ -755,6 +775,8 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 - **Tráiler** en español e inglés (`trailer/`), regenerable con un comando cuando cambie el arte.
 - **Intro:** video de la historia al arrancar (`video/intro.ogv`), se salta con cualquier tecla, fundidos de entrada/salida; en web pide una tecla antes para que suene.
 - **Idiomas:** español e inglés (todo el texto en `i18n/textos.csv`, imágenes con texto por idioma), selector en el menú principal, Ajustes y pausa; agregar un idioma = una columna.
+- **HUD de madera** (estilo de los botones del menú): indicador "P · PAUSA" arriba a la izquierda (en todos los
+  niveles, vía el PauseMenu; clic = pausar) y puntaje con la sopaipilla arriba a la derecha (salta al sumar).
 - **Menús:** principal (portada, botones de madera, botón de idioma; sin Salir), mapa de niveles ramificado con progreso, ajustes con el tema de madera (y borrar progreso), pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
 - **Audio:** autoload `Sfx` con 14 efectos placeholder (incluye click, brillo y pop de confetti del emboque), música (cueca, sigue en la pausa) y volumen por categoría (General / Música / Efectos, con muestra al mover Efectos).
 - **Arte (`assets/`):** jugadores animados (idle / caminata a 10 FPS / THROW al apuntar), palito, campana y cuerda, cajas, zonas de muerte animadas (fuego / púas / caca), sopaipillas, ganchos, terreno (piso por piezas + pared) y fondo.
@@ -840,6 +862,27 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 - **Menú de pausa (diseño del equipo):** cada uno de los 7 niveles tiene exactamente un PauseMenu; Esc pausa/reanuda; foco en Continuar; los 4 botones calzan con los pintados; hover mueve el foco; Ajustes muestra sliders y oculta botones; el slider cambia SettingsManager; Volver devuelve el foco a Ajustes; Continuar reanuda. PASS 43/43. Luego se agregó P como segunda tecla (acción `pause`): P pausa y reanuda, Esc también (en `level_3`). PASS.
 - **Arte (jugadores, cajas, zonas, sopaipillas, terreno, fondo, ganchos):** cada nivel cargado y capturado sin errores de script; animación de caminata a la frecuencia pedida (cambio de frame cada 12 ticks a 10 FPS con física a 120 Hz).
 
+### Controles en la portada y en la pausa
+
+Controles de la cuerda invertidos (soltar = T / `.`, tirar = R / `,`). En la portada (`assets/ui/portada.png` y
+`assets/ui/en/portada.png`) las tapitas de esas teclas se intercambiaron píxel a píxel (el resto del dibujo intacto;
+ojo: si se vuelven a cambiar, la portada hay que editarla, la pausa no). Pausa (Xvfb, tronco_1 y lanzar_1, es/en,
+también con Ajustes abierto): un panel por jugador en las franjas de los costados (18..266 y 1014..1262, alto 292 con
+lanzar), teclas leídas del Input Map (T/R y ./, ya invertidas), fila "Lanzar / recoger" solo en lanzar_1. PASS.
+
+Carteles de nivel (Xvfb, es/en): tronco_2 con un cartel por jugador ("T Soltar: estira la cuerda / R Tirar:
+retrae la cuerda" y lo mismo con . y , para J2) arriba de cada mitad, sin tapar el muro central ni el HUD; lanzar_1
+con "G/L Recoge el emboque a la mano · Otra vez: apunta · Y otra más: ¡lánzalo!" (reemplaza el texto plano
+anterior). Bot: tronco_2 y lanzar_1 ganados.
+
+### HUD (pausa y puntaje)
+
+Con Xvfb y capturas (peligro_1, tronco_1, lanzar_1, level_2, level_3, main): indicador de pausa en (16,14) en todos
+los niveles (main incluido, sin puntaje); P lo oculta al pausar y vuelve al reanudar; clic en él pausa; Esc reanuda.
+Puntaje con borde derecho en x=1264 con "Puntos: 0", "100" y "2500" (crece hacia la izquierda); en inglés "PAUSE" /
+"Points: 2500"; la placa salta 1,13 → 1 en 0,3 s al sumar (escalar el ícono dentro del HBox no funcionaba: el
+contenedor reinicia la escala de sus hijos). PASS 24/24. Bot: tronco_1, peligro_1, level_2, lanzar_1 ganados.
+
 ### Animación del emboque
 
 Con el bot (tronco_1 + script que sigue tras ganar, en Forward+ y Compatibility): las piezas quedan pegadas
@@ -870,6 +913,13 @@ y `final` (`brake` 470 → 465). `run_all.sh`: 28/29 (`placa_3`).
 ### Lanzar el emboque (`test_throw.tscn`) — PASS 49/49
 
 No toma al acortar hasta el mínimo; toma con pulsación nueva; en la mano va sin colisiones y pegado a la mano al caminar; apuntando no camina ni salta pero gira; la mira va de 0 a 60° y vuelve; soltar restaura todo sin alargar la cuerda; vuelo recto con desvío 0 px hasta 320 px; choca con la torre sin atravesarla; el mejor salto queda 40 px bajo el techo de la torre; cada jugador lanza a su gancho → sube → queda arriba de la torre; un extremo en la mano no emboca ni activa el closeup (con control); sin `LevelRules` no hay mecánica. Desde el mejor lugar (~150–200 px del gancho) sirve una ventana de ~10° del barrido.
+
+**Recoger con `lanzar`** (test_throw, headless): colgando → en la mano en 0,06 s; ciclo con la misma tecla
+(recoger → apuntar → lanzar → recoger en vuelo → en la mano); tras aterrizar a 197 px → en la mano en 0,10 s; el
+jugador no se mueve (0,0 px) al recoger; `soltar` corta la recogida y la cuerda queda del largo actual; extremo
+trabado (congelado) → deja de recoger a los 0,23 s sin arrastrar al jugador; enganchado, `lanzar` no hace nada; sin
+`LevelRules` no hace nada. PASS 20/20. Bot: lanzar_1..4 y viento_2 ganados; `final` cae al fuego (Palito@PitFire,
+t=10,96) igual con el código anterior: falla previa del bot, no de esta mecánica.
 
 ### Nivel 2 (`level_2.tscn`) — PASS 27/27
 

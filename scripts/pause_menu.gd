@@ -8,6 +8,9 @@ extends CanvasLayer
 ## el mouse).
 
 @onready var pause_panel: Control = $PausePanel
+## Indicador "P · Pausa" de la esquina superior izquierda (ui/hud_pause.tscn):
+## visible mientras se juega; un clic en él también pausa.
+@onready var hud_pause: Control = $HudPause
 @onready var buttons: Control = $PausePanel/Board/Buttons
 @onready var continue_button: Button = $PausePanel/Board/Buttons/ContinueButton
 @onready var restart_button: Button = $PausePanel/Board/Buttons/RestartButton
@@ -39,6 +42,7 @@ func _ready() -> void:
 	settings_sfx_volume.value_changed.connect(_on_sfx_volume_changed)
 	settings_fullscreen.toggled.connect(_on_fullscreen_toggled)
 	settings_language.pressed.connect(_settings.cycle_language)
+	hud_pause.pressed.connect(_set_paused.bind(true))
 	# El mouse mueve el foco: así brilla un solo botón a la vez.
 	for button: Button in [continue_button, restart_button, settings_button, main_menu_button]:
 		button.mouse_entered.connect(button.grab_focus)
@@ -56,6 +60,7 @@ func _toggle_pause() -> void:
 func _set_paused(paused: bool) -> void:
 	_is_paused = paused
 	pause_panel.visible = paused
+	hud_pause.visible = not paused
 	get_tree().paused = paused
 	if paused:
 		_show_pause_menu()
