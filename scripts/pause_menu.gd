@@ -42,6 +42,8 @@ func _ready() -> void:
 	settings_sfx_volume.value_changed.connect(_on_sfx_volume_changed)
 	settings_fullscreen.toggled.connect(_on_fullscreen_toggled)
 	settings_language.pressed.connect(_settings.cycle_language)
+	settings_language.add_theme_constant_override("icon_max_width", 33)
+	_show_language_flag()
 	hud_pause.pressed.connect(_set_paused.bind(true))
 	# El mouse mueve el foco: así brilla un solo botón a la vez.
 	for button: Button in [continue_button, restart_button, settings_button, main_menu_button]:
@@ -107,3 +109,11 @@ func _on_fullscreen_toggled(enabled: bool) -> void:
 func _go_to_main_menu() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_show_language_flag()
+
+## Bandera del idioma actual al lado de su nombre en el botón de idioma.
+func _show_language_flag() -> void:
+	settings_language.icon = Languages.flag_of(Languages.current())

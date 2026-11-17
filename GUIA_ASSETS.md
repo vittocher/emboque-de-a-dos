@@ -97,6 +97,7 @@ El "click" de zoom de la cámara y las piezas pegadas se ajustan en el Inspector
 |---|---|---|---|
 | Portada del menú principal (título y controles dibujados) | `assets/ui/portada.png` (español) y `assets/ui/en/portada.png` (inglés) | `scenes/ui/main_menu.tscn` | La fila de lanzar ahora dice "LANZAR" (el mapa ya no tiene "niveles verdes"). |
 | Menú de pausa | `assets/ui/pause_menu.webp` (español) y `assets/ui/en/pause_menu.webp` (inglés) | `scenes/ui/pause_menu.tscn` | Ver "Menú de pausa" en CLAUDE.md. Los botones pintados tienen que quedar en el mismo lugar en todos los idiomas. |
+| Banderas de idioma (al lado del nombre en el botón de idioma del menú, en Ajustes y en la pausa) | `assets/ui/banderas/es.svg` (Chile) y `assets/ui/banderas/en.svg` (Reino Unido) | `Languages.flag_of` | SVG en 3:2; se importan al doble de tamaño con mipmaps. Una bandera por código de idioma: un idioma nuevo solo necesita su `<código>.svg`. |
 | Botones de madera, nodos del mapa | (procedurales: `shaders/madera_boton.gdshader`) | `scenes/ui/boton_madera.tscn`, `scenes/ui/level_node.tscn` | Colores de la madera en los parámetros del shader. |
 | Video de intro | `video/intro.ogv` | `scenes/ui/intro.tscn` | Arrastrar el video (mp4…) sobre `tools/convertir_video.bat` y listo. Ver `video/README.md`. |
 

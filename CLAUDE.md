@@ -396,11 +396,13 @@ columna por idioma (`es`, `en`). Godot lo importa como `i18n/textos.<código>.tr
   original. Las de inglés (`assets/ui/en/`) se generaron reescribiendo el texto sobre el arte original (fuentes
   Bungee / Barlow Semi Condensed / Titan One): son **provisorias** hasta que diseño haga las definitivas.
 - **Selector**: botón arriba a la derecha del menú principal (muestra el idioma actual, cada clic pasa al
-  siguiente), fila "Idioma" en Ajustes (lista) y en el panel de ajustes de la pausa. Se guarda en
+  siguiente), fila "Idioma" en Ajustes (lista) y en el panel de ajustes de la pausa. Los tres muestran la
+  **bandera** del idioma al lado del nombre (`Languages.flag_of(código)` = `assets/ui/banderas/<código>.svg`:
+  es = Chile, en = Reino Unido; sin archivo, solo el nombre). `boton_madera.gd` tiene `icon` / `icon_max_width`. Se guarda en
   `user://settings.cfg` (`general/language`); la primera vez se usa el idioma del sistema si existe.
 - **Agregar un idioma**: columna nueva en el CSV (la fila `LANGUAGE_NAME` = su nombre en ese idioma) → abrir
   Godot (genera la `.translation`) → sumarla en Proyecto → Configuración → Localización → Traducciones →
-  (opcional) imágenes en `assets/ui/<código>/`. Los selectores la listan solos (`Languages.available()`).
+  (opcional) imágenes en `assets/ui/<código>/` y su bandera en `assets/ui/banderas/<código>.svg`. Los selectores la listan solos (`Languages.available()`).
 
 `CavitySensor` mask 8. Zonas de muerte: jugador mask 2, emboque mask 12 (seteado en `_ready`). Collectible mask 2. Los extremos colisionan entre sí; los jugadores no colisionan con nada salvo terreno.
 
@@ -774,7 +776,7 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 **Menús y presentación**
 - **Tráiler** en español e inglés (`trailer/`), regenerable con un comando cuando cambie el arte.
 - **Intro:** video de la historia al arrancar (`video/intro.ogv`), se salta con cualquier tecla, fundidos de entrada/salida; en web pide una tecla antes para que suene.
-- **Idiomas:** español e inglés (todo el texto en `i18n/textos.csv`, imágenes con texto por idioma), selector en el menú principal, Ajustes y pausa; agregar un idioma = una columna.
+- **Idiomas:** español e inglés (todo el texto en `i18n/textos.csv`, imágenes con texto por idioma), selector con bandera (Chile / Reino Unido) en el menú principal, Ajustes y pausa; agregar un idioma = una columna.
 - **HUD de madera** (estilo de los botones del menú): indicador "P · PAUSA" arriba a la izquierda (en todos los
   niveles, vía el PauseMenu; clic = pausar) y puntaje con la sopaipilla arriba a la derecha (salta al sumar).
 - **Menús:** principal (portada, botones de madera, botón de idioma; sin Salir), mapa de niveles ramificado con progreso, ajustes con el tema de madera (y borrar progreso), pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
@@ -861,6 +863,13 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 - **Audio en el export web** (build exportado, navegador Edge headless controlado por DevTools, midiendo la señal que llega a la salida con un AnalyserNode; control: un tono de prueba da RMS 0,71): con los buses creados en runtime la salida era **0,0000** aun con el AudioContext activo tras el clic (mudo, igual que en Newgrounds); con `default_bus_layout.tres` la música da RMS ~0,1–0,2 tras el primer clic y 3 saltos en el Nivel 1 disparan 3 efectos. PASS. En el mismo build web, el menú principal sin Salir deja Jugar/Ajustes centrados.
 - **Menú de pausa (diseño del equipo):** cada uno de los 7 niveles tiene exactamente un PauseMenu; Esc pausa/reanuda; foco en Continuar; los 4 botones calzan con los pintados; hover mueve el foco; Ajustes muestra sliders y oculta botones; el slider cambia SettingsManager; Volver devuelve el foco a Ajustes; Continuar reanuda. PASS 43/43. Luego se agregó P como segunda tecla (acción `pause`): P pausa y reanuda, Esc también (en `level_3`). PASS.
 - **Arte (jugadores, cajas, zonas, sopaipillas, terreno, fondo, ganchos):** cada nivel cargado y capturado sin errores de script; animación de caminata a la frecuencia pedida (cambio de frame cada 12 ticks a 10 FPS con física a 120 Hz).
+
+### Banderas de idioma
+
+Con Xvfb (es/en): bandera de Chile junto a "Español" y del Reino Unido junto a "English" en el botón del menú
+principal (con margen, sin pisar el borde dorado), en la lista de Ajustes (botón y desplegable) y en el botón de
+idioma de la pausa; al cambiar de idioma con el botón del menú la bandera cambia al tiro. Los SVG (con clipPath, la
+Union Jack) se dibujan bien. Sin errores de script. PASS.
 
 ### Cámara lenta más sutil (0,15 → 0,4)
 

@@ -6,6 +6,8 @@ extends Control
 
 ## Segundos que espera la confirmación de "borrar progreso".
 const ERASE_CONFIRM_TIME := 3.0
+## Ancho de la bandera junto a cada idioma (px).
+const FLAG_WIDTH := 36
 
 @onready var _master_volume: HSlider = %VolumeSlider
 @onready var _music_volume: HSlider = %MusicVolumeSlider
@@ -28,9 +30,15 @@ func _ready() -> void:
 	_sfx_volume.value_changed.connect(_on_sfx_volume_changed)
 	_fullscreen.toggled.connect(_settings.set_fullscreen)
 
-	# Un ítem por idioma disponible, cada uno con su nombre en su idioma.
+	# Un ítem por idioma disponible, cada uno con su bandera y su nombre en su idioma.
+	_language.add_theme_constant_override("icon_max_width", FLAG_WIDTH)
+	_language.get_popup().add_theme_constant_override("icon_max_width", FLAG_WIDTH)
 	for code in Languages.available():
-		_language.add_item(Languages.name_of(code))
+		var flag := Languages.flag_of(code)
+		if flag != null:
+			_language.add_icon_item(flag, Languages.name_of(code))
+		else:
+			_language.add_item(Languages.name_of(code))
 		_language.set_item_metadata(_language.item_count - 1, code)
 		if code == _settings.language:
 			_language.select(_language.item_count - 1)

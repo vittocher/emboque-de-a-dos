@@ -6,11 +6,23 @@ extends Control
 
 signal pressed
 
+## Margen a los costados cuando el botón lleva ícono (que no toque el borde).
+const ICON_MARGIN := 18.0
+
 @export var text: String = "Botón":
 	set(value):
 		text = value
 		if _btn != null:
 			_btn.text = value
+
+## Ícono a la izquierda del texto (p. ej. la bandera del botón de idioma).
+@export var icon: Texture2D:
+	set(value):
+		icon = value
+		if _btn != null:
+			_btn.icon = value
+## Ancho máximo del ícono (px); 0 = su tamaño real.
+@export var icon_max_width: int = 0
 
 @onready var _fondo: ColorRect = $Fondo
 @onready var _btn: Button = $Btn
@@ -20,6 +32,15 @@ var _focus := false
 
 func _ready() -> void:
 	_btn.text = text
+	_btn.icon = icon
+	if icon_max_width > 0:
+		_btn.add_theme_constant_override("icon_max_width", icon_max_width)
+		# Con ícono, margen para que no pise el borde dorado.
+		for state in ["normal", "hover", "pressed", "focus"]:
+			var box := StyleBoxEmpty.new()
+			box.content_margin_left = ICON_MARGIN
+			box.content_margin_right = ICON_MARGIN
+			_btn.add_theme_stylebox_override(state, box)
 	_btn.pressed.connect(func() -> void: pressed.emit())
 	_btn.mouse_entered.connect(func() -> void: _hover = true; _refresh())
 	_btn.mouse_exited.connect(func() -> void: _hover = false; _refresh())
