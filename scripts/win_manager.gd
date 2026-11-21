@@ -8,6 +8,9 @@ class_name WinManager
 
 @export var emboque_a: NodePath
 @export var emboque_b: NodePath
+## Apagado no hay magnetismo ni victoria (el nivel del jefe lo enciende recién en
+## la cima: antes, juntar los extremos no gana).
+@export var active: bool = true
 
 @export_group("Magnetismo")
 ## Radio (punta del palito ↔ boca de la campana) en que empieza la asistencia.
@@ -94,6 +97,9 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if _won or _palito == null or _campana == null:
+		return
+	if not active:
+		_hold = 0.0
 		return
 	var pal := _palito.get_end()
 	var camp := _campana.get_end()

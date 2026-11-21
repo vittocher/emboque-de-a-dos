@@ -114,6 +114,7 @@ var _swing_omega: float = 0.0   # velocidad angular (rad/s); + = hacia la derech
 var _launched: bool = false     # conserva el impulso tras soltarse de la cuerda
 var _wind := Vector2.ZERO       # aceleración del viento de este tick (WindZone.add_wind)
 var _wind_cap := 0.0
+var _push := Vector2.ZERO       # arrastre de este tick (add_push), como una cinta: no queda como impulso
 var _squash_tween: Tween
 
 @onready var _visual: Node2D = $Visual
@@ -123,6 +124,9 @@ var _squash_tween: Tween
 @onready var _sprite_rest: Vector2 = _sprite.position if _sprite != null else Vector2.ZERO
 var _lean := 0.0
 @onready var _squash_pivot: Vector2 = _anchor_offset
+
+func _enter_tree() -> void:
+	add_to_group(&"players")
 
 func _ready() -> void:
 	# Al empezar mira hacia el centro de la pantalla (hacia su compañero).
@@ -140,6 +144,7 @@ func _physics_process(delta: float) -> void:
 		# Colgando, el viento no empuja al jugador (y no se acumula para después).
 		_wind = Vector2.ZERO
 		_wind_cap = 0.0
+		_push = Vector2.ZERO
 		_process_swing(delta)
 	else:
 		_process_platformer(delta)
@@ -174,7 +179,15 @@ func _process_platformer(delta: float) -> void:
 	_pushing = direction != 0.0 and is_on_floor() and _try_push_box(direction)
 	var push_velocity := velocity.x
 	var fall_speed := velocity.y
+	# Arrastre (ráfagas del Tue Tue): se suma solo a este movimiento, como una cinta
+	# transportadora; quieto, el jugador se desliza a esa velocidad y caminando en
+	# contra avanza más lento.
+	var drift := _push
+	_push = Vector2.ZERO
+	velocity.x += drift.x
 	move_and_slide()
+	if drift.x != 0.0:
+		velocity.x = 0.0 if is_on_wall() else velocity.x - drift.x
 	if not was_on_floor and is_on_floor():
 		_on_landed(fall_speed)
 	if _pushing:
@@ -235,6 +248,24 @@ func _apply_launch_air_control(direction: float, delta: float) -> bool:
 func add_wind(accel: Vector2, max_speed: float) -> void:
 	_wind += accel
 	_wind_cap = maxf(_wind_cap, max_speed)
+
+## Arrastre de este tick (px/s): lo llama cada tick quien empuja (la ráfaga del Tue
+## Tue). No acelera: mientras dura, mueve al jugador a esa velocidad extra.
+func add_push(velocity_px: Vector2) -> void:
+	_push += velocity_px
+
+## Empujón (el Tue Tue al pasar en picada): sale volando con esa velocidad y, hasta
+## aterrizar, el aire frena suave (como al soltarse de un gancho). Si colgaba de un
+## gancho, se suelta.
+func knockback(v: Vector2) -> void:
+	if _hooked:
+		# El Emboque se desengancha con el mismo aviso que al saltar desde la cuerda.
+		swing_jumped.emit()
+	_hooked = false
+	_taut = false
+	velocity = v
+	_launched = true
+	_squash(Vector2(1.25, 0.78))
 
 ## Empuje del viento: suma su aceleración, pero sin pasar de [member _wind_cap]
 ## en la dirección del viento (si no, sube sin límite).

@@ -6,9 +6,14 @@ class_name LevelFlow
 ## - ganado: desde que se emboca hasta la pantalla de victoria ya no se muere
 ##   ni se juntan más coleccionables (el resultado ya quedó anotado);
 ## - reiniciándose: varias zonas de muerte tocadas a la vez recargan una sola vez.
+## Además recuerda qué escena se recargó por una MUERTE (restart), para que un
+## nivel con checkpoints (el del jefe) sepa si debe retomar desde ahí o empezar de
+## cero (entrar desde el mapa o "Reiniciar" en la pausa empiezan de cero).
 
 const WON := &"level_won"
 const RESTARTING := &"level_restarting"
+
+static var _died_in := ""  # ruta de la escena que se recargó por una muerte
 
 static func is_won(tree: SceneTree) -> bool:
 	return tree.current_scene != null and tree.current_scene.has_meta(WON)
@@ -29,4 +34,14 @@ static func restart(tree: SceneTree) -> void:
 	if scene == null or scene.has_meta(RESTARTING):
 		return
 	scene.set_meta(RESTARTING, true)
+	_died_in = scene.scene_file_path
 	tree.call_deferred(&"reload_current_scene")
+
+## True si la escena [param scene_path] viene de recargarse por una muerte (se
+## pasa la ruta porque en un _ready de la recarga current_scene puede no estar
+## listo todavía). Se consume: la siguiente vez (p. ej. al volver a entrar desde
+## el mapa) ya da false.
+static func consume_death_reload(scene_path: String) -> bool:
+	var died := scene_path != "" and scene_path == _died_in
+	_died_in = ""
+	return died

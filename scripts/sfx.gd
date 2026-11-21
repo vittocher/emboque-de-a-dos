@@ -26,6 +26,11 @@ const SOUNDS := {
 	&"emboque_click": ["res://audio/sfx/emboque_click.wav", 1.0],
 	&"sparkle": ["res://audio/sfx/sparkle.wav", -15.0],
 	&"confetti_pop": ["res://audio/sfx/confetti_pop.wav", -7.0],
+	# Jefe final (Tue Tue).
+	&"tuetue": ["res://audio/sfx/tuetue.wav", -6.0],
+	&"boss_hit": ["res://audio/sfx/boss_hit.wav", -4.0],
+	&"gust": ["res://audio/sfx/gust.wav", -8.0],
+	&"swoop": ["res://audio/sfx/swoop.wav", -6.0],
 }
 ## Cuántos efectos pueden sonar a la vez.
 const POOL_SIZE := 12

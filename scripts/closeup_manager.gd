@@ -9,6 +9,9 @@ class_name CloseupManager
 @export var camera_path: NodePath
 @export var emboque_a: NodePath
 @export var emboque_b: NodePath
+## Apagado no toca la cámara ni el tiempo (el nivel del jefe mueve la cámara solo y
+## lo enciende en la cima, con set_home).
+@export var enabled: bool = true
 
 @export_group("Activación")
 ## Distancia (px) a la que empieza el efecto. Corto: solo cuando ya están cerca.
@@ -28,6 +31,9 @@ class_name CloseupManager
 @export var transition_speed: float = 6.0
 ## Tamaño del nivel (para no mostrar fuera de los bordes al hacer zoom).
 @export var level_size: Vector2 = Vector2(1280, 720)
+## Esquina de arriba a la izquierda de ese rectángulo (niveles más altos que la
+## pantalla: la zona donde se emboca).
+@export var level_origin: Vector2 = Vector2.ZERO
 
 @export_group("Click al embocar")
 ## Zoom extra del "click" (fracción del zoom actual: 0.3 = 30 % más cerca).
@@ -71,7 +77,7 @@ func _ready() -> void:
 		add_child(_tension)
 
 func _process(delta: float) -> void:
-	if _camera == null or _a == null or _b == null:
+	if not enabled or _camera == null or _a == null or _b == null:
 		return
 
 	var pa := _a.get_end_position()
@@ -127,13 +133,20 @@ func punch() -> void:
 	_punch_tween.tween_property(self, "_punch", punch_zoom, punch_in_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	_punch_tween.tween_property(self, "_punch", 0.0, punch_out_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
+## Nueva vista "de reposo" (sin closeup) y rectángulo donde puede moverse la cámara
+## (en pantallas completas desde [param origin]). La usa el nivel del jefe al
+## llegar a la cima, donde se hace el último emboque.
+func set_home(pos: Vector2, origin: Vector2) -> void:
+	_home_pos = pos
+	level_origin = origin
+
 ## Mantiene el centro de cámara de modo que la vista (más chica con zoom) no
 ## se salga del nivel. Si la vista es más grande que el nivel, centra ese eje.
 func _clamp_to_level(pos: Vector2, zoom: Vector2) -> Vector2:
 	var view := get_viewport().get_visible_rect().size / zoom
 	var half := view * 0.5
-	var x := pos.x
-	var y := pos.y
+	var x := pos.x - level_origin.x
+	var y := pos.y - level_origin.y
 	if half.x * 2.0 >= level_size.x:
 		x = level_size.x * 0.5
 	else:
@@ -142,7 +155,7 @@ func _clamp_to_level(pos: Vector2, zoom: Vector2) -> Vector2:
 		y = level_size.y * 0.5
 	else:
 		y = clampf(y, half.y, level_size.y - half.y)
-	return Vector2(x, y)
+	return Vector2(x, y) + level_origin
 
 func _notification(what: int) -> void:
 	# En el menú de pausa la música suena normal; al volver, retoma el tono del closeup.

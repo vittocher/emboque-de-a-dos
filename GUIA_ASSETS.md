@@ -76,6 +76,25 @@ Se calculan solas a partir del dibujo: al cambiar un PNG, su sombra cambia con �
 | Placa de presión | `assets/props/placa/placa_base.png` (base) y `placa_tapa.png` (tapa) | `scenes/pressure_plate.tscn` | La **tapa se tiñe** con el color del canal: dibujarla en gris claro/blanco. |
 | Rayitas de viento | `assets/props/viento/rafaga.png` | `scenes/wind_zone.tscn` | Blanca con transparencia; se tiñe y se mueve sola. |
 
+## El Tue Tue (jefe del último nivel)
+
+Arte **provisorio** dibujado por código (`tools/generate_tuetue_art.py`): un pájaro nocturno oscuro de ojos
+amarillos. Para el definitivo, reemplazar los PNG de `assets/enemigos/tue_tue/` con el mismo nombre (dibujado
+**de frente**, centrado; hoy cada cuadro es de 360×280 px y en el juego se ve a la mitad, escala 0,5 del nodo
+`Sprite` de `scenes/boss/tue_tue.tscn`; si cambia el tamaño, ajustar esa escala).
+
+| Qué | Archivo(s) | Notas |
+|---|---|---|
+| Vuelo (aleteo en loop, 10 FPS) | `vuelo_1.png`, `vuelo_2.png`, `vuelo_3.png` (alas arriba, al medio, abajo) | Animación `fly` del `SpriteFrames` de `tue_tue.tscn` (orden 1-2-3-2). Al atacar aletea al doble. |
+| Chillido (aviso de ataque, 0,6 s) | `grito.png` | Pico abierto, ojos rojos: es la señal de que viene una picada o una ráfaga. |
+| Plumas que vuelan al pegarle | `pluma.png` | Partículas `Feathers`. |
+| Estrellitas de mareado (en la cima) | `estrella.png` | Tres, girando sobre la cabeza (`Art/Stars`). |
+| Vida en la barra del HUD | `vida.png` | Una pluma dorada por vida; las perdidas se apagan. La barra es `scenes/boss/boss_bar.tscn` (madera morada, mismo shader que el puntaje). |
+| Rayitas de la ráfaga | `assets/props/viento/rafaga.png` | Las mismas del viento, en `GustFx`. |
+
+Sonidos: `tuetue.wav` (su grito: dos silbidos que caen), `boss_hit.wav` (golpe + graznido + plumas), `gust.wav`
+(ráfaga) y `swoop.wav` (picada). Ver la tabla de sonidos.
+
 ## Celebración del emboque
 
 Al embocar salen dos efectos de partículas, sin imágenes (formas dibujadas por shader): se ajustan abriendo la
@@ -133,6 +152,10 @@ nombre → archivo + volumen). Reemplazar el archivo con el mismo nombre (WAV u 
 | `emboque_click.wav` | Al embocar: el "click" del palito entrando en la campana |
 | `sparkle.wav` | Al embocar: brillo sutil de las partículas doradas |
 | `confetti_pop.wav` | Al embocar: pop del confetti desde las esquinas |
+| `tuetue.wav` | Grito del Tue Tue (al aparecer, al avisar un ataque, al escapar) |
+| `boss_hit.wav` | Al pegarle al Tue Tue (y, más agudo y bajo, cuando su picada empuja a alguien) |
+| `gust.wav` | Ráfaga del Tue Tue (y cuando en la cima desparrama los extremos) |
+| `swoop.wav` | Picada del Tue Tue |
 | `audio/cueca.ogg` | Música |
 
 Los efectos actuales son placeholders sintetizados con `tools/generate_sfx.py`.

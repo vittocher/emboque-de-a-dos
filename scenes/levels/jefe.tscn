@@ -1,0 +1,213 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
+[ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
+[ext_resource type="Script" path="res://scripts/level_rules.gd" id="4_rules"]
+[ext_resource type="PackedScene" path="res://scenes/player_death_zone.tscn" id="5_spikes"]
+[ext_resource type="PackedScene" path="res://scenes/bowl.tscn" id="6_bowl"]
+[ext_resource type="PackedScene" path="res://scenes/boss/tue_tue.tscn" id="7_tuetue"]
+[ext_resource type="Script" path="res://scripts/boss/boss_fight.gd" id="8_fight"]
+[ext_resource type="PackedScene" path="res://scenes/boss/boss_bar.tscn" id="9_bar"]
+
+[node name="Jefe" instance=ExtResource("1_base")]
+
+[node name="LevelRules" type="Node" parent="."]
+script = ExtResource("4_rules")
+throw_enabled = true
+
+[node name="WallLeft" parent="."]
+position = Vector2(-20, -500)
+size = Vector2(40, 2800)
+
+[node name="WallRight" parent="."]
+position = Vector2(1300, -500)
+size = Vector2(40, 2800)
+
+[node name="Player1" parent="."]
+position = Vector2(470, 400)
+
+[node name="Player2" parent="."]
+position = Vector2(810, 400)
+
+[node name="WinManager" parent="."]
+active = false
+
+[node name="CloseupManager" parent="."]
+enabled = false
+
+[node name="ArenaFloor" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 670)
+size = Vector2(1000, 100)
+
+[node name="PitFloorLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(70, 715)
+size = Vector2(140, 30)
+
+[node name="PitFloorRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(1210, 715)
+size = Vector2(140, 30)
+
+[node name="SpikesLeft" parent="." instance=ExtResource("5_spikes")]
+position = Vector2(70, 682)
+scale = Vector2(1.4, 1.2)
+
+[node name="SpikesRight" parent="." instance=ExtResource("5_spikes")]
+position = Vector2(1210, 682)
+scale = Vector2(1.4, 1.2)
+
+[node name="StepL0" parent="." instance=ExtResource("2_block")]
+position = Vector2(120, 512)
+size = Vector2(160, 24)
+
+[node name="StepR0" parent="." instance=ExtResource("2_block")]
+position = Vector2(1160, 512)
+size = Vector2(160, 24)
+
+[node name="StepL1" parent="." instance=ExtResource("2_block")]
+position = Vector2(320, 392)
+size = Vector2(160, 24)
+
+[node name="StepR1" parent="." instance=ExtResource("2_block")]
+position = Vector2(960, 392)
+size = Vector2(160, 24)
+
+[node name="StepL2" parent="." instance=ExtResource("2_block")]
+position = Vector2(120, 272)
+size = Vector2(160, 24)
+
+[node name="StepR2" parent="." instance=ExtResource("2_block")]
+position = Vector2(1160, 272)
+size = Vector2(160, 24)
+
+[node name="StepL3" parent="." instance=ExtResource("2_block")]
+position = Vector2(320, 152)
+size = Vector2(160, 24)
+
+[node name="StepR3" parent="." instance=ExtResource("2_block")]
+position = Vector2(960, 152)
+size = Vector2(160, 24)
+
+[node name="StepL4" parent="." instance=ExtResource("2_block")]
+position = Vector2(120, 32)
+size = Vector2(160, 24)
+
+[node name="StepR4" parent="." instance=ExtResource("2_block")]
+position = Vector2(1160, 32)
+size = Vector2(160, 24)
+
+[node name="StepL5" parent="." instance=ExtResource("2_block")]
+position = Vector2(320, -88)
+size = Vector2(160, 24)
+
+[node name="StepR5" parent="." instance=ExtResource("2_block")]
+position = Vector2(960, -88)
+size = Vector2(160, 24)
+
+[node name="StepL6" parent="." instance=ExtResource("2_block")]
+position = Vector2(120, -208)
+size = Vector2(160, 24)
+
+[node name="StepR6" parent="." instance=ExtResource("2_block")]
+position = Vector2(1160, -208)
+size = Vector2(160, 24)
+
+[node name="StepL7" parent="." instance=ExtResource("2_block")]
+position = Vector2(320, -328)
+size = Vector2(160, 24)
+
+[node name="StepR7" parent="." instance=ExtResource("2_block")]
+position = Vector2(960, -328)
+size = Vector2(160, 24)
+
+[node name="StepL8" parent="." instance=ExtResource("2_block")]
+position = Vector2(120, -448)
+size = Vector2(160, 24)
+
+[node name="StepR8" parent="." instance=ExtResource("2_block")]
+position = Vector2(1160, -448)
+size = Vector2(160, 24)
+
+[node name="StepL9" parent="." instance=ExtResource("2_block")]
+position = Vector2(320, -568)
+size = Vector2(160, 24)
+
+[node name="StepR9" parent="." instance=ExtResource("2_block")]
+position = Vector2(960, -568)
+size = Vector2(160, 24)
+
+[node name="StepL10" parent="." instance=ExtResource("2_block")]
+position = Vector2(120, -688)
+size = Vector2(160, 24)
+
+[node name="StepR10" parent="." instance=ExtResource("2_block")]
+position = Vector2(1160, -688)
+size = Vector2(160, 24)
+
+[node name="StepL11" parent="." instance=ExtResource("2_block")]
+position = Vector2(320, -808)
+size = Vector2(160, 24)
+
+[node name="StepR11" parent="." instance=ExtResource("2_block")]
+position = Vector2(960, -808)
+size = Vector2(160, 24)
+
+[node name="StepL12" parent="." instance=ExtResource("2_block")]
+position = Vector2(120, -928)
+size = Vector2(160, 24)
+
+[node name="StepR12" parent="." instance=ExtResource("2_block")]
+position = Vector2(1160, -928)
+size = Vector2(160, 24)
+
+[node name="StepL13" parent="." instance=ExtResource("2_block")]
+position = Vector2(320, -1048)
+size = Vector2(160, 24)
+
+[node name="StepR13" parent="." instance=ExtResource("2_block")]
+position = Vector2(960, -1048)
+size = Vector2(160, 24)
+
+[node name="SummitLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(526, -1168)
+size = Vector2(192, 24)
+
+[node name="SummitRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(754, -1168)
+size = Vector2(192, 24)
+
+[node name="Bowl" parent="." instance=ExtResource("6_bowl")]
+position = Vector2(640, -1055)
+width = 150.0
+
+[node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(70, 640)
+
+[node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(1210, 640)
+
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(150, -15)
+
+[node name="Collectible4" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(1130, -15)
+
+[node name="Collectible5" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(320, -615)
+
+[node name="Collectible6" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(960, -615)
+
+[node name="Collectible7" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(640, -1205)
+
+[node name="TueTue" parent="." instance=ExtResource("7_tuetue")]
+position = Vector2(640, -150)
+
+[node name="BossFight" type="Node" parent="."]
+script = ExtResource("8_fight")
+summit_spawn_p1 = Vector2(520, -1280)
+summit_spawn_p2 = Vector2(760, -1280)
+summit_center = Vector2(640, -1055)
+
+[node name="BossBar" parent="UI" instance=ExtResource("9_bar")]

@@ -77,3 +77,10 @@ LEVEL_VIENTO_2,Ventolera,Gale
 LEVEL_VIENTO_3,Remolino,Whirlwind
 LEVEL_VIENTO_4,Remonte,Updraft
 LEVEL_FINAL,Emboque de a dos,Emboque de a Dos
+LEVEL_JEFE,El Tue Tue,The Tue Tue
+MAP_HINT_JEFE,Termina el nivel final para abrirlo,Finish the final level to unlock it
+BOSS_NAME,Tue Tue,Tue Tue
+BOSS_PHASE1,¡Lánzale el emboque al Tue Tue!,Throw your emboque at the Tue Tue!
+BOSS_PHASE2,¡Se escapa! ¡Suban!,It's getting away! Climb!
+BOSS_PHASE3,¡El último emboque!,The final emboque!
+BOSS_STUNNED,¡Mareado! ¡Ahora!,Dizzy! Now!
