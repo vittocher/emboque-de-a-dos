@@ -16,18 +16,32 @@ static func side(i: int, d: int, ctx) -> Array:
 		["release", back], ["wait", 0.4]] \
 		+ C.climb_box(i, -d, x, 230, 190, 470) + [["rope", 80], ["wait", 0.4]] \
 		+ C.climb_box(i, d, x, 150, 230, 330) \
-		+ C.climb_box(i, d, x, 330, 420, 230) \
-		+ C.climb_box(i, d, x, 505, 568, 130) \
-		+ [["wait", 0.3]]
+		+ C.climb_box(i, d, x, 330, 420, 230)
+
+## Del segundo escalón a la meta.
+static func last_step(i: int, d: int) -> Array:
+	var x := func(v: float) -> float: return v if d == 1 else 1280.0 - v
+	return C.climb_box(i, d, x, 505, 568, 130) + [["wait", 0.3]]
 
 ## En la meta: cada uno se para sobre la ranura del medio, acorta la cuerda al
-## mínimo (el extremo, que venía arrastrándose detrás, cae por la ranura) y la
-## alarga hasta el cuenco. De a uno, para que no se traben en la ranura.
+## mínimo y, si el extremo quedó apoyado en la repisa, lo arrastra de a poco hasta
+## que cae por la ranura; vuelve al medio y lo alarga hasta el cuenco. De a uno,
+## para que no se traben en la ranura (y J2 espera en el segundo escalón: arriba,
+## los extremos se juntan en la repisa antes de llegar al cuenco).
 static func drop(i: int, d: int, ctx) -> Array:
-	return [["walk_to", 640.0, 2], ["rope", 60, 1], ["wait", 0.6], ["rope", ctx.var_f("r%d" % i, 160)],
+	var dir := "right" if d == 1 else "left"
+	var fallen := func(c): return c.e(i).get_end().global_position.y > 100.0
+	var steps := [["walk_to", 640.0, 2], ["rope", 60, 1], ["wait", 0.3]]
+	for k in 6:
+		# Un pasito (`step` px) solo si todavía no cae.
+		var target: float = 640.0 + d * ctx.var_f("step", 12) * (k + 1)
+		steps += [["press", dir],
+			["until", func(c): return fallen.call(c) or (c.p(i).global_position.x - target) * d >= -4.0, 0.5],
+			["release", dir], ["wait", 0.25]]
+	return steps + [["walk_to", 640.0, 2], ["wait", 0.4], ["rope", ctx.var_f("r%d" % i, 160)],
 		["wait", 0.5], ["walk_to", 640.0 - d * ctx.var_f("back", 30), 3]]
 
 static func plan(ctx) -> Dictionary:
-	return {"p1": side(1, 1, ctx) + [["sync", "arriba"]] + drop(1, 1, ctx) + [["sync", "uno"], ["wait", 1.0],
-			["jiggle", 610.0, -10, 10]],
-		"p2": side(2, -1, ctx) + [["sync", "arriba"], ["sync", "uno"]] + drop(2, -1, ctx) + [["jiggle", 670.0, 10, 10]]}
+	return {"p1": side(1, 1, ctx) + last_step(1, 1) + drop(1, 1, ctx) + [["sync", "uno"], ["wait", 1.0],
+			["jiggle", 610.0, -10, int(ctx.var_f("times", 20))]],
+		"p2": side(2, -1, ctx) + [["sync", "uno"]] + last_step(2, -1) + drop(2, -1, ctx) + [["jiggle", 670.0, 10, int(ctx.var_f("times", 20))]]}
