@@ -89,9 +89,11 @@ scenes/
                        jefe"). Cada uno descrito en su solución tests/solutions/<nivel>.gd. El árbol está en
                        scripts/level_catalog.gd.
   boss/tue_tue.tscn    El Tue Tue (TueTue): Art/Sprite (vuelo + grito) y estrellas de mareado, Hurtbox (lo golpean
-                       los extremos, mask 12), Hitbox (toca jugadores en la picada, mask 2), partículas de plumas y
-                       de ráfaga. Arte provisorio en assets/enemigos/tue_tue (tools/generate_tuetue_art.py).
-  boss/boss_bar.tscn   Barra de vida del jefe en el HUD (BossBar, arriba al centro): nombre + una pluma por vida.
+                       los extremos, mask 12), Hitbox (toca jugadores en picadas y caídas, mask 2), partículas al
+                       pegarle (Feathers) y de ráfaga. Dos diseños, `look` en el Inspector: la cabeza transformada
+                       del video (assets/enemigos/tue_tue) o el pájaro (alternativos/pajaro). Arte provisorio
+                       (tools/generate_tuetue_art.py).
+  boss/boss_bar.tscn   Barra de vida del jefe en el HUD (BossBar, arriba al centro): nombre + un ícono por vida.
   block.tscn           Bloque de terreno (StaticBody2D, block.gd) con `size` editable: piso, plataforma o muro.
                        TerrainArt lo viste solo. Con él se traza todo nivel nuevo.
   bowl.tscn            Cuenco en V (bowl.gd: `width`, `slope`), tablas resbalosas (friction 0): la META de muchos
@@ -263,7 +265,8 @@ default_bus_layout.tres  Buses de audio Master / Music / SFX (ver "Volumen y bus
 tools/convertir_video.bat|.sh  Convierte el video de la intro a video/intro.ogv (ver "Intro (video)").
 tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python tools/generate_sfx.py [nombres]`
                    (sin nombres, todos; con nombres, solo esos, p. ej. `plate gate wind`).
-tools/generate_tuetue_art.py  Dibuja el arte provisorio del Tue Tue (Pillow) en assets/enemigos/tue_tue/.
+tools/generate_tuetue_art.py  Dibuja el arte provisorio del Tue Tue (Pillow + numpy): la cabeza (papel recortado) en
+                   assets/enemigos/tue_tue/ y el pájaro en assets/enemigos/tue_tue/alternativos/pajaro/.
 tests/             Bot de pruebas (ver "Bot de pruebas"): play_level.gd, run_all.sh, solutions/<nivel>.gd,
                    rec_map.gd (graba el mapa para el tráiler). Excluido del export (exclude_filter "tests/*").
 trailer/           Tráiler: trailer_es.mp4 / trailer_en.mp4 + cómo rehacerlo (make_trailer.sh: el bot juega y el
@@ -478,7 +481,7 @@ lo mueve `TueTue` según el modo. Todo es determinista (patrón fijo, sin azar):
 |---|---|
 | 1. Pelea (`FIGHT`) | Arena con fosos de púas a los costados. El Tue Tue repite `FIGHT_PATTERN`: **planea** en el centro (a tiro de un lanzamiento desde el piso: el alcance es `max_length` 320) y entre planeos **ataca**: PICADA a ras del piso (aviso: tiembla y chilla 0,9 s; empuja a quien toca hacia el foso del lado al que va, `swoop_knockback` bajo para pasar bajo los escalones) o RÁFAGA desde un costado (2,6 s: arrastra a los jugadores, `Player.add_push`, y a los extremos que cuelgan). Se esquiva saltando la picada y caminando contra la ráfaga. Un extremo **lanzado** (o a más de 550 px/s) que lo toca le quita una vida (5); tras un golpe ataca sin planear. Barra de vida (`BossBar`) arriba al centro. |
 | 2. Subida (`ESCAPE` → `CLIMB`) | Sin vidas escapa hacia arriba; a los 3 s la cámara sube sola (40 px/s; 75 si los dos van en la mitad de arriba) hasta la cima. Escalones en zigzag de 120 px por lado (afuera x 40..200 / adentro 240..400 y su espejo). Quien queda bajo el borde de abajo muere (`abyss_margin`). Un techo invisible (`WorldBoundaryShape2D`) sigue el borde de arriba y el fondo acompaña a la cámara. El Tue Tue vuela arriba de la pantalla. Con el emboque **en la mano** se salta sin que la cuerda reste altura ni amarre a los escalones. |
-| 3. Cima (`SUMMIT`) | Dos repisas con una ranura de 36 px y un cuenco debajo (como "Escalones"). Recién aquí se encienden `WinManager.active` y `CloseupManager.enabled` (+ `set_home` con el rectángulo de la cima). El Tue Tue da vueltas y se tira en picada al cuenco cada `orbit_time` o apenas los dos extremos se acercan (`react_radius`, no antes de `orbit_min_time`): los desparrama. Pegarle de un lanzamiento lo deja **mareado** `stun_time` (6,5 s) en un rincón: la ventana para embocar. |
+| 3. Cima (`SUMMIT`) | Dos repisas con una ranura de 36 px y un cuenco debajo (como "Escalones"). Recién aquí se encienden `WinManager.active` y `CloseupManager.enabled` (+ `set_home` con el rectángulo de la cima). El Tue Tue no deja de atacar (`HARASS_PATTERN`, entre ataques una vuelta de `orbit_time` 1,6 s): **picadas** por las repisas a la altura del pecho (empujan, `summit_knockback`, alejando al jugador de la ranura y sacando su extremo del cuenco), **ráfagas** (arrastran a los jugadores, `summit_gust_push`, y soplan los extremos fuera del cuenco) y **caídas** sobre el cuenco (golpean a quien esté en la ranura y desparraman los extremos). Apenas los dos extremos se juntan (`react_radius` 220, dando vueltas o yendo a atacar) cae sobre el cuenco con un aviso corto (`dive_telegraph_time`). Se esquiva igual que en la arena (saltar la picada, caminar contra la ráfaga, alejarse de la ranura). Pegarle de un lanzamiento lo deja **mareado** `stun_time` (5,5 s) en un rincón: la ventana para embocar (sin marearlo es casi imposible). Un empujón puede tirar a alguien de la repisa (si no cae en un escalón, muere y retoma en la cima). |
 | `WON` | Al embocar se va chillando (`beaten`); el WinManager sigue como en cualquier nivel. |
 
 **Checkpoints:** morir después de derrotarlo (la huida o la subida) o en la cima recarga y retoma al comienzo de esa fase (`BossFight._checkpoint`,
@@ -491,8 +494,8 @@ antes del checkpoint se conservan (`ScoreManager.restore`). `BossFight` tiene `r
 cinta) y `Player.knockback`; grupos `"players"` y `"emboques"`; `Emboque.is_flying` / `stop_flight`;
 `WinManager.active`; `CloseupManager.enabled`, `level_origin` y `set_home`.
 
-**Ajustes:** en el Inspector del `TueTue` de la escena (puntos de planeo, tiempos, fuerza de picada y ráfaga, vida,
-acoso y mareo) y del `BossFight` (velocidad de la cámara, demora, margen del abismo, dónde reaparecen). El trazado
+**Ajustes:** en el Inspector del `TueTue` de la escena (diseño `look`, puntos de planeo, tiempos, fuerza de picada
+y ráfaga, vida, acoso de la cima y mareo) y del `BossFight` (velocidad de la cámara, demora, margen del abismo, dónde reaparecen). El trazado
 se generó por código (escalones calculados) pero es una escena normal: se puede editar a mano.
 
 ### Bot de pruebas (`tests/`)
@@ -1001,9 +1004,12 @@ Rojo mata al jugador y no al emboque; naranja mata a ambos; el muro no se salta 
 Bot (`tests/solutions/jefe.gd`, controlador que reacciona al estado del Tue Tue): gana el nivel completo en ~60 s
 (pelea ~31 s con 5 golpes, subida ~24 s, cima ~5 s); también empezando en la subida (`--var=start=climb`, 29 s) y en
 la cima (`--var=start=summit`, 5 s); con cuerda final de J1 140/160/180 y de J2 140/160/180. Controles que fallan:
-nadie hace nada → la ráfaga lo tira al foso de púas (18 s); sin esquivar picadas ni ráfagas → al foso (8 s). En la
-cima sin marearlo el pájaro desparrama los extremos al acercarse y hay que reintentar (gana a los 13 s, en el
-2.º-3.er intento; mareándolo, al 1.º). Checkpoints con recargas reales (PASS 21/21): entrar = intro → pelea con
+nadie hace nada → la ráfaga lo tira al foso de púas (18 s); sin esquivar picadas ni ráfagas → al foso (8 s).
+**Cima más difícil** (pedido del equipo: el Tue Tue no empujaba): el bot ahora espera en su lado de la repisa
+saltando picadas y caminando contra ráfagas mientras J1 lo marea, y emboca durante el mareo (gana en ~65 s el nivel
+completo, 11 s la cima; cuerdas 140/180 y retroceso 20/40 también). Sin marearlo, 3 intentos desparramados por las
+caídas y termina empujado fuera de la repisa (antes de este cambio ganaba al 1.er intento). Los dos diseños
+(`look`) cargan y se ven en la pelea, con su ícono en la barra. Checkpoints con recargas reales (PASS 21/21): entrar = intro → pelea con
 barra; derrotarlo → escapa (ahí se guarda el checkpoint); quedarse abajo en la subida mata y recarga en la subida (J1 sobre la arena, sin barra, el Tue Tue no vuelve a
 pelear, puntaje y sopaipilla juntada conservados) y la cámara vuelve a subir; caer bajo la pantalla en la cima
 recarga en la cima (cámara arriba, WinManager y closeup encendidos); "Reiniciar" de la pausa vuelve a cero (fase

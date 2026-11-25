@@ -1,28 +1,53 @@
 extends Node2D
 class_name TueTue
 
-## El Tue Tue: el jefe del último nivel, un pájaro de mal agüero que no deja
-## embocar. Vuela sin chocar con nada (es un espíritu). Lo maneja BossFight según la
-## fase; acá está cómo se mueve y ataca en cada modo, siempre con el MISMO patrón
-## (sin azar: se puede aprender, y el bot de pruebas puede ganarle).
+## El Tue Tue: el jefe del último nivel, el espíritu de mal agüero que no deja
+## embocar. Vuela sin chocar con nada. Lo maneja BossFight según la fase; acá está
+## cómo se mueve y ataca en cada modo, siempre con el MISMO patrón (sin azar: se
+## puede aprender, y el bot de pruebas puede ganarle).
 ##
 ## - FIGHT (fase 1): planea en el centro (ahí es fácil pegarle), y entre planeo y
 ##   planeo ataca: PICADA a ras del piso (empuja a quien toque) o RÁFAGA desde un
 ##   costado (arrastra a todos hacia el foso de púas del otro lado). Un extremo
 ##   LANZADO (o muy rápido) que lo toca le quita una vida; sin vidas → defeated.
 ## - FOLLOW (fase 2): vuela arriba de la pantalla mientras la cámara sube.
-## - HARASS (fase 3, la cima): da vueltas y cada tanto (o apenas los dos extremos
-##   se acercan) se tira en picada sobre el punto del emboque y los desparrama. Si
-##   le pegan, queda mareado unos segundos: la ventana para embocar.
+## - HARASS (fase 3, la cima): no deja de atacar. Entre vueltas cortas hace
+##   PICADAS por las repisas (empujan a los jugadores y, con ellos, sacan los
+##   extremos del cuenco), RÁFAGAS (arrastran a los jugadores y soplan los extremos
+##   fuera del cuenco) y CAÍDAS en picada sobre el cuenco (golpean a quien esté en
+##   la ranura y desparraman los extremos). Apenas los dos extremos se acercan, cae
+##   sobre el cuenco. Si le pegan, queda mareado unos segundos: la ventana para
+##   embocar.
 ## - BEATEN: tras el emboque final se va chillando.
+##
+## Diseño ("look"): la cabeza transformada (como en el video de la intro) o el
+## pájaro del primer boceto. Se cambia en el Inspector.
 
 signal hit_taken(hp_left: int)
 signal defeated
 signal stunned
 
 enum Mode { IDLE, FIGHT, FLEE, FOLLOW, HARASS, BEATEN }
-## Estados de la fase de pelea / acoso (el bot de pruebas los lee).
+## Estados de la pelea / acoso (el bot de pruebas los lee por número).
 enum State { IDLE, MOVE, HOVER, TELEGRAPH, SWOOP, GUST, HURT, ORBIT, DIVE, STUNNED, GONE }
+
+## Los diseños: cuadros (vuelo + grito), trocitos que salen al pegarle, ícono de
+## vida del HUD y escala del dibujo.
+const LOOKS := [
+	{"frames": preload("res://assets/enemigos/tue_tue/tue_tue_frames.tres"),
+		"bits": preload("res://assets/enemigos/tue_tue/trozo.png"),
+		"icon": preload("res://assets/enemigos/tue_tue/vida.png"), "scale": 0.42},
+	{"frames": preload("res://assets/enemigos/tue_tue/alternativos/pajaro/pajaro_frames.tres"),
+		"bits": preload("res://assets/enemigos/tue_tue/alternativos/pajaro/pluma.png"),
+		"icon": preload("res://assets/enemigos/tue_tue/alternativos/pajaro/vida.png"), "scale": 0.5},
+]
+
+## Cuál dibujo usar: la cabeza transformada (el del video) o el pájaro (el primero).
+@export_enum("Cabeza (transformado)", "Pájaro") var look: int = 0:
+	set(value):
+		look = value
+		if is_node_ready():
+			_apply_look()
 
 @export_group("Pelea")
 @export var max_hp: int = 5
@@ -56,15 +81,30 @@ enum State { IDLE, MOVE, HOVER, TELEGRAPH, SWOOP, GUST, HURT, ORBIT, DIVE, STUNN
 
 @export_group("Acoso en la cima")
 @export var orbit_radius: Vector2 = Vector2(260, 120)
-@export var orbit_time: float = 3.6
-## Radio en que la picada desparrama los extremos y con qué rapidez salen (px/s).
-@export var blow_radius: float = 230.0
-@export var blow_speed: float = 520.0
-@export var stun_time: float = 6.5
-## Si los dos extremos se acercan a menos de esto (px) se tira en picada sin esperar
-## a terminar la vuelta (no deja embocar), pero no antes de orbit_min_time.
-@export var react_radius: float = 130.0
-@export var orbit_min_time: float = 1.2
+## Vuelta entre ataque y ataque (s): corta, casi no da respiro.
+@export var orbit_time: float = 1.6
+## Picadas y ráfagas de la cima: altura respecto del cuenco (a la altura del pecho
+## de quien está en las repisas) y medio ancho del recorrido.
+@export var summit_line_dy: float = -173.0
+@export var summit_half_width: float = 320.0
+## Empujón de la picada en la cima: aleja a los jugadores de la ranura (y, con la
+## cuerda, saca su extremo del cuenco) sin tirarlos siempre de las repisas.
+@export var summit_knockback: Vector2 = Vector2(420, -200)
+## Ráfaga de la cima: más corta y suave que la de la arena (las repisas son angostas).
+@export var summit_gust_time: float = 1.8
+@export var summit_gust_push: float = 220.0
+## Caída sobre el cuenco: empujón a quien toque (x hacia afuera del cuenco).
+@export var dive_knockback: Vector2 = Vector2(420, -260)
+## Radio en que la caída desparrama los extremos y con qué rapidez salen (px/s).
+@export var blow_radius: float = 260.0
+@export var blow_speed: float = 650.0
+@export var stun_time: float = 5.5
+## Si los dos extremos se acercan a menos de esto (px) cae sobre el cuenco sin
+## esperar a terminar la vuelta (no deja embocar), pero no antes de orbit_min_time.
+@export var react_radius: float = 220.0
+## Aviso antes de caer sobre el cuenco (más corto que el de los otros ataques).
+@export var dive_telegraph_time: float = 0.55
+@export var orbit_min_time: float = 0.5
 
 ## Orden fijo de la pelea: planear en un punto / picada desde un lado / ráfaga
 ## desde un lado (from = -1 izquierda, 1 derecha).
@@ -79,18 +119,29 @@ const FIGHT_PATTERN := [
 	{"do": "gust", "from": 1},
 ]
 
+## Orden fijo del acoso en la cima (entre cada ataque, una vuelta corta).
+const HARASS_PATTERN := [
+	{"do": "orbit"}, {"do": "swoop", "from": 1},
+	{"do": "orbit"}, {"do": "dive"},
+	{"do": "orbit"}, {"do": "gust", "from": -1},
+	{"do": "orbit"}, {"do": "swoop", "from": -1},
+	{"do": "orbit"}, {"do": "dive"},
+	{"do": "orbit"}, {"do": "gust", "from": 1},
+]
+
 var mode: Mode = Mode.IDLE
 var state: State = State.IDLE
 var hp: int = 5
-## Paso actual del patrón de pelea (el bot lo lee).
+## Paso actual del patrón (el bot lo lee).
 var step: Dictionary = {}
 
 var _pattern_i := -1
+var _harass_i := -1
 var _t := 0.0                 # tiempo en el estado actual
 var _target := Vector2.ZERO
 var _move_then := ""          # qué hacer al llegar (MOVE)
 var _swoop_dir := 0
-var _swoop_hit := {}          # jugadores ya empujados en esta picada
+var _swoop_hit := {}          # jugadores ya empujados en este ataque
 var _hurt := 0.0              # invulnerable mientras > 0
 var _camera: Camera2D
 var _harass_center := Vector2.ZERO
@@ -108,10 +159,22 @@ var _hover_base := Vector2.ZERO
 
 func _ready() -> void:
 	hp = max_hp
+	_apply_look()
 	_hurtbox.body_entered.connect(_on_hurtbox_body_entered)
 	_stars.visible = false
 	_gust_fx.emitting = false
 	visible = false
+
+func _apply_look() -> void:
+	var l: Dictionary = LOOKS[clampi(look, 0, LOOKS.size() - 1)]
+	_sprite.sprite_frames = l.frames
+	_sprite.scale = Vector2.ONE * float(l.scale)
+	_sprite.play(&"fly")
+	_feathers.texture = l.bits
+
+## Ícono de una vida en la barra del HUD (según el diseño).
+func hp_icon() -> Texture2D:
+	return LOOKS[clampi(look, 0, LOOKS.size() - 1)].icon
 
 # --- Órdenes de BossFight ---
 
@@ -127,6 +190,7 @@ func start_fight() -> void:
 func flee() -> void:
 	mode = Mode.FLEE
 	_set_state(State.MOVE)
+	_gust_fx.emitting = false
 	_target = Vector2(position.x, position.y - 900)
 	_screech()
 
@@ -144,13 +208,15 @@ func harass(center: Vector2) -> void:
 	visible = true
 	_harass_center = center
 	_orbit_phase = 0.0
-	_set_state(State.ORBIT)
+	_harass_i = -1
+	_next_harass()
 	_screech()
 
 ## Embocaron: se va chillando y no vuelve.
 func beaten() -> void:
 	mode = Mode.BEATEN
 	_set_state(State.MOVE)
+	_gust_fx.emitting = false
 	_target = position + Vector2(0, -800)
 	_stars.visible = false
 	_screech()
@@ -179,8 +245,51 @@ func _physics_process(delta: float) -> void:
 
 func _fight(delta: float) -> void:
 	match state:
+		State.HOVER:
+			position = _hover_base + Vector2(sin(_t * 1.9) * hover_sway.x, sin(_t * 3.1) * hover_sway.y)
+			if _t >= hover_time:
+				_next_pattern()
+		State.HURT:
+			# Retrocede un poco y sigue con el siguiente ataque.
+			position += (_target - position) * minf(1.0, delta * 6.0)
+			if _t >= hurt_time:
+				_next_pattern(true)
+		_:
+			_attack(delta)
+
+func _harass(delta: float) -> void:
+	match state:
+		State.ORBIT:
+			_orbit_phase += delta * 1.3
+			var want := _harass_center + Vector2(cos(_orbit_phase) * orbit_radius.x,
+				-170.0 - absf(sin(_orbit_phase)) * orbit_radius.y)
+			_fly_to(want, fly_speed, delta)
+			if _t >= orbit_min_time and _ends_close():
+				# Están por embocar: cae sobre el cuenco ya (fuera del patrón).
+				_begin_attack({"do": "dive"})
+			elif _t >= orbit_time:
+				_next_harass()
+		State.STUNNED:
+			_fly_to(_target + Vector2(0, sin(_t * 2.0) * 8.0), fly_speed, delta)
+			if _t >= stun_time:
+				_stars.visible = false
+				_set_state(State.ORBIT)
+				_screech()
 		State.MOVE:
-			if _fly_to(_target, fly_speed, delta):
+			# Yendo a atacar: si los extremos se juntan, cambia de idea y cae al cuenco.
+			if step.get("do", "") != "dive" and _ends_close():
+				_begin_attack({"do": "dive"})
+			else:
+				_attack(delta)
+		_:
+			_attack(delta)
+
+## Ataques (iguales en la arena y en la cima; cambian los bordes y la altura):
+## ir al punto de partida → avisar → picada / ráfaga / caída.
+func _attack(delta: float) -> void:
+	match state:
+		State.MOVE:
+			if _fly_to(_target, fly_speed * (1.0 if mode == Mode.FIGHT else 1.3), delta):
 				match _move_then:
 					"hover":
 						_set_state(State.HOVER)
@@ -188,81 +297,125 @@ func _fight(delta: float) -> void:
 					"telegraph":
 						_set_state(State.TELEGRAPH)
 						_screech()
-		State.HOVER:
-			position = _hover_base + Vector2(sin(_t * 1.9) * hover_sway.x, sin(_t * 3.1) * hover_sway.y)
-			if _t >= hover_time:
-				_next_pattern()
 		State.TELEGRAPH:
 			# Tiembla y chilla: se viene el ataque.
 			_art.position = Vector2(randf_range(-3, 3), randf_range(-3, 3))
-			if _t >= telegraph_time:
+			var wait := dive_telegraph_time if step.get("do", "") == "dive" else telegraph_time
+			if _t >= wait:
 				_art.position = Vector2.ZERO
-				if step.do == "swoop":
-					_set_state(State.SWOOP)
-					_swoop_dir = -int(step.from)
-					_swoop_hit.clear()
-					Sfx.play(&"swoop")
-				else:
-					_set_state(State.GUST)
-					_start_gust_fx(-int(step.from))
-					Sfx.play(&"gust")
+				_swoop_hit.clear()
+				match str(step.get("do", "")):
+					"swoop":
+						_set_state(State.SWOOP)
+						_swoop_dir = -int(step.from)
+						Sfx.play(&"swoop")
+					"gust":
+						_set_state(State.GUST)
+						_start_gust_fx(-int(step.from))
+						Sfx.play(&"gust")
+					"dive":
+						_set_state(State.DIVE)
+						Sfx.play(&"swoop", 0.85)
 		State.SWOOP:
 			position.x += _swoop_dir * swoop_speed * delta
-			_knock_players()
-			var end_x := arena_right + 60.0 if _swoop_dir > 0 else arena_left - 60.0
+			_knock_players(func(_p: Player) -> int: return _swoop_dir,
+				swoop_knockback if mode != Mode.HARASS else summit_knockback)
+			var end_x := _lane_right() + 60.0 if _swoop_dir > 0 else _lane_left() - 60.0
 			if (position.x - end_x) * _swoop_dir >= 0.0:
-				_next_pattern()
+				_attack_done()
 		State.GUST:
-			position.y = gust_y + sin(_t * 9.0) * 6.0
+			position.y = _gust_line() + sin(_t * 9.0) * 6.0
 			_blow(-int(step.from), delta)
-			if _t >= gust_time:
+			if _t >= (gust_time if mode == Mode.FIGHT else summit_gust_time):
 				_gust_fx.emitting = false
-				_next_pattern()
-		State.HURT:
-			# Retrocede un poco y sigue con el siguiente ataque.
-			position += (_target - position) * minf(1.0, delta * 6.0)
-			if _t >= hurt_time:
-				_next_pattern(true)
+				_attack_done()
+		State.DIVE:
+			_knock_players(func(p: Player) -> int:
+				return 1 if p.global_position.x >= _harass_center.x else -1, dive_knockback)
+			if _fly_to(_harass_center + Vector2(0, 20), swoop_speed * 1.1, delta):
+				_scatter_ends()
+				_attack_done()
 
-## Pasa al siguiente paso del patrón. [param skip_hover]: tras un golpe no vuelve a
-## planear, ataca directamente.
+## Terminó un ataque: el siguiente paso del patrón que corresponda.
+func _attack_done() -> void:
+	if mode == Mode.HARASS:
+		_next_harass()
+	else:
+		_next_pattern()
+
+## Pasa al siguiente paso del patrón de pelea. [param skip_hover]: tras un golpe no
+## vuelve a planear, ataca directamente.
 func _next_pattern(skip_hover := false) -> void:
 	for _i in FIGHT_PATTERN.size():
 		_pattern_i = (_pattern_i + 1) % FIGHT_PATTERN.size()
 		step = FIGHT_PATTERN[_pattern_i]
 		if not (skip_hover and step.do == "hover"):
 			break
-	_set_state(State.MOVE)
-	match step.do:
-		"hover":
-			_target = hover_points[int(step.at) % hover_points.size()]
-			_move_then = "hover"
-		"swoop":
-			var x := arena_right + 40.0 if int(step.from) > 0 else arena_left - 40.0
-			_target = Vector2(x, swoop_y)
-			_move_then = "telegraph"
-		"gust":
-			var gx := arena_right - 60.0 if int(step.from) > 0 else arena_left + 60.0
-			_target = Vector2(gx, gust_y)
-			_move_then = "telegraph"
+	if step.do == "hover":
+		_set_state(State.MOVE)
+		_target = hover_points[int(step.at) % hover_points.size()]
+		_move_then = "hover"
+	else:
+		_begin_attack(step)
 
-## Empuja a los jugadores que toca en picada (una vez por picada a cada uno).
-func _knock_players() -> void:
+## Siguiente paso del acoso en la cima.
+func _next_harass() -> void:
+	_harass_i = (_harass_i + 1) % HARASS_PATTERN.size()
+	var s: Dictionary = HARASS_PATTERN[_harass_i]
+	if s.do == "orbit":
+		step = s
+		_set_state(State.ORBIT)
+	else:
+		_begin_attack(s)
+
+## Vuela al punto de partida de un ataque; al llegar avisa (tiembla y chilla).
+func _begin_attack(s: Dictionary) -> void:
+	step = s
+	_set_state(State.MOVE)
+	_move_then = "telegraph"
+	match str(s.do):
+		"swoop":
+			var x := _lane_right() + 40.0 if int(s.from) > 0 else _lane_left() - 40.0
+			_target = Vector2(x, _swoop_line())
+		"gust":
+			var gx := _lane_right() - 60.0 if int(s.from) > 0 else _lane_left() + 60.0
+			_target = Vector2(gx, _gust_line())
+		"dive":
+			_target = _harass_center + Vector2(0, -200)
+
+# Bordes y alturas de los ataques: la arena (fase 1) o las repisas de la cima.
+func _lane_left() -> float:
+	return arena_left if mode != Mode.HARASS else _harass_center.x - summit_half_width
+
+func _lane_right() -> float:
+	return arena_right if mode != Mode.HARASS else _harass_center.x + summit_half_width
+
+func _swoop_line() -> float:
+	return swoop_y if mode != Mode.HARASS else _harass_center.y + summit_line_dy
+
+func _gust_line() -> float:
+	return gust_y if mode != Mode.HARASS else _harass_center.y + summit_line_dy
+
+## Empuja a los jugadores que toca (una vez por ataque a cada uno), hacia el lado
+## que diga [param side_of] (±1).
+func _knock_players(side_of: Callable, kb: Vector2) -> void:
 	for body in _hitbox.get_overlapping_bodies():
 		if body is Player and not _swoop_hit.has(body):
 			_swoop_hit[body] = true
-			(body as Player).knockback(Vector2(swoop_knockback.x * _swoop_dir, swoop_knockback.y))
+			var side: int = side_of.call(body)
+			(body as Player).knockback(Vector2(kb.x * side, kb.y))
 			Sfx.play(&"boss_hit", 1.4, -6.0)
 
 ## Ráfaga hacia [param dir]: arrastra a todos los jugadores y empuja los extremos
 ## que cuelgan (no los lanzados: el tiro sigue recto).
 func _blow(dir: int, _delta: float) -> void:
+	var push := gust_push if mode != Mode.HARASS else summit_gust_push
 	for p in get_tree().get_nodes_in_group(&"players"):
-		(p as Player).add_push(Vector2(dir * gust_push, 0))
+		(p as Player).add_push(Vector2(dir * push, 0))
 	for e in _emboques():
 		var end := e.get_end()
-		if end != null and not e.is_flying() and not e.is_held():
-			end.apply_central_force(Vector2(dir * gust_end_force * end.mass, 0))
+		if end != null and not e.is_flying() and not e.is_held() and not end.is_attached():
+			end.apply_central_force(Vector2(dir * gust_end_force * end.mass, -0.35 * gust_end_force * end.mass))
 
 func _start_gust_fx(dir: int) -> void:
 	_gust_fx.direction = Vector2(dir, 0)
@@ -279,35 +432,6 @@ func _follow(delta: float) -> void:
 	if fmod(_phase, 6.0) < delta:
 		_screech()
 
-func _harass(delta: float) -> void:
-	match state:
-		State.ORBIT:
-			_orbit_phase += delta * 1.3
-			var want := _harass_center + Vector2(cos(_orbit_phase) * orbit_radius.x,
-				-160.0 - absf(sin(_orbit_phase)) * orbit_radius.y)
-			_fly_to(want, fly_speed, delta)
-			if _t >= orbit_time or (_t >= orbit_min_time and _ends_close()):
-				_set_state(State.TELEGRAPH)
-				_target = _harass_center + Vector2(0, -190)
-				_screech()
-		State.TELEGRAPH:
-			_fly_to(_target, fly_speed, delta)
-			_art.position = Vector2(randf_range(-3, 3), randf_range(-3, 3))
-			if _t >= telegraph_time:
-				_art.position = Vector2.ZERO
-				_set_state(State.DIVE)
-				Sfx.play(&"swoop")
-		State.DIVE:
-			if _fly_to(_harass_center + Vector2(0, 20), swoop_speed * 1.1, delta):
-				_scatter_ends()
-				_set_state(State.ORBIT)
-		State.STUNNED:
-			_fly_to(_target + Vector2(0, sin(_t * 2.0) * 8.0), fly_speed, delta)
-			if _t >= stun_time:
-				_stars.visible = false
-				_set_state(State.ORBIT)
-				_screech()
-
 ## Los dos extremos colgando cerca uno del otro (están por embocar).
 func _ends_close() -> bool:
 	var ends: Array[RopeEnd] = []
@@ -318,7 +442,7 @@ func _ends_close() -> bool:
 		ends.append(end)
 	return ends.size() == 2 and ends[0].global_position.distance_to(ends[1].global_position) < react_radius
 
-## La picada en la cima: los extremos cerca del punto de emboque salen volando.
+## La caída en la cima: los extremos cerca del cuenco salen volando.
 func _scatter_ends() -> void:
 	Sfx.play(&"gust", 1.3)
 	_feathers.restart()
@@ -329,9 +453,8 @@ func _scatter_ends() -> void:
 		var off := end.global_position - _harass_center
 		if off.length() > blow_radius:
 			continue
-		var dir := off.normalized() if off.length() > 4.0 else Vector2(1 if e.end_kind == "palito" else -1, 0)
-		dir.x = signf(dir.x) if absf(dir.x) > 0.01 else 1.0
-		end.linear_velocity = Vector2(dir.x * blow_speed, -blow_speed * 0.45)
+		var dir_x := signf(off.x) if absf(off.x) > 4.0 else (1.0 if e.end_kind == "palito" else -1.0)
+		end.linear_velocity = Vector2(dir_x * blow_speed, -blow_speed * 0.55)
 
 # --- Golpes ---
 
@@ -353,10 +476,11 @@ func _on_hurtbox_body_entered(body: Node) -> void:
 	_feathers.restart()
 	_flash()
 	Sfx.play(&"boss_hit")
+	_gust_fx.emitting = false
+	_art.position = Vector2.ZERO
 	if mode == Mode.FIGHT:
 		hp -= 1
 		hit_taken.emit(hp)
-		_gust_fx.emitting = false
 		if hp <= 0:
 			defeated.emit()
 			return

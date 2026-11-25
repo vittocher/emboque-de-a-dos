@@ -78,21 +78,31 @@ Se calculan solas a partir del dibujo: al cambiar un PNG, su sombra cambia con �
 
 ## El Tue Tue (jefe del último nivel)
 
-Arte **provisorio** dibujado por código (`tools/generate_tuetue_art.py`): un pájaro nocturno oscuro de ojos
-amarillos. Para el definitivo, reemplazar los PNG de `assets/enemigos/tue_tue/` con el mismo nombre (dibujado
-**de frente**, centrado; hoy cada cuadro es de 360×280 px y en el juego se ve a la mitad, escala 0,5 del nodo
-`Sprite` de `scenes/boss/tue_tue.tscn`; si cambia el tamaño, ajustar esa escala).
+Hay **dos diseños** y se elige con **`look`** en el Inspector del nodo `TueTue` (en `scenes/boss/tue_tue.tscn` o en
+el nivel `scenes/levels/jefe.tscn`): **"Cabeza (transformado)"** (el que se usa) o **"Pájaro"** (el primer boceto,
+guardado por si se vuelve a él). El cambio también pone las partículas al pegarle y el ícono de la barra de vida.
+Los dos son **provisorios**, dibujados por código (`tools/generate_tuetue_art.py`). Para el definitivo,
+reemplazar los PNG con el mismo nombre (dibujado **de frente**, centrado en la cabeza; si cambia el tamaño del
+cuadro, ajustar la escala en `LOOKS` de `scripts/boss/tue_tue.gd`).
+
+**Cabeza transformada** (como en el video de la intro: cabeza verde que vuela con orejas de murciélago, estilo papel
+recortado), en `assets/enemigos/tue_tue/` (cuadros de 640×380 px, en el juego a escala 0,42):
 
 | Qué | Archivo(s) | Notas |
 |---|---|---|
-| Vuelo (aleteo en loop, 10 FPS) | `vuelo_1.png`, `vuelo_2.png`, `vuelo_3.png` (alas arriba, al medio, abajo) | Animación `fly` del `SpriteFrames` de `tue_tue.tscn` (orden 1-2-3-2). Al atacar aletea al doble. |
-| Chillido (aviso de ataque, 0,6 s) | `grito.png` | Pico abierto, ojos rojos: es la señal de que viene una picada o una ráfaga. |
-| Plumas que vuelan al pegarle | `pluma.png` | Partículas `Feathers`. |
-| Estrellitas de mareado (en la cima) | `estrella.png` | Tres, girando sobre la cabeza (`Art/Stars`). |
-| Vida en la barra del HUD | `vida.png` | Una pluma dorada por vida; las perdidas se apagan. La barra es `scenes/boss/boss_bar.tscn` (madera morada, mismo shader que el puntaje). |
-| Rayitas de la ráfaga | `assets/props/viento/rafaga.png` | Las mismas del viento, en `GustFx`. |
+| Vuelo (aleteo de las orejas, 8 FPS) | `vuelo_1.png`, `vuelo_2.png`, `vuelo_3.png` (orejas arriba, al medio, abajo) | Animación `fly` de `tue_tue_frames.tres` (orden 1-2-3-2). Al atacar aletea al doble. |
+| Grito (aviso de ataque, 0,6 s) | `grito.png` | Boca abierta con lengua, cejas enojadas, ojos rojos: viene una picada, una ráfaga o la caída. |
+| Trocitos de papel al pegarle | `trozo.png` | Partículas `Feathers`. |
+| Vida en la barra del HUD | `vida.png` | Cabecita; las vidas perdidas se apagan. |
 
-Sonidos: `tuetue.wav` (su grito: dos silbidos que caen), `boss_hit.wav` (golpe + graznido + plumas), `gust.wav`
+**Pájaro** (alternativo), en `assets/enemigos/tue_tue/alternativos/pajaro/`: `vuelo_1..3.png` + `grito.png`
+(`pajaro_frames.tres`, 360×280 a escala 0,5), `pluma.png` (partículas) y `vida.png` (pluma dorada).
+
+Los dos usan `assets/enemigos/tue_tue/estrella.png` (estrellitas de mareado, `Art/Stars`) y las rayitas de la ráfaga
+`assets/props/viento/rafaga.png` (`GustFx`). La barra de vida es `scenes/boss/boss_bar.tscn` (madera morada, mismo
+shader que el puntaje).
+
+Sonidos: `tuetue.wav` (su grito: dos silbidos que caen), `boss_hit.wav` (golpe + graznido + aleteo), `gust.wav`
 (ráfaga) y `swoop.wav` (picada). Ver la tabla de sonidos.
 
 ## Celebración del emboque

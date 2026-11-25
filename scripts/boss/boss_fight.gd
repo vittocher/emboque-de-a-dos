@@ -104,6 +104,7 @@ func _ready() -> void:
 	_boss.defeated.connect(_on_boss_defeated)
 	_boss.stunned.connect(_on_boss_stunned)
 	if _bar != null:
+		_bar.feather_texture = _boss.hp_icon()
 		_bar.setup(_boss.max_hp)
 	_make_ceiling()
 	_make_banner()

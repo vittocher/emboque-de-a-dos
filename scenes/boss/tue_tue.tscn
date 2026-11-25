@@ -1,41 +1,10 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/boss/tue_tue.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/enemigos/tue_tue/vuelo_1.png" id="2_v1"]
-[ext_resource type="Texture2D" path="res://assets/enemigos/tue_tue/vuelo_2.png" id="3_v2"]
-[ext_resource type="Texture2D" path="res://assets/enemigos/tue_tue/vuelo_3.png" id="4_v3"]
-[ext_resource type="Texture2D" path="res://assets/enemigos/tue_tue/grito.png" id="5_grito"]
-[ext_resource type="Texture2D" path="res://assets/enemigos/tue_tue/pluma.png" id="6_pluma"]
+[ext_resource type="SpriteFrames" path="res://assets/enemigos/tue_tue/tue_tue_frames.tres" id="2_frames"]
+[ext_resource type="Texture2D" path="res://assets/enemigos/tue_tue/trozo.png" id="6_pluma"]
 [ext_resource type="Texture2D" path="res://assets/enemigos/tue_tue/estrella.png" id="7_estrella"]
 [ext_resource type="Texture2D" path="res://assets/props/viento/rafaga.png" id="8_rafaga"]
-
-[sub_resource type="SpriteFrames" id="Frames_tuetue"]
-animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("2_v1")
-}, {
-"duration": 1.0,
-"texture": ExtResource("3_v2")
-}, {
-"duration": 1.0,
-"texture": ExtResource("4_v3")
-}, {
-"duration": 1.0,
-"texture": ExtResource("3_v2")
-}],
-"loop": true,
-"name": &"fly",
-"speed": 10.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("5_grito")
-}],
-"loop": true,
-"name": &"screech",
-"speed": 5.0
-}]
 
 [sub_resource type="CircleShape2D" id="Shape_hurt"]
 radius = 44.0
@@ -59,8 +28,8 @@ script = ExtResource("1_script")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="Art"]
 texture_filter = 4
-scale = Vector2(0.5, 0.5)
-sprite_frames = SubResource("Frames_tuetue")
+scale = Vector2(0.42, 0.42)
+sprite_frames = ExtResource("2_frames")
 animation = &"fly"
 autoplay = "fly"
 

@@ -1,8 +1,9 @@
 extends PanelContainer
 class_name BossBar
 
-## Vida del Tue Tue en el HUD (arriba al centro): su nombre y una pluma dorada por
-## vida sobre madera, como la placa de puntaje. BossFight llama setup() y set_hp().
+## Vida del Tue Tue en el HUD (arriba al centro): su nombre y un ícono por vida
+## (la cabecita o la pluma, según el diseño del Tue Tue) sobre madera, como la placa
+## de puntaje. BossFight le pasa el ícono y llama setup() y set_hp().
 
 const FULL := Color(1, 1, 1, 1)
 const EMPTY := Color(0.15, 0.1, 0.18, 0.55)
@@ -19,7 +20,11 @@ func setup(max_hp: int) -> void:
 	for i in max_hp:
 		var pip := TextureRect.new()
 		pip.texture = feather_texture
-		pip.custom_minimum_size = Vector2(32, 32)
+		# Tan alto como la placa; ancho según el dibujo (pluma o cabecita).
+		var aspect := 1.0
+		if feather_texture != null:
+			aspect = clampf(feather_texture.get_width() / float(feather_texture.get_height()), 1.0, 1.8)
+		pip.custom_minimum_size = Vector2(32.0 * aspect, 32)
 		pip.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		pip.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		pip.mouse_filter = Control.MOUSE_FILTER_IGNORE

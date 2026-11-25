@@ -8,9 +8,11 @@ const SCENE := "res://scenes/levels/jefe.tscn"
 ##    terminar en el foso de púas.
 ## 2. Subida: con el emboque en la mano (sin cuerda que lo amarre a los escalones)
 ##    sube el zigzag de su lado.
-## 3. Cima: J1 marea al Tue Tue de un lanzamiento y, mientras está mareado, los dos
-##    bajan los extremos por la ranura al cuenco (de a uno, como en "Escalones"). Si
-##    el pájaro los desparrama antes, otro intento (hasta 4).
+## 3. Cima: cada uno espera en su lado de la repisa (lejos de la ranura, donde cae
+##    en picada) saltando las picadas y caminando contra las ráfagas, mientras J1 le
+##    lanza el emboque hasta marearlo; mareado, bajan los extremos por la ranura al
+##    cuenco (de a uno, como en "Escalones") y los balancean. Si se despierta antes
+##    de embocar, otro intento (hasta 4).
 ## --var=r1=…/r2=… largo de la cuerda al bajar al cuenco (160).
 ## --var=start=climb|summit empieza directo en esa fase (para probarlas aparte).
 ## Controles: --var=idle=1 (nadie hace nada: el Tue Tue los tira al foso),
@@ -196,24 +198,63 @@ static func climb(i: int, ctx) -> Array:
 	out += C.climb_box(i, s, x, 385, 480, summit - 40.0)
 	return out
 
-## Cima: J1 marea al Tue Tue (lanzándole mientras da vueltas).
-static func stun_tick(c, i: int, st: Dictionary) -> bool:
+## Cima, un tick: en su lugar ([param home], lejos de la ranura, donde cae en
+## picada), salta las picadas y camina contra las ráfagas; con [param throw] además
+## le lanza el emboque cuando está a tiro (dando vueltas o avisando la caída). True
+## cuando el Tue Tue queda mareado.
+static func summit_tick(c, i: int, st: Dictionary, home: float, throw: bool) -> bool:
 	var b := boss(c)
-	if b.state == B_STUNNED:
+	if b.state == B_STUNNED or c.won():
 		walk(c, i, 0)
 		return true
 	if tapping(c, i, st):
 		return false
 	var pl = c.p(i)
-	var target: Vector2 = b.position + Vector2(0, -6)
-	var ok: bool = b.state == B_ORBIT and pl.is_on_floor() and reach(c, i, target) < 300.0
-	walk(c, i, 0)
-	throw_cycle(c, i, st, target, ok)
+	var em = c.e(i)
+	var kind: String = b.step.get("do", "")
+	var attack: bool = (kind == "swoop" or kind == "gust") and b.state in [B_TELEGRAPH, B_SWOOP, B_GUST]
+	if attack and not c.vars.has("nododge"):
+		if em._throw_state == T_AIMING:
+			tap(c, i, st, "release")
+			return false
+		if kind == "swoop":
+			walk_toward(c, i, home, 15.0)
+			var ahead: float = (pl.global_position.x - b.position.x) * b._swoop_dir
+			if b.state == B_SWOOP and ahead > 0.0 and ahead < 190.0 and pl.is_on_floor():
+				walk(c, i, 0)
+				tap(c, i, st, "jump")
+		else:
+			walk_toward(c, i, home, 10.0)
+		return false
+	if em._throw_state != T_AIMING:
+		walk_toward(c, i, home, 15.0)
+	else:
+		walk(c, i, 0)
+	if throw:
+		var target: Vector2 = b.position + Vector2(0, -6)
+		var ok: bool = (b.state == B_ORBIT or (kind == "dive" and b.state in [B_MOVE, B_TELEGRAPH])) \
+			and pl.is_on_floor() and reach(c, i, target) < 300.0
+		throw_cycle(c, i, st, target, ok)
 	return false
 
-static func stun(i: int) -> Array:
+static func guard(i: int, home: float, throw: bool) -> Array:
 	var st := {}
-	return [["until", func(c): return stun_tick(c, i, st), 30.0]]
+	return [["until", func(c): return summit_tick(c, i, st, home, throw), 40.0]]
+
+## Balancea el extremo (va y vuelve) mientras el Tue Tue sigue mareado; si se
+## despierta antes de embocar, deja de hacerlo (el siguiente intento lo esquiva).
+static func jiggle_stunned(i: int, home: float, back: float) -> Array:
+	var st := {"leg": 0, "t": 0.0}
+	return [["until", func(c):
+		if c.won() or boss(c).state != B_STUNNED:
+			walk(c, i, 0)
+			return true
+		st.t += 1.0 / 120.0
+		var target := home - back if st.leg == 0 else home
+		if walk_toward(c, i, target, 3.0) or st.t > 0.8:
+			st.leg = 1 - st.leg
+			st.t = 0.0
+		return false, 8.0]]
 
 ## Recoge el extremo a la mano, se para junto a la ranura (mirando hacia ella, así
 ## el extremo en la mano queda justo encima: va 8 px adelante), lo suelta (cae por
@@ -224,15 +265,22 @@ static func drop(i: int, ctx) -> Array:
 	return hold_end(i) + [["walk_to", 640.0 - d * 8.0, 1], ["tap", "release"], ["wait", 0.4],
 		["rope", ctx.var_f("r%d" % i, 160)], ["wait", 0.5], ["walk_to", 640.0 - d * ctx.var_f("back", 30), 3]]
 
-## Un intento en la cima: J1 lo marea, bajan los extremos y los balancean. Si el
-## Tue Tue los desparrama antes de embocar, el siguiente intento empieza de nuevo.
+## Un intento en la cima: esperan cada uno en su lugar esquivando mientras J1 le
+## pega (queda mareado), bajan los extremos al cuenco de a uno y los balancean
+## mientras dura el mareo. Si se despierta antes, otro intento.
 static func attempt(n: int, ctx) -> Dictionary:
 	var t := "_%d" % n
-	var mareo: Array = [] if ctx.vars.has("nostun") else stun(1)
-	return {"p1": [["walk_to", 560.0, 6], ["sync", "cima" + t]] + mareo + [["sync", "mareado" + t]] + drop(1, ctx) \
-			+ [["sync", "uno" + t], ["wait", 1.0], ["jiggle", 610.0, -10, 8], ["sync", "fin" + t]],
-		"p2": [["walk_to", 720.0, 6], ["sync", "cima" + t], ["sync", "mareado" + t], ["sync", "uno" + t]] \
-			+ drop(2, ctx) + [["jiggle", 670.0, 10, 8], ["sync", "fin" + t]]}
+	if ctx.vars.has("nostun"):
+		# Control: sin marearlo, bajan los extremos apenas termina un ataque.
+		var calm := func(c): return boss(c).state == B_ORBIT
+		return {"p1": guard(1, 560.0, false).slice(0, 0) + [["until", calm, 10.0]] + drop(1, ctx) \
+				+ [["sync", "uno" + t], ["jiggle", 610.0, -10, 6], ["sync", "fin" + t]],
+			"p2": [["sync", "uno" + t]] + drop(2, ctx) + [["jiggle", 670.0, 10, 6], ["sync", "fin" + t]]}
+	var p1_guard: Array = guard(1, 560.0, true)
+	return {"p1": p1_guard + [["sync", "mareado" + t]] + drop(1, ctx) \
+			+ [["sync", "uno" + t]] + jiggle_stunned(1, 610.0, -10) + [["sync", "fin" + t]],
+		"p2": guard(2, 720.0, false) + [["sync", "mareado" + t], ["sync", "uno" + t]] \
+			+ drop(2, ctx) + jiggle_stunned(2, 670.0, 10) + [["sync", "fin" + t]]}
 
 static func fight(i: int) -> Array:
 	var st := {}
@@ -255,7 +303,7 @@ static func plan(ctx) -> Dictionary:
 	else:
 		p1 += [["do", func(c): c.level.get_node("BossFight").debug_start(4)], ["wait_floor"]]
 		p2 += [["wait_floor"]]
-	for n in 4:
+	for n in 6:
 		var a := attempt(n, ctx)
 		p1 += a.p1
 		p2 += a.p2
