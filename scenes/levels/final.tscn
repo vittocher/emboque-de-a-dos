@@ -35,8 +35,8 @@ position = Vector2(418, 622)
 size = Vector2(76, 24)
 
 [node name="TopLeft" parent="." instance=ExtResource("n_block")]
-position = Vector2(579, 372)
-size = Vector2(62, 24)
+position = Vector2(570, 372)
+size = Vector2(80, 24)
 
 [node name="StartRight" parent="." instance=ExtResource("n_block")]
 position = Vector2(1555, 930)
@@ -46,32 +46,32 @@ size = Vector2(90, 140)
 position = Vector2(1310, 590)
 
 [node name="LedgeRight" parent="." instance=ExtResource("n_block")]
-position = Vector2(1182, 622)
-size = Vector2(76, 24)
+position = Vector2(1170, 622)
+size = Vector2(100, 24)
 
 [node name="TopRight" parent="." instance=ExtResource("n_block")]
-position = Vector2(1021, 372)
-size = Vector2(62, 24)
+position = Vector2(1010, 372)
+size = Vector2(80, 24)
 
 [node name="PlateTop" parent="." instance=ExtResource("n_plate")]
-position = Vector2(579, 360)
+position = Vector2(594, 360)
 channel = 0
-scale = Vector2(0.8, 1)
+scale = Vector2(0.5, 1)
 
 [node name="PlateLow" parent="." instance=ExtResource("n_plate")]
-position = Vector2(1156, 610)
+position = Vector2(1138, 610)
 channel = 1
-scale = Vector2(0.6, 1)
+scale = Vector2(0.45, 1)
 
 [node name="LiftLeft" parent="." instance=ExtResource("n_mp")]
-position = Vector2(502, 620)
-size = Vector2(80, 20)
+position = Vector2(494, 620)
+size = Vector2(64, 20)
 travel = Vector2(0, -250)
 channel = 1
 
 [node name="LiftRight" parent="." instance=ExtResource("n_mp")]
-position = Vector2(1098, 620)
-size = Vector2(80, 20)
+position = Vector2(1086, 620)
+size = Vector2(64, 20)
 travel = Vector2(0, -250)
 channel = 0
 
@@ -87,8 +87,20 @@ position = Vector2(800, 100)
 scale = Vector2(1.6, 1.6)
 
 [node name="Wall" parent="." instance=ExtResource("n_block")]
-position = Vector2(800, -275)
-size = Vector2(16, 650)
+position = Vector2(800, -265)
+size = Vector2(16, 670)
+
+[node name="WallLow" parent="." instance=ExtResource("n_block")]
+position = Vector2(800, 545)
+size = Vector2(16, 830)
+
+[node name="ShaftLeft" parent="." instance=ExtResource("n_block")]
+position = Vector2(537, 522)
+size = Vector2(20, 276)
+
+[node name="ShaftRight" parent="." instance=ExtResource("n_block")]
+position = Vector2(1043, 522)
+size = Vector2(20, 276)
 
 [node name="Fire" parent="." instance=ExtResource("n_fire")]
 position = Vector2(800, 885)
@@ -99,16 +111,16 @@ position = Vector2(800, 1010)
 scale = Vector2(1.25, 1)
 
 [node name="Collectible5" parent="." instance=ExtResource("n_col")]
-position = Vector2(800, 360)
+position = Vector2(740, 230)
 
 [node name="Collectible4" parent="." instance=ExtResource("n_col")]
-position = Vector2(1098, 480)
+position = Vector2(1086, 480)
 
 [node name="Collectible3" parent="." instance=ExtResource("n_col")]
-position = Vector2(502, 480)
+position = Vector2(494, 480)
 
 [node name="Collectible2" parent="." instance=ExtResource("n_col")]
-position = Vector2(1400, 720)
+position = Vector2(1310, 685)
 
 [node name="Collectible1" parent="." instance=ExtResource("n_col")]
-position = Vector2(200, 720)
+position = Vector2(290, 685)

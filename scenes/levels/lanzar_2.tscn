@@ -65,10 +65,10 @@ scale = Vector2(1.25, 1)
 position = Vector2(680, 310)
 
 [node name="Collectible4" parent="." instance=ExtResource("n_col")]
-position = Vector2(1100, 390)
+position = Vector2(1056, 395)
 
 [node name="Collectible3" parent="." instance=ExtResource("n_col")]
-position = Vector2(500, 390)
+position = Vector2(544, 395)
 
 [node name="Collectible2" parent="." instance=ExtResource("n_col")]
 position = Vector2(1310, 640)

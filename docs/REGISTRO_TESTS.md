@@ -140,6 +140,24 @@ t=10,96) igual con el código anterior: falla previa del bot, no de esta mecáni
 
 Rojo mata al jugador y no al emboque; naranja mata a ambos; el muro no se salta por arriba; extremos y jugadores recogen. Rutas: J1 baja con cuidado a la izquierda del rojo, engancha el gancho de abajo (tirar al mínimo, soltar un poco y volver a tirar) y se balancea hasta la T en 10/12 combinaciones largo/ángulo; J2 acorta la cuerda, corre a la izquierda, el palito engancha el gancho derecho y salta a la T en 4/4 ángulos; con la cuerda a 170 el palito roza el bloque naranja; desde la T los extremos cuelgan bajo el muro, se juntan a 5 px y recogen los 2 coleccionables de abajo.
 
+## Tandas 2 y 3, y arreglos de peligro_3 y caja_1
+
+`run_all.sh` 29/29; `run_controls.sh` 42/42. Mono (700–800 s por prueba) sin atajos, salvo lo anotado.
+
+| Nivel | Gana | Notas |
+|---|---|---|
+| peligro_3 | 10–32 s | escalón de 113 px, todo con cuerda 60; 8 de 8 |
+| caja_1 | 12 s | caja de 120, pared de 250, todo con cuerda 60; sin caja el mono no sube en 1500 s |
+| caja_3 | 27 s | sin la caja chica o sin la grande no se llega |
+| lanzar_2 | 13 s | mira 22–35° |
+| lanzar_4 | 17–25 s | 14 de 18; sin lanzar el mono ganó una vez en 590 s partiendo en la meta |
+| placa_2 | 24 s | 6 de 6; con el extremo en la placa y a la carrera el mono cruzó una vez sin tocar la cuerda (671 s) |
+| placa_3 | 17–23 s | 6 de 9; sin la placa de la meta el mono no gana |
+| movil_2 | 29–48 s | cuerda 170–210 (con 140 no); con J2 quieto se gana (J2 solo viaja) |
+| viento_2 | 27–36 s | J1 260–320 con J2 110–190; sin viento no |
+| viento_4 | 24 s | los dos a la vez; sin balancearse no (con ráfagas de 1,3 s se ganaba solo) |
+| final | 26 s | sin lanzar, sin ascensores o sin ráfaga no se pasa; nadie cruza |
+
 ## Tanda 1 de los niveles que faltaban
 
 `run_all.sh` 29/29; `run_controls.sh` 29/29 (ningún control se gana). Mono (1000–1200 s por prueba): ningún atajo salvo

@@ -116,7 +116,7 @@ scenes/
                           En las tres el arte lo pone un hijo `Art` con hazard_art.gd: repite la animación a lo
                           ancho en cuadros tan altos como la zona, sin deformarse con la escala de la instancia.
                           Los Polygon2D de color (rojo / morado / naranja) quedaron ocultos.
-  push_box.tscn        Caja empujable (RigidBody2D 64×64, capa 6, rotación bloqueada). Reutilizable en cualquier nivel.
+  push_box.tscn        Caja empujable (RigidBody2D 64×64 o el `size` que se le ponga, capa 6, rotación bloqueada). Reutilizable en cualquier nivel.
                        Arte: Sprite con assets/props/caja/caja.png (320×320 a escala 0.2) + material resaltar.gdshader
                    (madera más cálida y saturada + contorno dorado que late: se distingue del terreno y se
                    entiende que se mueve); placeholders ocultos.
@@ -645,6 +645,14 @@ Leer antes de diseñar o cambiar un nivel.
     hueco): parados juntos, embocar es trivial. Se prueba con `monkey.gd --goal` apuntando al lado contrario. Muros hasta
     arriba, fosos ≥ 480 y fuego bajo el hueco de la meta.
 
+**Que no estorbe**
+
+12. **Todo escalón obligatorio se sube con la cuerda retraída del todo** (feedback peligro_3 y caja_1): ≤ 115 px, o 130 desde
+    parado y pegado. Con la cuerda corta el salto llega a 143–155. Para exigir una caja: pared de 250 y caja GRANDE
+    (`PushBox.size` = 120).
+13. **Nada irrelevante alrededor de la meta** (feedback caja_1): una plataforma o un muro que se puede ignorar, sobra.
+14. **Los recorridos no pueden ser triviales:** una fila de saltos iguales o una sola caja "para subir" no alcanza.
+
 ### Escala del nivel (opcional: más plataformeo y objetos)
 
 Cuando un nivel necesita **más espacio para plataformas y objetos**, se hereda de `levels/level_base_large.tscn` en vez
@@ -653,7 +661,7 @@ la física: personajes, saltos, cuerdas y magnetismo miden lo mismo en px del mu
 51 px en vez de 64). El closeup compensa (`max_zoom` 2,5), así el emboque se ve igual de grande.
 - **Solo en los niveles que lo necesitan**; los que introducen algo simple quedan en 1280×720. Son los dos únicos
   tamaños: con 0,7 el palito casi no se ve.
-- Hoy: peligro_2, caja_2, lanzar_3, placa_4, viento_1 y viento_3.
+- Hoy: peligro_2, caja_2, caja_3, lanzar_2, lanzar_3, placa_3, placa_4, movil_2, los cuatro de viento y el final.
 - Coordenadas: centro (800, 450); espejo = `1600 - x`; `FallZone` en (800, 1010) con escala (1.25, 1).
 - El código no debe asumir 1280×720: usar `LevelFlow.level_size(get_tree())` (mundo) o el viewport (UI).
 
@@ -681,32 +689,26 @@ Las metas se están rehaciendo para que los extremos **cuelguen libres** y haya 
 | Tiro al blanco | lanzar_3 | repisas de 260 px (dos lanzamientos a ganchos por lado); islas a distinta altura: J1 cuelga la campana (cuerda 80–110), J2 le lanza el palito |
 | Volantín | viento_1 | (antes, dos saltos con chorros) columna de 60 px + viento ancho (360, 1600, `player_factor` 0): péndulos al revés |
 | Correo aéreo | viento_3 | (antes, chorros y vientos en contra en ráfagas) el viento sube la campana de J1; J2 baja el palito desde arriba (hay que hallar los largos) |
-| Desnivel | tronco_2, caja_1 | manos a alturas distintas: igualar los extremos con el largo de la cuerda |
+| Desnivel | tronco_2, caja_3 | manos a alturas distintas: igualar los extremos con el largo de la cuerda |
 | Ventana | tronco_4 | muro de 60 con un agujero de 90 px; ranura de 36 entre repisa y muro (pasa el extremo, no el jugador) |
 | Fácil sobre púas | peligro_1 | S ≈ 92, repisas flotantes: los extremos sí pueden entrar donde el jugador muere |
-| Al rojo | peligro_3 | S ≈ 100 con fuego a 175 px de la mano |
+| Al rojo | peligro_3 | S ≈ 100 con fuego a ~175 px de la mano |
 | Tiro con poco ángulo | lanzar_1 | J1 122 px más arriba con la campana colgando (65–100); J2 lanza a 8–16° |
 | Puerta en la meta | placa_1 | compuerta entre los extremos, abierta solo con los dos en la placa de su borde |
-| Hueco con cortina | level_4, movil_1 | S ≈ 92, sin nada macizo cerca |
+| Hueco con cortina | level_4, movil_1, caja_1, placa_2 | S ≈ 92, sin nada macizo cerca |
+| Mismo gancho a distancia | lanzar_2 | un gancho en un agujero de 56 px del muro; cada uno le lanza su extremo (22–35°) |
+| Por la ranura | lanzar_4 | muro con ranura de 60 px; la campana cuelga detrás (cuerda 80–95) y J2 lanza a 10–16° |
+| Mecedora | placa_3 | J2 en una `MovingPlatform` que se mueve (60 px) mientras J1 pisa la placa de su borde: lo mece |
+| Al pasar | movil_2 | J2 en una plataforma que va y viene (más cerca: 116 px entre bordes); J1 se balancea a tiempo |
+| Bandera | viento_2 | viento de costado (1700) estira la cuerda de J1 sobre 260 px hasta el palito de J2; tope en el borde, porque acortar la cuerda con viento arrastra |
+| Ráfagas hacia adentro | viento_4 | S ≈ 184, dos vientos de 260 en ráfagas de 2,2/2,2 s (más cortas o fuertes: se gana sin hacer nada) |
+| Trapecio con viento | final | gancho en un agujero de 60 px del muro, que solo se alcanza saltando dentro de la ráfaga |
 
 Tras el primer playtest: tronco_3 y movil_4 gustaron tal cual; los otros 7 se rehicieron.
-#### Pendientes de rehacer (plan aprobado)
-
-La tanda 1 (9 niveles) ya está hecha, falta probarla con gente. Se conservan tronco_1 y level_2 ("La T"). Prototipos: la
-mecedora (placa_3), la bandera (viento_2) y las ráfagas (viento_4) funcionan; falta ajustar "al pasar" (movil_2). Las metas marcadas (*) son nuevas: si quedan erráticas, se reemplazan por un
-hueco de S ≈ 100. Entre paréntesis, los atajos que encontró el mono en la versión vieja.
-
-| Tanda | Nivel | Recorrido | Meta |
-|---|---|---|---|
-| 2 | caja_3 (sin caja) | torre de dos cajas, pared de 310 | hueco |
-| 2 | lanzar_2 (sin lanzar, cruzar) | repisas de 260, muro | los dos lanzan al mismo gancho |
-| 2 | lanzar_4 | igual | tiro por una ranura |
-| 2 | placa_2 (sin cuerda) | placa hundida, puerta lejos | hueco |
-| 2 | placa_3 (sin caja) "La mecedora" | caja y extremo obligados | * J1 mece la plataforma de J2 con una placa |
-| 2 | movil_2 (saltando, cruzar) | foso ≥ 480, muro | * J2 en una plataforma que pasa |
-| 3 | viento_2 (sin viento) | viento en contra | * el viento lateral estira la cuerda de J1 |
-| 3 | viento_4 | un piso más | * ráfagas que columpian (S ≈ 140) |
-| 3 | final (saltando) | gancho sobre 480 → relevo de ascensores | trapecio que solo se alcanza en una ráfaga |
+Estado: rehechos 27 niveles (todos menos tronco_1 y level_2 "La T"). Probados con gente y aprobados: los 9 primeros y la
+tanda 1. **Falta probar** la tanda 2 (caja_3, lanzar_2, lanzar_4, placa_2, placa_3, movil_2) y la 3 (viento_2, viento_4,
+final). Siguiente fase: recorridos que se sienten **triviales** (feedback: peligro_1 y level_4) y la meta de lanzar_1, que
+es menos intuitiva que el resto.
 
 ### Pantalla de victoria y highscore (`victory.gd` + `score_board.gd`)
 
@@ -821,7 +823,12 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **Un extremo apoyado en la repisa no cae solo por el borde:** con la cuerda al mínimo (60) y la mano 50 px sobre el
   piso, le sobran ~33 px y se queda arriba. Hay que pararse en el borde y **saltar en el lugar** (paso `hang` del bot).
 - **Para exigir una caja (o un gancho), la pared mide 250:** con 200 se salta sin nada (194 con cuerda 170, 239 con 320).
-  Desde la caja, con cuerda larga, se alcanza.
+  Desde una caja normal solo se alcanza con cuerda larga; con la grande (120), también retraída.
+- **Un extremo que cuelga del costado de un ascensor se traba bajo la repisa de arriba:** poner un muro bajo la repisa, al
+  lado del ascensor (final).
+- **Tirar rápido de una cuerda cuyo extremo está trabado arrastra al jugador** (placa_2: lo sacaba por la compuerta); la
+  compuerta lenta (`speed` 90) da tiempo a recoger de a poco.
+- **Una placa en un rebaje de 60 px también la pisa el jugador;** en uno de 36, solo el extremo (placa con `scale.x` 0,55).
 - **Una caja pasa derecho sobre un foso casi de su ancho** (66 px): para que caiga, ~84.
 - **El fuego separa a los jugadores sin frenar las cajas** (las zonas de muerte no las tocan): un pozo con fuego en las
   paredes deja pasar solo cajas.
@@ -890,7 +897,7 @@ Hecho (el detalle de lo verificado con tests headless está en `docs/REGISTRO_TE
 - **Closeup + cámara lenta** al acercarse los extremos (estilo Peggle).
 - **Escala 0,8** opcional (`level_base_large`) y **ráfagas** de viento.
 - **Bonos de estilo** (solo texto): "¡Limpio!" y "¡Al vuelo!".
-- **Zonas de emboque nuevas** (9 niveles de muestra, un tipo cada uno; ver "Zonas de emboque").
+- **Zonas de emboque nuevas** en 27 niveles (ver "Zonas de emboque").
 - **Animación del emboque:** subida de tensión (silencio antes del golpe, viñeta, halo), magnetismo más sutil, piezas pegadas al embocar, click de zoom, partículas doradas y
   confetti + chispas desde las esquinas de abajo.
 
@@ -926,8 +933,8 @@ Pendiente:
 - **Imágenes en inglés definitivas** (`assets/ui/en/portada.png`, `pause_menu.webp`): hoy son el arte original
   con el texto reescrito por código; diseño puede reemplazarlas con el mismo nombre.
 - **Niveles del equipo fuera del mapa** (`main`, `level_3`): corregir el inicio (ver Lecciones) si se quieren sumar.
-- **Zonas de emboque:** probar la tanda 1 con gente y rehacer los 9 que faltan (ver "Zonas de emboque").
-- **Tráiler:** tronco_3, peligro_2, caja_2, lanzar_3, placa_4, movil_3, viento_1 y viento_3 cambiaron de meta (regrabar). Los `start` de los clips en `trailer/edit.py` son tiempos fijos del bot; al regrabar hay que revisarlos (p. ej. `level_4` ahora emboca a los ~20 s de juego; antes, ~14).
+- **Zonas de emboque:** probar con gente las tandas 2 y 3 y hacer menos triviales los recorridos (ver "Zonas de emboque").
+- **Tráiler:** tronco_3, peligro_2, caja_2, lanzar_3, placa_4, movil_3, viento_1, viento_3 y casi todos los demás cambiaron (regrabar). Los `start` de los clips en `trailer/edit.py` son tiempos fijos del bot; al regrabar hay que revisarlos (p. ej. `level_4` ahora emboca a los ~20 s de juego; antes, ~14).
 - **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos.
 
 Post-prototipo (del concepto): más objetos dinámicos, más niveles.

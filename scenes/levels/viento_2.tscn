@@ -41,16 +41,20 @@ gust_on = 1.6
 gust_off = 1.4
 
 [node name="LedgeLeft" parent="." instance=ExtResource("n_block")]
-position = Vector2(575, 432)
-size = Vector2(150, 24)
+position = Vector2(590, 432)
+size = Vector2(180, 24)
+
+[node name="Stop" parent="." instance=ExtResource("n_block")]
+position = Vector2(674, 413)
+size = Vector2(12, 14)
 
 [node name="LedgeRight" parent="." instance=ExtResource("n_block")]
-position = Vector2(1025, 432)
-size = Vector2(150, 24)
+position = Vector2(1014, 432)
+size = Vector2(152, 24)
 
 [node name="Flag" parent="." instance=ExtResource("n_wind")]
-position = Vector2(770, 500)
-size = Vector2(240, 220)
+position = Vector2(740, 470)
+size = Vector2(300, 280)
 direction = Vector2(1, 0)
 strength = 1700.0
 player_factor = 0.0
@@ -84,7 +88,7 @@ position = Vector2(800, 1010)
 scale = Vector2(1.25, 1)
 
 [node name="Collectible5" parent="." instance=ExtResource("n_col")]
-position = Vector2(800, 560)
+position = Vector2(860, 505)
 
 [node name="Collectible4" parent="." instance=ExtResource("n_col")]
 position = Vector2(1370, 540)

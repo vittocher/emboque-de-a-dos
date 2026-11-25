@@ -90,10 +90,10 @@ position = Vector2(800, 1010)
 scale = Vector2(1.25, 1)
 
 [node name="Collectible5" parent="." instance=ExtResource("n_col")]
-position = Vector2(760, 620)
+position = Vector2(760, 590)
 
 [node name="Collectible4" parent="." instance=ExtResource("n_col")]
-position = Vector2(1090, 400)
+position = Vector2(1000, 420)
 
 [node name="Collectible3" parent="." instance=ExtResource("n_col")]
 position = Vector2(630, 400)

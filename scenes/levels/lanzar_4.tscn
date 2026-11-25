@@ -21,8 +21,8 @@ position = Vector2(220, 340)
 position = Vector2(1120, 340)
 
 [node name="GroundLeft" parent="." instance=ExtResource("2_block")]
-position = Vector2(245, 640)
-size = Vector2(490, 160)
+position = Vector2(316, 640)
+size = Vector2(632, 160)
 
 [node name="GroundRight" parent="." instance=ExtResource("2_block")]
 position = Vector2(1036, 640)
