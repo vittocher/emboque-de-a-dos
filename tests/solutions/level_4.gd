@@ -1,36 +1,23 @@
 extends RefCounted
-const CONTROLS := ["12", "1", "2"]
-const SHORTCUTS := ["--no=box --goal=540,68,740,68", "--start=535,0,745,0 --goal=745,68,535,68"]
+const CONTROLS := ["12"]
+const SHORTCUTS := ["--no=box --goal=600,138,620,558", "--start=1080,270,1330,270 --goal=1330,338,1080,338"]
 const SCENE := "res://scenes/level_4.tscn"
-## Nivel 4 del equipo ("Escalones"): la caja empieza DEBAJO de la primera
-## plataforma (200 px sobre el piso). Cada uno salta por encima de la caja, la
-## empuja hacia atrás hasta que quede fuera de la plataforma, se sube a ella,
-## salta a la primera plataforma y sube los escalones (100 px) hasta la meta del
-## centro, donde se juntan los extremos.
-const C := preload("res://tests/solutions/caja_2.gd")
-
-static func side(i: int, d: int, ctx) -> Array:
-	var x := func(v: float) -> float: return v if d == 1 else 1280.0 - v
-	var back := "left" if d == 1 else "right"
-	var box := "Box1" if d == 1 else "Box2"
-	return [["wait_floor"], ["rope", 100], ["walk_to", x.call(170)], ["jump_to", x.call(330)], ["wait", 0.3],
-		["press", back], ["until", func(c): return (c.level.get_node(box).global_position.x - x.call(ctx.var_f("bx", 150))) * d <= 0.0, 6.0],
-		["release", back], ["wait", 0.4]] \
-		+ C.climb_box(i, -d, x, 230, 190, 470) + [["rope", 80], ["wait", 0.4]] \
-		+ C.climb_box(i, d, x, 150, 230, 330) \
-		+ C.climb_box(i, d, x, 325, 410, 230)
-
-## Del segundo escalón a la meta.
-static func last_step(i: int, d: int) -> Array:
-	var x := func(v: float) -> float: return v if d == 1 else 1280.0 - v
-	return C.climb_box(i, d, x, 455, 520, 100) + [["wait", 0.3]]
-
-## En la meta los extremos cuelgan por el hueco, con la cortina entre los jugadores.
-static func goal(i: int, d: int, ctx) -> Array:
-	var x := func(v: float) -> float: return v if d == 1 else 1280.0 - v
-	return [["rope", 60], ["hang", x.call(593)], ["rope", ctx.var_f("r", 150)], ["wait", 0.8], ["sync", "listos"],
-		["swing", x.call(593), ctx.var_f("m", 45) * d, 24]]
+## "Escalones" (del equipo), en dos pisos: los dos van hacia la derecha, J1 por arriba y J2 por abajo.
+## Cada uno tiene que subir una pared de 250 con una caja grande: J1 parte del lado equivocado de la
+## suya y la de J2 tapa las púas pegadas a la pared. J1 sigue por islas sobre el fuego; J2, por
+## islas, caca y un túnel bajo el hueco de la meta, y sube en zigzag al otro lado.
+const M := preload("res://tests/solutions/moves.gd")
+const C := preload("res://tests/solutions/caja_1.gd")
 
 static func plan(ctx) -> Dictionary:
-	return {"p1": side(1, 1, ctx) + last_step(1, 1) + goal(1, 1, ctx),
-		"p2": side(2, -1, ctx) + last_step(2, -1) + goal(2, -1, ctx)}
+	var m: float = ctx.var_f("m", 45)
+	var r: float = ctx.var_f("r", 150)
+	return {
+		"p1": [["wait_floor"], ["rope", 60]] + C.climb(1, -1, 290, 240, 270) + [["walk_to", 100, 4], ["wait_floor"]] + C.push_until_stuck(1, 1)
+			+ C.climb(1, 1, 415, 470, 270) + C.climb(1, 1, 530, 590, 138)
+			+ M.path(1, [[615, 745], ["run", 752, 872], [885, 940], [960, 1060]])
+			+ [["sync", "arriba"], ["hang", 1162], ["rope", r], ["wait", 0.8], ["sync", "listos"], ["swing", 1162, m, 24]],
+		"p2": [["wait_floor"], ["rope", 60]] + C.push_until_stuck(2, 1) + C.climb(2, 1, 455, 510, 690) + C.climb(2, 1, 570, 620, 558)
+			+ M.path(2, [[625, 735], [765, 865], ["over", 920, 960], ["go", 1090], ["over", 1170, 1220], [1325, 1445], [1470, 1570], [1545, 1445], [1470, 1570], [1550, 1350]])
+			+ [["sync", "arriba"], ["hang", 1258], ["rope", r], ["wait", 0.8], ["sync", "listos"], ["swing", 1258, -m, 24]],
+	}

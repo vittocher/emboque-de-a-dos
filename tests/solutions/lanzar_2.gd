@@ -1,7 +1,7 @@
 extends RefCounted
 const SHORTCUTS := ["--no=throw --goal=500,418,1100,418", "--no=hook --goal=500,418,1100,418", "--no=throw --start=500,350,1100,350", "--start=500,350,1100,350 --goal=1100,418,500,418"]
 const SCENE := "res://scenes/levels/lanzar_2.tscn"
-## Lanzar 2 "Puntería": cada uno lanza al gancho de su lado, sube la cuerda, se columpia sobre
+## Lanzar 2 "Puntería": J1 baja por un pasillo con caca y púas, J2 por unas repisas. Cada uno lanza al gancho de su lado, sube la cuerda, se columpia sobre
 ## el fuego y salta a su repisa (270 px más arriba: no se llega saltando). En el medio, un muro
 ## con un agujero y UN gancho adentro para los dos: cada uno le lanza su extremo desde su
 ## repisa; con los dos en el mismo gancho, se embocan.
@@ -10,7 +10,7 @@ const M := preload("res://tests/solutions/moves.gd")
 static func side(i: int, d: int, ctx) -> Array:
 	var x := func(v: float) -> float: return v if d == 1 else 1600.0 - v
 	var dir := "right" if d == 1 else "left"
-	return [["wait_floor"], ["walk_to", x.call(ctx.var_f("tx", 143)), 3], ["wait", 0.5]] \
+	return [["walk_to", x.call(ctx.var_f("tx", 143)), 3], ["wait", 0.5]] \
 		+ M.throw_at(i, d, ctx.var_f("deg", 43)) \
 		+ [["until", func(c): return c.hooked(i), 1.5], ["rope", ctx.var_f("len", 90), 2], ["pump", ctx.var_f("pump", 1.5)],
 		["until", func(c): return c.p(i)._swing_omega * d < -0.3, 4.0],
@@ -31,5 +31,5 @@ static func shoot(i: int, d: int, ctx) -> Array:
 	return out
 
 static func plan(ctx) -> Dictionary:
-	return {"p1": side(1, 1, ctx) + [["sync", "listos"]] + shoot(1, 1, ctx),
-		"p2": side(2, -1, ctx) + [["sync", "listos"], ["until", func(c): return c.hooked(1), 10.0], ["wait", 1.0]] + shoot(2, -1, ctx)}
+	return {"p1": [["wait_floor"], ["rope", 60], ["walk_to", 245, 5], ["wait_floor"]] + M.path(1, [["over", 170, 115], ["go", 42], ["over", 125, 160], ["go", 235]]) + side(1, 1, ctx) + [["sync", "listos"]] + shoot(1, 1, ctx),
+		"p2": [["wait_floor"], ["rope", 60]] + M.path(2, [["go", 1415], ["go", 1530], ["go", 1420], ["go", 1545], ["go", 1465]]) + side(2, -1, ctx) + [["sync", "listos"], ["until", func(c): return c.hooked(1), 10.0], ["wait", 1.0]] + shoot(2, -1, ctx)}

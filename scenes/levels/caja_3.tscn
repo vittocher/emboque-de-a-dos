@@ -11,7 +11,7 @@
 [node name="Caja3" instance=ExtResource("1_base")]
 
 [node name="Player1" parent="." index="4"]
-position = Vector2(690, 290)
+position = Vector2(60, 330)
 
 [node name="Player2" parent="." index="5"]
 position = Vector2(80, 700)
@@ -21,8 +21,8 @@ position = Vector2(715, 442)
 size = Vector2(370, 24)
 
 [node name="ShaftWallA" parent="." instance=ExtResource("n_block")]
-position = Vector2(432, 237.5)
-size = Vector2(16, 675)
+position = Vector2(432, 362.5)
+size = Vector2(16, 425)
 
 [node name="ShaftWallB" parent="." instance=ExtResource("n_block")]
 position = Vector2(538, 514.5)
@@ -121,11 +121,39 @@ size = 120.0
 position = Vector2(800, 1010)
 scale = Vector2(1.25, 1)
 
+[node name="IslandSlab" parent="." instance=ExtResource("n_block")]
+position = Vector2(212, 568)
+size = Vector2(424, 16)
+
+[node name="Start1" parent="." instance=ExtResource("n_block")]
+position = Vector2(60, 530)
+size = Vector2(120, 60)
+
+[node name="Climb1" parent="." instance=ExtResource("n_block")]
+position = Vector2(230, 427)
+size = Vector2(80, 24)
+
+[node name="Climb2" parent="." instance=ExtResource("n_block")]
+position = Vector2(384.5, 337)
+size = Vector2(79, 24)
+
+[node name="Climb3" parent="." instance=ExtResource("n_block")]
+position = Vector2(230, 247)
+size = Vector2(80, 24)
+
+[node name="Climb4" parent="." instance=ExtResource("n_block")]
+position = Vector2(384.5, 162)
+size = Vector2(79, 24)
+
+[node name="IslandFire" parent="." instance=ExtResource("n_fire")]
+position = Vector2(272, 546)
+scale = Vector2(3.04, 0.9)
+
 [node name="Collectible5" parent="." instance=ExtResource("n_col")]
 position = Vector2(1100, 300)
 
 [node name="Collectible4" parent="." instance=ExtResource("n_col")]
-position = Vector2(800, 270)
+position = Vector2(230, 185)
 
 [node name="Collectible3" parent="." instance=ExtResource("n_col")]
 position = Vector2(1340, 370)

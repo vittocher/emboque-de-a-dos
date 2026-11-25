@@ -61,11 +61,9 @@ scenes/
   level_3.tscn         Nivel 3: cada jugador sube por 3 escalones de su lado hasta la cima, cae y se engancha a
                        un HookPoint (2, uno por lado) para aterrizar en la plataforma central, donde se emboca.
                        Piso de fuego; 8 coleccionables.
-  level_4.tscn         "Escalones" (del equipo, en el mapa al final de la rama de cajas; ahora hereda level_base):
-                       una caja por lado DEBAJO de la primera plataforma (200 px sobre el piso): hay que pasar
-                       por encima, empujarla hacia atrás (o hasta el borde del foso) y saltar desde ella. Luego
-                       2 escalones de 100 px hasta la meta: dos repisas con una ranura de 36 px (no cabe un
-                       jugador, sí los extremos) y un cuenco debajo. Piso de fuego en el foso; 5 coleccionables.
+  level_4.tscn         "Escalones" (del equipo, final de la rama de cajas; rehecho sobre level_base_large): dos pisos,
+                       los dos jugadores van hacia la derecha (J1 arriba, J2 abajo) y cada uno sube una pared de 250 con
+                       su caja grande; J2 pasa por un túnel bajo el hueco de la meta y sube en zigzag al otro lado.
   test_death.tscn      "Prueba: muerte": las 3 zonas de muerte (2 jugadores + 2 emboques). Sin CloseupManager.
   test_physics.tscn    "Prueba: física": Nivel 1 SIN muro central (para probar el balanceo), plataformas más
                        afuera (x=170 / x=1110), 3 HookPoint (izq/centro/der) y 2 cajas en el suelo.
@@ -485,9 +483,9 @@ con esos jugadores quietos en la meta (`--still`: llegan, pero se saltan `swing`
 `const SHORTCUTS` de cada solución (~1500 s de juego cada uno, en ~1 min). Que no encuentre un atajo no prueba que no exista.
 
 Cada `tests/solutions/<nivel>.gd` declara `const SCENE` y `static func plan(ctx)` con los pasos de cada jugador
-(`walk_to`, `jump_to`, `rope`, `tap`/`hold`, `sync`, `until`, `pump` (columpio), `pump_end` (balancear el
+(`walk_to`, `jump_to`, `leap_to` (frena en el aire para caer justo), `rope`, `tap`/`hold`, `sync`, `until`, `pump` (columpio), `pump_end` (balancear el
 extremo), `jiggle`, `hang` (dejar el extremo colgando del borde), `swing` (balanceo al ritmo del péndulo)…; lista completa arriba de play_level.gd). `tests/solutions/moves.gd` tiene movimientos
-compuestos (correr-saltar-engancharse-columpiarse-lanzarse, lanzar a un ángulo). `--var=nombre=valor` permite
+compuestos (correr-saltar-engancharse-columpiarse-lanzarse, lanzar a un ángulo y `path`: un recorrido de saltos escrito como lista). `--var=nombre=valor` permite
 barrer parámetros (`ctx.var_f`), `--shots=dir` guarda capturas (sin `--headless`, con Xvfb). **Al cambiar la
 física o un nivel, correr `run_all.sh`.** Las soluciones son a la vez documentación de cómo se resuelve cada
 nivel.
@@ -653,6 +651,22 @@ Leer antes de diseñar o cambiar un nivel.
 13. **Nada irrelevante alrededor de la meta** (feedback caja_1): una plataforma o un muro que se puede ignorar, sobra.
 14. **Los recorridos no pueden ser triviales:** una fila de saltos iguales o una sola caja "para subir" no alcanza.
 
+**El recorrido** (feedback de las tandas 2 y 3)
+
+15. **Asimétrico por defecto.** Un nivel espejo se siente trivial: cada jugador con su recorrido, sus obstáculos y su altura.
+    Espejo solo si la meta lo pide (y ahí, solo la meta).
+16. **Pero parejo en cantidad:** los dos tienen que tener un plataformeo de largo y dificultad parecidos (en caja_3, J2 tenía
+    mucho más que J1). Se compara contando obstáculos por lado y mirando el tiempo del bot.
+17. **Cada nivel es un recorrido de plataformas de verdad** (5 o más obstáculos por jugador, de 2 o más tipos) y la meta es su
+    remate. Un nivel "bien" con un recorrido corto sigue quedando trivial.
+18. **Cada peligro vale por a quién NO daña.** Púas: el extremo entra y sale (alcanza una placa o una sopaipilla que el jugador
+    no puede; se cuelga a través). Caca: el jugador la pisa, pero solo si el extremo no la toca (en la mano, colgando por
+    arriba, o enganchado). Fuego: solo lo cruzan las cajas. Usarlos así, no como simples hoyos.
+19. **Cruzarse:** los jugadores pueden pasar al lado contrario del mapa por pisos distintos mientras los extremos siguen
+    separados (pisos a 200 px o más, o un techo entre medio: el imán alcanza 65 px y atraviesa paredes).
+20. **Antes de dejar un objeto, preguntarse qué pasa si lo borro.** Si el nivel se gana igual (la placa rosada y la caja de la
+    antigua placa_3, la repisa extra de lanzar_4), sobra. Se prueba con `monkey.gd --remove=Nodo`.
+
 ### Escala del nivel (opcional: más plataformeo y objetos)
 
 Cuando un nivel necesita **más espacio para plataformas y objetos**, se hereda de `levels/level_base_large.tscn` en vez
@@ -661,7 +675,7 @@ la física: personajes, saltos, cuerdas y magnetismo miden lo mismo en px del mu
 51 px en vez de 64). El closeup compensa (`max_zoom` 2,5), así el emboque se ve igual de grande.
 - **Solo en los niveles que lo necesitan**; los que introducen algo simple quedan en 1280×720. Son los dos únicos
   tamaños: con 0,7 el palito casi no se ve.
-- Hoy: peligro_2, caja_2, caja_3, lanzar_2, lanzar_3, placa_3, placa_4, movil_2, los cuatro de viento y el final.
+- Hoy: todos los del mapa menos tronco_1..4, level_2, movil_3 y movil_4.
 - Coordenadas: centro (800, 450); espejo = `1600 - x`; `FallZone` en (800, 1010) con escala (1.25, 1).
 - El código no debe asumir 1280×720: usar `LevelFlow.level_size(get_tree())` (mundo) o el viewport (UI).
 
@@ -691,24 +705,42 @@ Las metas se están rehaciendo para que los extremos **cuelguen libres** y haya 
 | Correo aéreo | viento_3 | (antes, chorros y vientos en contra en ráfagas) el viento sube la campana de J1; J2 baja el palito desde arriba (hay que hallar los largos) |
 | Desnivel | tronco_2, caja_3 | manos a alturas distintas: igualar los extremos con el largo de la cuerda |
 | Ventana | tronco_4 | muro de 60 con un agujero de 90 px; ranura de 36 entre repisa y muro (pasa el extremo, no el jugador) |
-| Fácil sobre púas | peligro_1 | S ≈ 92, repisas flotantes: los extremos sí pueden entrar donde el jugador muere |
+| Fácil sobre púas | peligro_1 | S ≈ 92, repisas flotantes |
 | Al rojo | peligro_3 | S ≈ 100 con fuego a ~175 px de la mano |
 | Tiro con poco ángulo | lanzar_1 | J1 122 px más arriba con la campana colgando (65–100); J2 lanza a 8–16° |
 | Puerta en la meta | placa_1 | compuerta entre los extremos, abierta solo con los dos en la placa de su borde |
 | Hueco con cortina | level_4, movil_1, caja_1, placa_2 | S ≈ 92, sin nada macizo cerca |
 | Mismo gancho a distancia | lanzar_2 | un gancho en un agujero de 56 px del muro; cada uno le lanza su extremo (22–35°) |
 | Por la ranura | lanzar_4 | muro con ranura de 60 px; la campana cuelga detrás (cuerda 80–95) y J2 lanza a 10–16° |
-| Mecedora | placa_3 | J2 en una `MovingPlatform` que se mueve (60 px) mientras J1 pisa la placa de su borde: lo mece |
+| Titiritero | placa_3 | S ≈ 90: J1 llega caminando arriba con la campana ya colgando por el hueco; J2 sube al otro lado |
 | Al pasar | movil_2 | J2 en una plataforma que va y viene (más cerca: 116 px entre bordes); J1 se balancea a tiempo |
 | Bandera | viento_2 | viento de costado (1700) estira la cuerda de J1 sobre 260 px hasta el palito de J2; tope en el borde, porque acortar la cuerda con viento arrastra |
 | Ráfagas hacia adentro | viento_4 | S ≈ 184, dos vientos de 260 en ráfagas de 2,2/2,2 s (más cortas o fuertes: se gana sin hacer nada) |
 | Trapecio con viento | final | gancho en un agujero de 60 px del muro, que solo se alcanza saltando dentro de la ráfaga |
 
-Tras el primer playtest: tronco_3 y movil_4 gustaron tal cual; los otros 7 se rehicieron.
-Estado: rehechos 27 niveles (todos menos tronco_1 y level_2 "La T"). Probados con gente y aprobados: los 9 primeros y la
-tanda 1. **Falta probar** la tanda 2 (caja_3, lanzar_2, lanzar_4, placa_2, placa_3, movil_2) y la 3 (viento_2, viento_4,
-final). Siguiente fase: recorridos que se sienten **triviales** (feedback: peligro_1 y level_4) y la meta de lanzar_1, que
-es menos intuitiva que el resto.
+### Recorridos (qué hace cada lado)
+
+Metas aprobadas con gente en todos los niveles menos placa_3 (nueva). Feedback de las tandas 2 y 3: las metas bien, pero los
+recorridos **triviales y simétricos**. Se rehicieron 13 (sin tocar la meta, salvo placa_3 y la repisa redundante de lanzar_4):
+
+| Nivel | J1 | J2 |
+|---|---|---|
+| peligro_1 | sube islas en zigzag sobre púas | baja con un muro de púas al lado y vuelve a subir |
+| peligro_3 | islas sobre fuego, brasas | pasillos de techo bajo: brasa, caca, púas |
+| caja_1 | salta su caja (parte del lado equivocado), la empuja, sube y 3 islas | igual, pero su caja TAPA púas; 4 islas y un salto largo |
+| caja_3 | 4 islas hasta sus cajas, bota la chica, sube con la grande | piedra de paso y escalera sobre púas |
+| level_4 | piso de arriba: caja, islas con brasa | piso de abajo: caja sobre púas, caca, túnel bajo la meta, zigzag |
+| lanzar_1 | pasillo de caca de techo bajo: cruzarlo con el extremo EN LA MANO | islas |
+| lanzar_2 | chimenea con caca y púas, columpio | repisas con púas, columpio |
+| lanzar_4 | pasillos; lanza por la ranura a la placa → puerta de J2 | repisas; lanza por un nicho de púas a la placa → puerta de J1 |
+| placa_1 | islas hasta su botón y vuelta | botón al fondo de un foso de púas: lo aprieta el extremo |
+| placa_2 | islas sobre fuego, foso del peso muerto | pasillos, foso del peso muerto |
+| placa_3 | arriba, lleva la campana por el pasillo del medio (caca, placas, compuerta) | abajo, púas y compuertas que le abre la campana; su placa abre la del pasillo |
+| movil_1 | ascensor que termina en púas: bajarse a tiempo; segundo ascensor | plataforma en diagonal sobre caca alta; ascensor con púas a los lados |
+| movil_2 | plataforma, ascensor y pasillo de techo bajo | por el techo del pasillo (púas, caca) y de vuelta por abajo |
+
+Se **cruzan** (uno pasa por encima del otro) en level_4 y placa_3. **Falta probar con gente** estos 13. Siguen simétricos:
+movil_3, movil_4, placa_4, viento_1, viento_4 y el final (aprobados tal cual). La meta de lanzar_1 es menos intuitiva que el resto.
 
 ### Pantalla de victoria y highscore (`victory.gd` + `score_board.gd`)
 
@@ -832,6 +864,17 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **Una caja pasa derecho sobre un foso casi de su ancho** (66 px): para que caiga, ~84.
 - **El fuego separa a los jugadores sin frenar las cajas** (las zonas de muerte no las tocan): un pozo con fuego en las
   paredes deja pasar solo cajas.
+- **Islas en zigzag:** dos columnas separadas ≥ 60 px, ~90 px entre una isla y la siguiente y ≥ 165 entre dos de la misma
+  columna, sin que la de arriba asome hacia el hueco (si asoma, el salto pega con la cabeza y se queda corto).
+- **Al aterrizar, el extremo sigue de largo ~60 px** (balanceo): dejar ≥ 80 px entre el aterrizaje y la caca o brasa siguiente,
+  y ≥ 80 px de suelo antes de cada peligro para tomar impulso.
+- **Pasillos de techo bajo** (146 px libres): el salto dura menos y cubre ~185 px; para que haya que pasar CAMINANDO (caca con el
+  extremo en la mano), 90 px libres.
+- **El extremo nace `rope_length` bajo la mano y no puede nacer dentro de un bloque** (el jugador salió disparado a 1e14, placa_3)
+  ni bajo el piso de partida: con piso delgado, `rope_length` = 80 en los dos Emboque (`l.rope()`), o partir parado sobre el piso.
+- **Un ascensor termina 1 px MÁS ARRIBA que la repisa y parte 2 px más abajo que la de salida:** con 2 px de escalón en
+  contra, el jugador se queda pegado.
+- **Un extremo apoyado donde baja un ascensor queda debajo de él:** esperarlo ~80 px atrás.
 - **Crear un nivel (en tests) dentro del paso de física deja el extremo en el origen** y arrastra al jugador: esperar un
   `process_frame`.
 - **Dos extremos en el mismo `HookPoint` se embocan** (es el trapecio de placa_4). No poner un gancho al alcance de los
@@ -933,7 +976,7 @@ Pendiente:
 - **Imágenes en inglés definitivas** (`assets/ui/en/portada.png`, `pause_menu.webp`): hoy son el arte original
   con el texto reescrito por código; diseño puede reemplazarlas con el mismo nombre.
 - **Niveles del equipo fuera del mapa** (`main`, `level_3`): corregir el inicio (ver Lecciones) si se quieren sumar.
-- **Zonas de emboque:** probar con gente las tandas 2 y 3 y hacer menos triviales los recorridos (ver "Zonas de emboque").
+- **Recorridos:** probar con gente los 13 rehechos (ver "Recorridos").
 - **Tráiler:** tronco_3, peligro_2, caja_2, lanzar_3, placa_4, movil_3, viento_1, viento_3 y casi todos los demás cambiaron (regrabar). Los `start` de los clips en `trailer/edit.py` son tiempos fijos del bot; al regrabar hay que revisarlos (p. ej. `level_4` ahora emboca a los ~20 s de juego; antes, ~14).
 - **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos.
 

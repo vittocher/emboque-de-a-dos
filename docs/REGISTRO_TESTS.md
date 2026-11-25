@@ -261,3 +261,27 @@ Cada nivel se gana con el plan de `tests/solutions/<nivel>.gd` (además se barri
 También: mapa (desbloqueo, foco inicial en lo recién desbloqueado, F9), flujo completo menú → mapa → nivel →
 victoria → Continuar → mapa con el siguiente desbloqueado (PASS); compuerta no aplasta; capturas de cada nivel
 revisadas.
+
+## Recorridos nuevos (13 niveles, tras el feedback de las tandas 2 y 3)
+
+`run_all.sh`: **29/29**. `run_controls.sh` en los 13: 13/13 OK (ahora con 90 s: placa_3 llega a la meta a los ~50 s y con 45 s
+el control no probaba nada). Mono tramposo, 900 s por opción (38 opciones): sin atajos en la versión final.
+
+| Nivel | Tiempo del bot | Atajos encontrados y corregidos |
+|---|---|---|
+| peligro_1 | 32 s | — |
+| peligro_3 | 20 s | — |
+| caja_1 | 24 s | — |
+| caja_3 | 41 s | — |
+| level_4 | 30 s | — |
+| lanzar_1 | 16 s | el pasillo de caca se cruza tomando el extremo con `tirar` (válido); sin tomarlo, no (600 s) |
+| lanzar_2 | 18 s | — |
+| lanzar_4 | 43 s | — |
+| placa_1 | 20 s | — |
+| placa_2 | 36 s | — |
+| placa_3 | 55 s | — |
+| movil_1 | 40 s | la plataforma de J2 se saltaba (foso de 300): ahora 360 y la llegada 98 px más arriba |
+| movil_2 | 44 s | la primera plataforma de J1 se saltaba (foso de 290): ahora 335 y 80 px más arriba |
+
+El bot no pasa por todas las sopaipillas (faltan 1–4 por nivel): no se comprobó una por una que se alcancen.
+movil_2 se gana con 11 de 16 combinaciones de vaivén (40/55 px, cuerda 170/200, espera 0–1,2 s).

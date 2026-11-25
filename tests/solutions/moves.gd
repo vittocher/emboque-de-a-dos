@@ -40,3 +40,33 @@ static func throw_at(i: int, dir: int, deg: float) -> Array:
 			var a: float = pingpong(c.e(i)._aim_time * c.e(i).aim_sweep_speed_deg, c.e(i).aim_max_angle_deg)
 			return a >= deg - 0.5, 3.0],
 		["tap", "throw"]]
+
+## Salto simple: toma un impulso corto (así el extremo queda atrás y no se engancha bajo el
+## borde), salta al pasar [param from] hacia [param to] y espera aterrizar.
+static func hop(i: int, from: float, to: float) -> Array:
+	var d := 1 if to > from else -1
+	return [["walk_to", from - 25.0 * d, 4], ["wait", 0.2], ["press", _side(d)],
+		["until", func(c): return (c.p(i).global_position.x - from) * d > 0.0, 1.0], ["leap_to", to], ["wait_floor"]]
+
+## Salto con carrera: parte 70 px antes de [param from].
+static func run_hop(i: int, from: float, to: float) -> Array:
+	var d := 1 if to > from else -1
+	return [["walk_to", from - 70.0 * d, 4], ["wait", 0.25], ["press", _side(d)],
+		["until", func(c): return (c.p(i).global_position.x - from) * d > 0.0, 2.0], ["leap_to", to], ["wait_floor"]]
+
+## Recorrido: lista de [desde, hasta] (salto), ["run", desde, hasta] (con carrera) o
+## ["over", a, b] (salta con carrera por encima de un peligro que va de a hasta b) o
+## ["go", x] (camina, aunque caiga por un borde).
+static func path(i: int, list: Array) -> Array:
+	var out := []
+	for s: Array in list:
+		if s[0] is String and s[0] == "run":
+			out += run_hop(i, s[1], s[2])
+		elif s[0] is String and s[0] == "over":
+			var d := 1 if s[2] > s[1] else -1
+			out += hop(i, s[1] - 60.0 * d, s[2] + 45.0 * d)
+		elif s[0] is String and s[0] == "go":
+			out += [["walk_to", s[1], 5], ["wait_floor"]]
+		else:
+			out += hop(i, s[0], s[1])
+	return out

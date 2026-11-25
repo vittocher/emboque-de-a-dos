@@ -33,6 +33,7 @@ extends SceneTree
 ##   ["wait", s]
 ##   ["wait_floor"]                 espera a estar en el piso
 ##   ["jump_to", x]                 salta hacia x manteniendo la dirección hasta llegar/aterrizar
+##   ["leap_to", x]                 igual, pero frena en el aire para caer en x
 ##   ["rope", largo, tol=4]         tira/suelta hasta ese largo de cuerda
 ##   ["sync", "tag"]                espera a que el otro jugador llegue al mismo tag
 ##   ["until", Callable(ctx) -> bool, timeout_s=20]
@@ -301,6 +302,14 @@ func _do_step(who: String, step: Array, dt: float) -> bool:
 			return _walk_to(who, pl, float(step[1]), float(step[2]) if step.size() > 2 else 6.0, t)
 		"jump_to":
 			return _jump_to(who, pl, float(step[1]), st, t)
+		"leap_to":
+			_act(who, "jump", t < 0.05)
+			_walk_to(who, pl, float(step[1]), 4.0, 0.0)
+			if t > 0.1 and pl.is_on_floor():
+				_act(who, "right", false)
+				_act(who, "left", false)
+				return true
+			return t > 6.0
 		"rope":
 			var target := float(step[1])
 			var tol := float(step[2]) if step.size() > 2 else 4.0
