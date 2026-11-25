@@ -78,6 +78,7 @@ scenes/
   levels/level_base.tscn  Escena BASE de todo nivel nuevo (se hereda: New Inherited Scene). Trae Background,
                        Camera2D, WallLeft/WallRight, Player1/2 (z 1), WinManager, CloseupManager, Emboque1/2 (z 1),
                        ScoreManager, UI (ScoreLabel/WinLabel), TerrainArt y PauseMenu, en el orden correcto.
+  levels/level_base_large.tscn  La misma base con la cámara alejada (zoom 0,8, mundo 1600×900). Ver "Escala del nivel".
   levels/*.tscn        Los 27 niveles nuevos del mapa (heredan la base): tronco_1..4, peligro_1..3, caja_1..3,
                        placa_1..4, movil_1..4, lanzar_1..4, viento_1..4, final. Cada uno descrito en su solución
                        tests/solutions/<nivel>.gd. El árbol está en scripts/level_catalog.gd.
@@ -90,7 +91,7 @@ scenes/
   pressure_plate.tscn  Placa de presión (ver "Mecánicas de las ramas"). Arte: assets/props/placa.
   gate.tscn            Compuerta que se desliza (AnimatableBody2D).
   moving_platform.tscn Plataforma móvil / ascensor (AnimatableBody2D) con rieles punteados.
-  wind_zone.tscn       Corriente de aire (Area2D) con rayitas de aire (CPUParticles2D) y sonido en loop.
+  wind_zone.tscn       Corriente de aire (Area2D) con rayitas de aire (CPUParticles2D) y sonido en loop; opcional en ráfagas.
   fx/emboque_burst.tscn  Celebración del emboque (ver "Animación del emboque"): destello + estrellitas doradas
                        (CPUParticles2D con destello.gdshader); el WinManager lo pega a la campana.
   fx/tension_fx.tscn     Subida de tensión al acercarse los extremos (TensionFx, la crea el CloseupManager):
@@ -183,7 +184,8 @@ scripts/
                    nivel: casilla throw_enabled. Nivel sin el nodo = todo lo opcional apagado. También
                    THROW_COLOR (verde de la mecánica en los menús) y scene_throw_enabled(escena).
   level_flow.gd    class LevelFlow: estado del nivel en curso (meta en la escena): ganado (ya no se muere ni
-                   junta) y reiniciándose (una sola recarga aunque se toquen varias zonas a la vez).
+                   junta) y reiniciándose (una sola recarga aunque se toquen varias zonas a la vez). level_size(tree) =
+                   tamaño del mundo del nivel (del CloseupManager): usarlo en vez de asumir 1280×720.
   player_death_zone.gd   Al entrar un jugador (mask=2) → reinicia el nivel. Señal triggered; export reload_on_death.
   emboque_death_zone.gd  Al entrar un extremo (mask=12 = campana 4 + palito 8) → reinicia. (Scripts separados a propósito.)
   hazard_art.gd    @tool, class HazardArt: arte animado de una zona de peligro (ver both_death_zone.tscn) +
@@ -201,6 +203,7 @@ scripts/
   block.gd / bowl.gd  Bloque de terreno con `size`; cuenco con `width`/`slope` (ambos @tool).
   mechanisms/      channel.gd (canales con color), pressure_plate.gd, gate.gd, moving_platform.gd, wind_zone.gd.
   push_box.gd      Caja empujable (class_name PushBox): el Player la empuja con push(); los extremos la golpean por física.
+                   Si cae fuera de la pantalla (`respawn_y`) reaparece donde partió.
                    Suena un loop de arrastre mientras se desliza por el piso.
   pause_menu.gd    Menú de pausa del nivel (acción `pause` = Esc / P): Continuar / Reiniciar / Ajustes / Menú principal. Es el
                    script de ui/pause_menu.tscn. La pausa NO es global: cada nivel debe instanciar esa escena.
@@ -221,6 +224,8 @@ scripts/
                    uno por jugador en su mitad de la pantalla (`player` p1/p2 = etiqueta). Cada fila de `rows` es
                    "@accion texto": `@p1_release` = tecla del Input Map, `/` = barra, lo demás = clave de i18n.
                    Lo usan tronco_2 (soltar/tirar cuerda) y lanzar_1 (recoger → apuntar → lanzar).
+  ui/style_bonus.gd class StyleBonus (escena ui/style_bonus.tscn): textos de los bonos de estilo al embocar (ver
+                   "Bonos de estilo").
   ui/key_cap.gd    class KeyCap: tecla dibujada como en la portada; muestra la tecla de una `action` del Input Map
                    (flechas dibujadas con líneas: la fuente por defecto no trae ← → en la web).
   ui/wood_plaque.gd  class WoodPlaque: ColorRect con el shader de madera de los botones (madera_boton.gdshader):
@@ -249,7 +254,8 @@ default_bus_layout.tres  Buses de audio Master / Music / SFX (ver "Volumen y bus
 tools/convertir_video.bat|.sh  Convierte el video de la intro a video/intro.ogv (ver "Intro (video)").
 tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python tools/generate_sfx.py [nombres]`
                    (sin nombres, todos; con nombres, solo esos, p. ej. `plate gate wind`).
-tests/             Bot de pruebas (ver "Bot de pruebas"): play_level.gd, run_all.sh, solutions/<nivel>.gd,
+tests/             Bot de pruebas (ver "Bot de pruebas"): play_level.gd, run_all.sh, run_controls.sh, monkey.gd + run_shortcuts.sh
+                   (atajos), solutions/<nivel>.gd,
                    rec_map.gd (graba el mapa para el tráiler). Excluido del export (exclude_filter "tests/*").
 trailer/           Tráiler: trailer_es.mp4 / trailer_en.mp4 + cómo rehacerlo (make_trailer.sh: el bot juega y el
                    Movie Maker de Godot graba; cards.py hace las tarjetas; edit.py monta al ritmo de la cueca).
@@ -351,6 +357,10 @@ Según el concepto, los objetos dinámicos se empujan "por los jugadores o por l
 
 Un `CharacterBody2D` no empuja cuerpos rígidos por sí solo, así que el empuje es explícito: en `_process_platformer`, si el jugador está en el suelo con input, `_try_push_box` busca una caja justo delante con `test_move` (contacto lateral) → limita su velocidad a `push_speed` y llama `box.push(velocity.x)`; tras `move_and_slide` **restaura esa velocidad** (el deslizamiento la anula al tocar la caja y el empuje daría tirones). La caja, en `_integrate_forces`, **fija** `linear_velocity.x` a la suma de empujes del tick (dos jugadores en contra se anulan) y **compensa el roce** del paso anterior con una fuerza de un paso: así avanza exactamente a la velocidad que informa, que es la que usa quien va parado encima.
 
+En el **aire no se empuja** (`push_box.gd`): si no, seguir apretando contra la pared de enfrente de un pozo la dejaba
+pegada. Y **quien empuja no se cae tras la caja** (`Player._guard_push_edge`): al caer la caja por un borde, el jugador se
+detiene ahí mientras siga con la misma dirección apretada (soltarla, o saltar, lo deja pasar).
+
 ### Menú de pausa (`ui/pause_menu.tscn` + `pause_menu.gd`)
 
 El diseño es una **imagen** hecha por el equipo, `assets/ui/pause_menu.webp` (1015×1024: título "PAUSA", tablero de madera con 4 botones pintados y los dos personajes con el emboque). Estructura:
@@ -448,7 +458,10 @@ de inicio y amarra al jugador, ver Lecciones) y los `test_*`. `level_2` ("La T")
   los aparta la física).
 - **Viento (`WindZone`)**: Area2D con `size`, `direction`, `strength` (aceleración sobre extremos y cajas, mask 46; la
   gravedad es 980) y `player_factor` (fracción para jugadores, con tope `player_max_speed`; vía
-  `Player.add_wind`). Con viento hacia arriba los extremos suben como un **volantín**: hay que soltar cuerda.
+  `Player.add_wind`). **Ráfagas** (`gust_off` > 0): sopla `gust_on` s y para `gust_off` s (`gust_offset` desfasa el ciclo);
+  sube y baja en 0,3 s y las rayitas y el sonido paran con ella. Da plataformeo con ritmo: los chorros se toman cuando
+  soplan (`gust_on` × `player_max_speed` ≈ cuánto sube una ráfaga: que alcance para un piso, no para dos) y los vientos
+  en contra se cruzan en la calma. Se usa en viento_3. Con viento hacia arriba los extremos suben como un **volantín**: hay que soltar cuerda.
   `player_factor = 0` → solo afecta a los extremos. Sonido `wind` en loop (AudioStreamPlayer2D).
 
 ### Bot de pruebas (`tests/`)
@@ -461,9 +474,19 @@ que faltaron). Corre headless y mucho más rápido que el tiempo real con `--fix
 GODOT="$GODOT" tests/run_all.sh          # todos los niveles; sale con 1 si alguno no se gana
 ```
 
+`tests/run_controls.sh` corre los **controles**: una solución con `const CONTROLS := ["12", "1", "2"]` no se debe ganar
+con esos jugadores quietos en la meta (`--still`: llegan, pero se saltan `swing` / `jiggle`).
+
+`--start=x1,y1,x2,y2` parte desde esos puntos (para probar solo un tramo).
+
+**Atajos (`tests/monkey.gd`, "mono tramposo"):** juega al azar y reinicia al morir, con la mecánica clave prohibida
+(`--no=rope|hook|throw|box|wind`, `--remove=Nodo`), y no debe ganar. `--goal=x1,y1,x2,y2` = que nadie llegue a ese punto y
+`--start` = desde dónde: para niveles largos conviene probar por tramos. `tests/run_shortcuts.sh` corre los declarados en
+`const SHORTCUTS` de cada solución (~1500 s de juego cada uno, en ~1 min). Que no encuentre un atajo no prueba que no exista.
+
 Cada `tests/solutions/<nivel>.gd` declara `const SCENE` y `static func plan(ctx)` con los pasos de cada jugador
 (`walk_to`, `jump_to`, `rope`, `tap`/`hold`, `sync`, `until`, `pump` (columpio), `pump_end` (balancear el
-extremo), `jiggle`…; lista completa arriba de play_level.gd). `tests/solutions/moves.gd` tiene movimientos
+extremo), `jiggle`, `hang` (dejar el extremo colgando del borde), `swing` (balanceo al ritmo del péndulo)…; lista completa arriba de play_level.gd). `tests/solutions/moves.gd` tiene movimientos
 compuestos (correr-saltar-engancharse-columpiarse-lanzarse, lanzar a un ángulo). `--var=nombre=valor` permite
 barrer parámetros (`ctx.var_f`), `--shots=dir` guarda capturas (sin `--headless`, con Xvfb). **Al cambiar la
 física o un nivel, correr `run_all.sh`.** Las soluciones son a la vez documentación de cómo se resuelve cada
@@ -574,6 +597,117 @@ Al ganar (grupo "Celebración" del Inspector del WinManager):
   por detrás del cartel y debajo de la pausa). Las dos escenas (`WinFx`) corren a velocidad real aunque el
   closeup tenga la cámara lenta, y se borran solas.
 
+### Bonos de estilo (`WinManager.style_bonuses` + `StyleBonus`)
+
+Al embocar aparece un texto por bono bajo el cartel (solo texto: no dan puntos ni se guardan; está en todos los
+niveles, lo instancia el WinManager junto al `WinLabel`). Se ajustan en el grupo "Bonos de estilo" del WinManager:
+- **"¡Limpio!"** (`STYLE_CLEAN`): ninguno de los dos extremos tocó terreno, cajas ni ganchos en los últimos
+  `clean_time` (2,5 s) antes de embocar (`RopeEnd.untouched_time`; tocarse entre ellos no cuenta).
+- **"¡Al vuelo!"** (`STYLE_FLY`): los dos llegaron a `magnet_radius` a `fly_speed` (110 px/s) o más (antes de que
+  actúe el magnetismo) y embocaron a los `fly_window` (1,5 s) como máximo.
+
+### Aprendizajes de diseño de niveles (de los playtests)
+
+Leer antes de diseñar o cambiar un nivel.
+
+**Que la mecánica sea necesaria**
+1. **Cada nivel tiene una mecánica clave y no se gana sin ella.** Se prueba quitándola (cuerda, gancho, lanzar, caja,
+   viento), no jugando la solución ideal. Pasó en peligro_2 (se ganaba sin tocar la cuerda), lanzar_3 (el foso se
+   saltaba) y placa_4 (el gancho del medio sobraba).
+2. **Los obstáculos se calculan contra el alcance real del jugador.** Corriendo, un salto a la misma altura cubre 314 px
+   (cuerda 170), 380 (60) o 410 (240); ~440 sin nada que lo frene. En alto: 140–150 px corriendo, 236 como máximo
+   (parado, cuerda larga). Para EXIGIR un gancho: foso ≥ 480 px o desnivel ≥ 250 px.
+3. **Balancear el extremo reemplaza a acortar la cuerda, pero no a alargarla.** Un obstáculo que pide cuerda corta se
+   esquiva con vaivén si hay espacio a los lados; uno que pide cuerda larga no se puede evitar.
+4. **La cuerda se vuelve interesante cuando dos obstáculos seguidos piden largos opuestos**, sin espacio entre ellos para
+   balancearse (~65 px).
+
+**Que la interacción tenga decisiones**
+
+5. **"Empujar hasta que tope" no es un puzzle.** Un objeto importa si hay que decidir dónde, cuándo o para quién va: es
+   escaso, tiene dos usos o hay que pasárselo al compañero.
+6. **La cooperación se nota más cuando los lados no son espejo:** cada uno necesita algo del otro antes de la meta.
+
+**La meta**
+
+7. **Lo que mejor funciona** (tronco_3, movil_4): los extremos cuelgan libres, los dos se mueven a la vez y hay que
+   encontrar el ritmo.
+8. **Despejar el espacio de balanceo:** nada macizo cerca, tampoco hacia afuera (muros bajo las repisas).
+9. **Un truco nuevo en la meta tiene que ser el único camino** (si balancearse también emboca, el truco sobra).
+
+**El ritmo**
+
+10. **La meta no puede ser todo el nivel:** antes tiene que haber un trayecto de plataformas que use la misma mecánica.
+
+**La separación**
+
+11. **Nadie debe poder cruzar al lado del otro** antes de la meta (saltando una torre, una caja o un foso, o cayendo por el
+    hueco): parados juntos, embocar es trivial. Se prueba con `monkey.gd --goal` apuntando al lado contrario. Muros hasta
+    arriba, fosos ≥ 480 y fuego bajo el hueco de la meta.
+
+### Escala del nivel (opcional: más plataformeo y objetos)
+
+Cuando un nivel necesita **más espacio para plataformas y objetos**, se hereda de `levels/level_base_large.tscn` en vez
+de `level_base.tscn`: la **cámara se aleja** (zoom 0,8) y el mundo mide **1600×900** (+56 % de área). No cambia nada de
+la física: personajes, saltos, cuerdas y magnetismo miden lo mismo en px del mundo, solo se ven más chicos (el jugador,
+51 px en vez de 64). El closeup compensa (`max_zoom` 2,5), así el emboque se ve igual de grande.
+- **Solo en los niveles que lo necesitan**; los que introducen algo simple quedan en 1280×720. Son los dos únicos
+  tamaños: con 0,7 el palito casi no se ve.
+- Hoy: peligro_2, caja_2, lanzar_3, placa_4, viento_1 y viento_3.
+- Coordenadas: centro (800, 450); espejo = `1600 - x`; `FallZone` en (800, 1010) con escala (1.25, 1).
+- El código no debe asumir 1280×720: usar `LevelFlow.level_size(get_tree())` (mundo) o el viewport (UI).
+
+### Zonas de emboque (cómo diseñar la meta)
+
+Feedback de jugadores: embocar en un cuenco en V (o un pozo angosto) no satisface, porque los extremos se juntan solos.
+Las metas se están rehaciendo para que los extremos **cuelguen libres** y haya que acercarlos. Reglas:
+- **S** = separación mínima entre las manos (hueco entre repisas − 40, o ancho de la columna + 40: la mano llega 20 px
+  más allá del borde). 40: emboca solo. 50–70: zona muerta, falla. **80–90:** basta con uno. **~100: los dos a la vez.**
+  120–150 errático. Con S chico, el envión de la llegada puede embocar sin balancearse.
+- Los jugadores **separados por un muro o columna** (si no, se paran juntos y es trivial). El muro que cuelga termina
+  ~30 px sobre el borde de la repisa: no se cruza saltando y los extremos pasan por abajo.
+- **Repisas delgadas** (24 px, el cuerpo de la torre ≥ 150 px hacia afuera, o sin cuerpo): una torre maciza no deja
+  balancear. Con el cuerpo a 100 px, movil_1 y peligro_1 fallaban casi siempre; flotando, ganan siempre.
+- Nada debajo que junte los extremos: vacío o peligro.
+
+| Tipo | Nivel | Cómo |
+|---|---|---|
+| Balanceo | tronco_3 | dos islas, hueco 120, cortina al medio |
+| El alambre | peligro_2 | extremos por dentro de un pasillo: largo para el diente, corto para la caca que está pegada a él, largo para los escalones; techo bajo para no saltar los montones |
+| Voladizo | caja_2 | hueco 215: asomar la caja por el borde (10–44 px; si se pasa, cae y reaparece). Antes, "La mudanza": tres cajas, J1 le bota dos a J2 (tapa un foso + escalón) y se guarda una |
+| Trapecio | placa_4 | UN gancho alto al medio, sobre fuego, con un muro corto encima: los dos saltan a él y se embocan en el aire |
+| Cortina móvil | movil_3 | `MovingPlatform` vertical de 16 px que sube y baja entre los extremos; repisas flotantes (sin muro debajo) |
+| Contratiempo | movil_4 | una plataforma por jugador, al revés |
+| Tiro al blanco | lanzar_3 | repisas de 260 px (dos lanzamientos a ganchos por lado); islas a distinta altura: J1 cuelga la campana (cuerda 80–110), J2 le lanza el palito |
+| Volantín | viento_1 | (antes, dos saltos con chorros) columna de 60 px + viento ancho (360, 1600, `player_factor` 0): péndulos al revés |
+| Correo aéreo | viento_3 | (antes, chorros y vientos en contra en ráfagas) el viento sube la campana de J1; J2 baja el palito desde arriba (hay que hallar los largos) |
+| Desnivel | tronco_2, caja_1 | manos a alturas distintas: igualar los extremos con el largo de la cuerda |
+| Ventana | tronco_4 | muro de 60 con un agujero de 90 px; ranura de 36 entre repisa y muro (pasa el extremo, no el jugador) |
+| Fácil sobre púas | peligro_1 | S ≈ 92, repisas flotantes: los extremos sí pueden entrar donde el jugador muere |
+| Al rojo | peligro_3 | S ≈ 100 con fuego a 175 px de la mano |
+| Tiro con poco ángulo | lanzar_1 | J1 122 px más arriba con la campana colgando (65–100); J2 lanza a 8–16° |
+| Puerta en la meta | placa_1 | compuerta entre los extremos, abierta solo con los dos en la placa de su borde |
+| Hueco con cortina | level_4, movil_1 | S ≈ 92, sin nada macizo cerca |
+
+Tras el primer playtest: tronco_3 y movil_4 gustaron tal cual; los otros 7 se rehicieron.
+#### Pendientes de rehacer (plan aprobado)
+
+La tanda 1 (9 niveles) ya está hecha, falta probarla con gente. Se conservan tronco_1 y level_2 ("La T"). Prototipos: la
+mecedora (placa_3), la bandera (viento_2) y las ráfagas (viento_4) funcionan; falta ajustar "al pasar" (movil_2). Las metas marcadas (*) son nuevas: si quedan erráticas, se reemplazan por un
+hueco de S ≈ 100. Entre paréntesis, los atajos que encontró el mono en la versión vieja.
+
+| Tanda | Nivel | Recorrido | Meta |
+|---|---|---|---|
+| 2 | caja_3 (sin caja) | torre de dos cajas, pared de 310 | hueco |
+| 2 | lanzar_2 (sin lanzar, cruzar) | repisas de 260, muro | los dos lanzan al mismo gancho |
+| 2 | lanzar_4 | igual | tiro por una ranura |
+| 2 | placa_2 (sin cuerda) | placa hundida, puerta lejos | hueco |
+| 2 | placa_3 (sin caja) "La mecedora" | caja y extremo obligados | * J1 mece la plataforma de J2 con una placa |
+| 2 | movil_2 (saltando, cruzar) | foso ≥ 480, muro | * J2 en una plataforma que pasa |
+| 3 | viento_2 (sin viento) | viento en contra | * el viento lateral estira la cuerda de J1 |
+| 3 | viento_4 | un piso más | * ráfagas que columpian (S ≈ 140) |
+| 3 | final (saltando) | gancho sobre 480 → relevo de ascensores | trapecio que solo se alcanza en una ráfaga |
+
 ### Pantalla de victoria y highscore (`victory.gd` + `score_board.gd`)
 
 Al ganar, `WinManager` llama `ScoreBoard.report_win(level_id, level_name, score, collected, total)` — el puntaje y las sopaipillas salen del `ScoreManager` del nivel (0 si no tiene) — y luego `change_scene_to_file(victory_scene)`. **`ScoreBoard`** es un autoload que (a) guarda los datos de la última victoria (`last_level_id`, `last_level_name`, `last_score`, `last_is_record`, `last_collected`, `last_total`) para que `victory.gd` los muestre sin tener que pasar parámetros entre escenas, y (b) persiste el **highscore por nivel** en `user://scores.cfg` (sección `highscores`, clave = `level_id`), actualizándolo solo si el puntaje lo supera. `victory.tscn` (estilo del menú): título, número y nombre del nivel, puntaje, sopaipillas juntadas, récord (muestra "¡Nuevo récord!" si se batió) y botones **Reintentar** (solo si el nivel está en el catálogo) y **Continuar** (vuelve al mapa; Esc hace lo mismo).
@@ -677,11 +811,24 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
   arriba se va con él y tira al jugador.
 - **Un ascensor que baja hasta el borde de una repisa puede atrapar el extremo debajo** (si el extremo quedó
   colgando en el hueco del ascensor): esperar un paso atrás del borde. Sin hueco entre la repisa y el ascensor.
+- **Bajar de un ascensor deja el extremo en el hueco del lado de la torre:** pegar el ascensor a la torre y dejar el hueco
+  (19 px) del lado de la partida (movil_1).
 - **En una corriente vertical el extremo sube derecho sobre la mano** (no hacia el gancho): un gancho que se
   alcanza con viento va justo encima de donde se para el jugador, y la corriente con margen hacia afuera (si el
   extremo sale por el borde, cae y se va lejos).
 - **Las placas las pisan también los extremos**: el extremo que cuelga detrás de un jugador puede activar una
   placa sin querer (pasó en movil_3); dejar espacio alrededor de las placas.
+- **Un extremo apoyado en la repisa no cae solo por el borde:** con la cuerda al mínimo (60) y la mano 50 px sobre el
+  piso, le sobran ~33 px y se queda arriba. Hay que pararse en el borde y **saltar en el lugar** (paso `hang` del bot).
+- **Para exigir una caja (o un gancho), la pared mide 250:** con 200 se salta sin nada (194 con cuerda 170, 239 con 320).
+  Desde la caja, con cuerda larga, se alcanza.
+- **Una caja pasa derecho sobre un foso casi de su ancho** (66 px): para que caiga, ~84.
+- **El fuego separa a los jugadores sin frenar las cajas** (las zonas de muerte no las tocan): un pozo con fuego en las
+  paredes deja pasar solo cajas.
+- **Crear un nivel (en tests) dentro del paso de física deja el extremo en el origen** y arrastra al jugador: esperar un
+  `process_frame`.
+- **Dos extremos en el mismo `HookPoint` se embocan** (es el trapecio de placa_4). No poner un gancho al alcance de los
+  dos si no es a propósito.
 - **Muros sobre un cuenco: dejar ≥ 60 px entre el borde de abajo del muro y el cuenco**, o lo parten en dos y
   un extremo queda encajado entre la esquina del muro y la tabla.
 - **Pozos de 38 px entre dos repisas** (no cabe un jugador, sí los extremos) son una meta simple, pero dos
@@ -741,6 +888,9 @@ Hecho (el detalle de lo verificado con tests headless está en `docs/REGISTRO_TE
 - **Tomar y lanzar el emboque** (por nivel, `LevelRules`), con mira en ping-pong y vuelo recto; la misma tecla lo recoge rápido a la mano. Se usa en lanzar_1..4 y en el final.
 - **Magnetismo con curva + trabado:** suave a distancia, resorte fuerte una vez embocado.
 - **Closeup + cámara lenta** al acercarse los extremos (estilo Peggle).
+- **Escala 0,8** opcional (`level_base_large`) y **ráfagas** de viento.
+- **Bonos de estilo** (solo texto): "¡Limpio!" y "¡Al vuelo!".
+- **Zonas de emboque nuevas** (9 niveles de muestra, un tipo cada uno; ver "Zonas de emboque").
 - **Animación del emboque:** subida de tensión (silencio antes del golpe, viñeta, halo), magnetismo más sutil, piezas pegadas al embocar, click de zoom, partículas doradas y
   confetti + chispas desde las esquinas de abajo.
 
@@ -776,7 +926,8 @@ Pendiente:
 - **Imágenes en inglés definitivas** (`assets/ui/en/portada.png`, `pause_menu.webp`): hoy son el arte original
   con el texto reescrito por código; diseño puede reemplazarlas con el mismo nombre.
 - **Niveles del equipo fuera del mapa** (`main`, `level_3`): corregir el inicio (ver Lecciones) si se quieren sumar.
-- **Tráiler:** los `start` de los clips en `trailer/edit.py` son tiempos fijos del bot; al regrabar hay que revisarlos (p. ej. `level_4` ahora emboca a los ~20 s de juego; antes, ~14).
+- **Zonas de emboque:** probar la tanda 1 con gente y rehacer los 9 que faltan (ver "Zonas de emboque").
+- **Tráiler:** tronco_3, peligro_2, caja_2, lanzar_3, placa_4, movil_3, viento_1 y viento_3 cambiaron de meta (regrabar). Los `start` de los clips en `trailer/edit.py` son tiempos fijos del bot; al regrabar hay que revisarlos (p. ej. `level_4` ahora emboca a los ~20 s de juego; antes, ~14).
 - **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos.
 
 Post-prototipo (del concepto): más objetos dinámicos, más niveles.

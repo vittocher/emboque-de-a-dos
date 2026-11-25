@@ -1,11 +1,10 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
 [ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
 [ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
 [ext_resource type="PackedScene" path="res://scenes/hook_point.tscn" id="4_hook"]
 [ext_resource type="PackedScene" path="res://scenes/fall_zone.tscn" id="5_fall"]
-[ext_resource type="PackedScene" path="res://scenes/bowl.tscn" id="6_bowl"]
 
 [node name="Tronco4" instance=ExtResource("1_base")]
 
@@ -32,16 +31,16 @@ position = Vector2(900, -55)
 size = Vector2(40, 490)
 
 [node name="LandingLeft" parent="." instance=ExtResource("2_block")]
-position = Vector2(576, 482)
-size = Vector2(112, 24)
+position = Vector2(522, 482)
+size = Vector2(104, 24)
 
 [node name="LandingRight" parent="." instance=ExtResource("2_block")]
-position = Vector2(704, 342)
-size = Vector2(112, 24)
+position = Vector2(758, 342)
+size = Vector2(104, 24)
 
 [node name="Wall" parent="." instance=ExtResource("2_block")]
-position = Vector2(640, 85)
-size = Vector2(16, 770)
+position = Vector2(640, 117.5)
+size = Vector2(60, 835)
 
 [node name="HookLeft" parent="." instance=ExtResource("4_hook")]
 position = Vector2(300, 400)
@@ -51,6 +50,10 @@ position = Vector2(980, 260)
 
 [node name="FallZone" parent="." instance=ExtResource("5_fall")]
 
+[node name="WallLow" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 692.5)
+size = Vector2(60, 135)
+
 [node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
 position = Vector2(300, 600)
 
@@ -58,10 +61,7 @@ position = Vector2(300, 600)
 position = Vector2(980, 460)
 
 [node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(640, 566)
+position = Vector2(640, 580)
 
 [node name="Collectible4" parent="." instance=ExtResource("3_collectible")]
 position = Vector2(1030, 110)
-
-[node name="Bowl" parent="." instance=ExtResource("6_bowl")]
-position = Vector2(640, 598)

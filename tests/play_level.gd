@@ -17,6 +17,10 @@ extends SceneTree
 ##   --linger=S      al terminar sigue S s más (el closeup y el cartel de victoria)
 ##   --lang=CÓDIGO   idioma del juego ("es", "en")
 ##   --music=V       volumen de la música (0 = muda, para montarla aparte)
+##   --still=1|2|12  control: esos jugadores llegan a la meta pero NO se balancean
+##                   (se saltan sus pasos swing / jiggle); ver tests/run_controls.sh
+##   --start=x1,y1,x2,y2  para probar un tramo: parten desde ahí, con la cuerda al mínimo
+##                   (el punto va ~100 px sobre el piso, para que el extremo nazca arriba)
 ##
 ## Imprime al final una línea:  RESULT WIN|DEATH|TIMEOUT t=… collected=a/b ...
 ##
@@ -40,6 +44,13 @@ extends SceneTree
 ##   ["release_all"]
 ##   ["jiggle", home_x, back, veces=6]  va y vuelve (home_x-back ↔ home_x) para
 ##                                  balancear el extremo; termina antes si ya ganó
+##   ["hang", x]                en el borde x: acorta la cuerda y salta en el lugar hasta
+##                                  que el extremo quede colgando afuera (apoyado en la
+##                                  repisa, al mínimo, no cae solo)
+##   ["swing", home_x, back, veces=14, g=980]  balanceo al RITMO del péndulo: va y vuelve
+##                                  entre home_x y home_x-back, un tramo por cada medio
+##                                  período (según el largo de su cuerda). Con los dos
+##                                  sincronizados (sync antes), se balancean a la vez
 ## Los nombres de clases del proyecto NO se usan acá (el script se compila antes
 ## que los autoloads, ver CLAUDE.md): todo se accede por nombre de propiedad.
 
@@ -64,6 +75,8 @@ var _shot_acc := 0.0
 var _shot_n := 0
 var _done := false
 var _linger := 0.0
+var _still := ""
+var _starts: PackedFloat64Array = []
 var _win_manager: Node
 
 const FRICTION := 2600.0
@@ -89,12 +102,16 @@ func _initialize() -> void:
 			_shots_dir = a.get_slice("=", 1)
 		elif a.begins_with("--shot-every="):
 			_shot_every = float(a.get_slice("=", 1))
+		elif a.begins_with("--still="):
+			_still = a.get_slice("=", 1)
 		elif a.begins_with("--linger="):
 			_linger = float(a.get_slice("=", 1))
 		elif a.begins_with("--lang="):
 			root.get_node("SettingsManager").set_language(a.get_slice("=", 1))
 		elif a.begins_with("--music="):
 			root.get_node("SettingsManager").set_music_volume(float(a.get_slice("=", 1)))
+		elif a.begins_with("--start="):
+			_starts = a.get_slice("=", 1).split_floats(",")
 		elif a.begins_with("--var="):
 			var kv := a.trim_prefix("--var=")
 			vars[kv.get_slice("=", 0)] = kv.get_slice("=", 1)
@@ -106,6 +123,10 @@ func _initialize() -> void:
 		return
 	level = scene.instantiate()
 	_disable_reloads(level)
+	if _starts.size() == 4:
+		for i in [1, 2]:
+			level.get_node("Player%d" % i).position = Vector2(_starts[i * 2 - 2], _starts[i * 2 - 1])
+			level.get_node("Emboque%d" % i).rope_length = 60.0
 	root.add_child(level)
 	current_scene = level
 	_bind_actors()
@@ -247,6 +268,8 @@ func _do_step(who: String, step: Array, dt: float) -> bool:
 	var pl: Node2D = players[who]
 	var st: Dictionary = _step_state[who]
 	var t: float = _step_time[who]
+	if step[0] in ["swing", "jiggle"] and _still.contains(who.right(1)):
+		return true
 	match step[0]:
 		"wait":
 			return t >= float(step[1])
@@ -321,6 +344,34 @@ func _do_step(who: String, step: Array, dt: float) -> bool:
 				if st["leg"] == 0:
 					st["n"] += 1
 					st["wait_until"] = t + 0.6
+			return false
+		"hang":
+			# Solo mira (y salta) tras estar quieto en el borde un momento.
+			_act(who, "pull", emboques[who].rope_length > 61.0)
+			var at_edge: bool = _walk_to(who, pl, float(step[1]), 2.0, 0.0) and pl.is_on_floor()
+			st["still"] = float(st.get("still", 0.0)) + dt if at_edge else 0.0
+			var ready: bool = st["still"] > 0.5 and emboques[who].rope_length <= 61.0
+			if ready and emboques[who].get_end_position().y > pl.global_position.y + 36.0:
+				_act(who, "pull", false)
+				return true
+			_act(who, "jump", ready)
+			return t > 10.0
+		"swing":
+			# Medio período = pi * raíz(L / g); en tiempo de juego (la cámara lenta no
+			# cambia el ritmo del péndulo).
+			if not st.has("leg"):
+				st["leg"] = 0
+				st["start"] = time
+			var legs := 2 * (int(step[3]) if step.size() > 3 else 14)
+			if won() or st["leg"] >= legs:
+				_act(who, "left", false)
+				_act(who, "right", false)
+				return true
+			_walk_to(who, pl, float(step[1]) - (float(step[2]) if st["leg"] % 2 == 0 else 0.0), 4.0, 0.0)
+			var half: float = PI * sqrt(emboques[who].rope_length / (float(step[4]) if step.size() > 4 else 980.0))
+			if time - st["start"] >= half:
+				st["start"] += half
+				st["leg"] += 1
 			return false
 		"pump_end":
 			var center := float(step[2])

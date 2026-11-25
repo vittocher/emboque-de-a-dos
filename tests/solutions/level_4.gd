@@ -1,4 +1,6 @@
 extends RefCounted
+const CONTROLS := ["12", "1", "2"]
+const SHORTCUTS := ["--no=box --goal=540,68,740,68", "--start=535,0,745,0 --goal=745,68,535,68"]
 const SCENE := "res://scenes/level_4.tscn"
 ## Nivel 4 del equipo ("Escalones"): la caja empieza DEBAJO de la primera
 ## plataforma (200 px sobre el piso). Cada uno salta por encima de la caja, la
@@ -16,32 +18,19 @@ static func side(i: int, d: int, ctx) -> Array:
 		["release", back], ["wait", 0.4]] \
 		+ C.climb_box(i, -d, x, 230, 190, 470) + [["rope", 80], ["wait", 0.4]] \
 		+ C.climb_box(i, d, x, 150, 230, 330) \
-		+ C.climb_box(i, d, x, 330, 420, 230)
+		+ C.climb_box(i, d, x, 325, 410, 230)
 
 ## Del segundo escalón a la meta.
 static func last_step(i: int, d: int) -> Array:
 	var x := func(v: float) -> float: return v if d == 1 else 1280.0 - v
-	return C.climb_box(i, d, x, 505, 568, 130) + [["wait", 0.3]]
+	return C.climb_box(i, d, x, 455, 520, 100) + [["wait", 0.3]]
 
-## En la meta: cada uno se para sobre la ranura del medio, acorta la cuerda al
-## mínimo y, si el extremo quedó apoyado en la repisa, lo arrastra de a poco hasta
-## que cae por la ranura; vuelve al medio y lo alarga hasta el cuenco. De a uno,
-## para que no se traben en la ranura (y J2 espera en el segundo escalón: arriba,
-## los extremos se juntan en la repisa antes de llegar al cuenco).
-static func drop(i: int, d: int, ctx) -> Array:
-	var dir := "right" if d == 1 else "left"
-	var fallen := func(c): return c.e(i).get_end().global_position.y > 100.0
-	var steps := [["walk_to", 640.0, 2], ["rope", 60, 1], ["wait", 0.3]]
-	for k in 6:
-		# Un pasito (`step` px) solo si todavía no cae.
-		var target: float = 640.0 + d * ctx.var_f("step", 12) * (k + 1)
-		steps += [["press", dir],
-			["until", func(c): return fallen.call(c) or (c.p(i).global_position.x - target) * d >= -4.0, 0.5],
-			["release", dir], ["wait", 0.25]]
-	return steps + [["walk_to", 640.0, 2], ["wait", 0.4], ["rope", ctx.var_f("r%d" % i, 160)],
-		["wait", 0.5], ["walk_to", 640.0 - d * ctx.var_f("back", 30), 3]]
+## En la meta los extremos cuelgan por el hueco, con la cortina entre los jugadores.
+static func goal(i: int, d: int, ctx) -> Array:
+	var x := func(v: float) -> float: return v if d == 1 else 1280.0 - v
+	return [["rope", 60], ["hang", x.call(593)], ["rope", ctx.var_f("r", 150)], ["wait", 0.8], ["sync", "listos"],
+		["swing", x.call(593), ctx.var_f("m", 45) * d, 24]]
 
 static func plan(ctx) -> Dictionary:
-	return {"p1": side(1, 1, ctx) + last_step(1, 1) + drop(1, 1, ctx) + [["sync", "uno"], ["wait", 1.0],
-			["jiggle", 610.0, -10, int(ctx.var_f("times", 20))]],
-		"p2": side(2, -1, ctx) + [["sync", "uno"]] + last_step(2, -1) + drop(2, -1, ctx) + [["jiggle", 670.0, 10, int(ctx.var_f("times", 20))]]}
+	return {"p1": side(1, 1, ctx) + last_step(1, 1) + goal(1, 1, ctx),
+		"p2": side(2, -1, ctx) + last_step(2, -1) + goal(2, -1, ctx)}

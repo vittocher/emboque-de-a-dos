@@ -16,6 +16,10 @@ var constrained: bool = false  # el Emboque lo activa tras posicionar el extremo
 ## Fracción del exceso de largo que se corrige por frame (estabilización).
 @export var stiffness: float = 0.5
 
+## Segundos (de juego) desde que tocó por última vez el terreno, una caja o un gancho
+## (el otro extremo no cuenta). Lo usa el bono "¡Limpio!" del WinManager.
+var untouched_time: float = 0.0
+
 var _held: bool = false
 var _saved_layer: int = 0
 var _saved_mask: int = 0
@@ -27,6 +31,8 @@ var _carry_xform := Transform2D.IDENTITY
 
 func _ready() -> void:
 	_base_gravity_scale = gravity_scale
+	# Para que _integrate_forces vea los contactos (untouched_time).
+	max_contacts_reported = 4
 
 ## En la mano del jugador (mecánica de lanzar): congelado y SIN colisiones, así
 ## no empuja al otro extremo, no entra en la cavidad de la campana ni activa
@@ -98,6 +104,7 @@ func end_flight() -> void:
 	gravity_scale = _base_gravity_scale
 
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
+	_update_untouched(state)
 	if not constrained:
 		return
 
@@ -116,6 +123,14 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	if _carried != null and is_instance_valid(_carried):
 		var point := (state.transform * _carried._carry_xform).origin
 		_apply_rope(state, point, _carried.anchor_position, _carried.rope_length)
+
+func _update_untouched(state: PhysicsDirectBodyState2D) -> void:
+	untouched_time += state.step
+	if hooked:
+		untouched_time = 0.0
+	for i in state.get_contact_count():
+		if not state.get_contact_collider_object(i) is RopeEnd:
+			untouched_time = 0.0
 
 ## Restricción de una cuerda (ancla, largo) sobre el punto [param point] del cuerpo,
 ## por velocidad (sobre la velocidad lineal del cuerpo).

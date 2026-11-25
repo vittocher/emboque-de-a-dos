@@ -5,7 +5,6 @@
 [ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
 [ext_resource type="PackedScene" path="res://scenes/moving_platform.tscn" id="4_mp"]
 [ext_resource type="PackedScene" path="res://scenes/both_death_zone.tscn" id="5_fire"]
-[ext_resource type="PackedScene" path="res://scenes/bowl.tscn" id="6_bowl"]
 [ext_resource type="PackedScene" path="res://scenes/fall_zone.tscn" id="7_fall"]
 
 [node name="Movil4" instance=ExtResource("1_base")]
@@ -60,27 +59,25 @@ travel = Vector2(0, 230)
 speed = 95.0
 wait_time = 0.7
 
-[node name="TowerWallLeft" parent="." instance=ExtResource("2_block")]
-position = Vector2(560, 450)
-size = Vector2(40, 500)
-
-[node name="TowerWallRight" parent="." instance=ExtResource("2_block")]
-position = Vector2(720, 450)
-size = Vector2(40, 500)
-
-[node name="RoofLeft" parent="." instance=ExtResource("2_block")]
-position = Vector2(556, 180)
-size = Vector2(132, 20)
-
-[node name="RoofRight" parent="." instance=ExtResource("2_block")]
-position = Vector2(724, 180)
-size = Vector2(132, 20)
-
-[node name="Bowl" parent="." instance=ExtResource("6_bowl")]
-position = Vector2(640, 310)
-width = 116.0
-
 [node name="FallZone" parent="." instance=ExtResource("7_fall")]
+
+[node name="GoalLeft" parent="." instance=ExtResource("4_mp")]
+position = Vector2(528, 290)
+size = Vector2(84, 20)
+travel = Vector2(0, -120)
+speed = 80.0
+wait_time = 0.8
+
+[node name="GoalRight" parent="." instance=ExtResource("4_mp")]
+position = Vector2(752, 170)
+size = Vector2(84, 20)
+travel = Vector2(0, 120)
+speed = 80.0
+wait_time = 0.8
+
+[node name="WallCenter" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, -60)
+size = Vector2(16, 500)
 
 [node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
 position = Vector2(290, 300)

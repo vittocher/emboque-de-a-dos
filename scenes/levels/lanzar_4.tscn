@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/pressure_plate.tscn" id="4_plate"]
 [ext_resource type="PackedScene" path="res://scenes/gate.tscn" id="5_gate"]
 [ext_resource type="Script" path="res://scripts/level_rules.gd" id="6_rules"]
-[ext_resource type="PackedScene" path="res://scenes/bowl.tscn" id="7_bowl"]
+[ext_resource type="PackedScene" path="res://scenes/fall_zone.tscn" id="n_fall"]
 
 [node name="Lanzar4" instance=ExtResource("1_base")]
 
@@ -21,28 +21,12 @@ position = Vector2(220, 340)
 position = Vector2(1120, 340)
 
 [node name="GroundLeft" parent="." instance=ExtResource("2_block")]
-position = Vector2(280, 640)
-size = Vector2(560, 160)
-
-[node name="RoofLeft" parent="." instance=ExtResource("2_block")]
-position = Vector2(591, 570)
-size = Vector2(62, 20)
+position = Vector2(245, 640)
+size = Vector2(490, 160)
 
 [node name="GroundRight" parent="." instance=ExtResource("2_block")]
-position = Vector2(1000, 640)
-size = Vector2(560, 160)
-
-[node name="RoofRight" parent="." instance=ExtResource("2_block")]
-position = Vector2(689, 570)
-size = Vector2(62, 20)
-
-[node name="ChamberFloor" parent="." instance=ExtResource("2_block")]
-position = Vector2(640, 715)
-size = Vector2(160, 10)
-
-[node name="Bowl" parent="." instance=ExtResource("7_bowl")]
-position = Vector2(640, 670)
-width = 150.0
+position = Vector2(1036, 640)
+size = Vector2(488, 160)
 
 [node name="MailboxTop" parent="." instance=ExtResource("2_block")]
 position = Vector2(40, 244)
@@ -73,17 +57,36 @@ position = Vector2(880, 475)
 size = Vector2(24, 170)
 
 [node name="CenterPlate" parent="." instance=ExtResource("4_plate")]
-position = Vector2(480, 560)
+position = Vector2(815, 560)
 channel = 1
+
+[node name="LedgeLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(528, 462)
+size = Vector2(76, 24)
+
+[node name="LedgeRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(752, 572)
+size = Vector2(80, 24)
+
+[node name="WallTop" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 31)
+size = Vector2(16, 862)
+
+[node name="WallLow" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 641)
+size = Vector2(16, 238)
+
+[node name="FallZone" parent="." instance=ExtResource("n_fall")]
+position = Vector2(640, 830)
 
 [node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
 position = Vector2(34, 512)
 
 [node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(480, 430)
+position = Vector2(450, 430)
 
 [node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(640, 630)
+position = Vector2(640, 492)
 
 [node name="Collectible4" parent="." instance=ExtResource("3_collectible")]
 position = Vector2(1010, 380)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
 [ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
@@ -8,21 +8,21 @@
 [node name="Tronco2" instance=ExtResource("1_base")]
 
 [node name="Player1" parent="."]
-position = Vector2(200, 250)
+position = Vector2(200, 230)
 
 [node name="Player2" parent="."]
-position = Vector2(1080, 440)
+position = Vector2(1080, 430)
 
 [node name="LedgeHigh" parent="." instance=ExtResource("2_block")]
-position = Vector2(316, 322)
+position = Vector2(316, 302)
 size = Vector2(632, 24)
 
 [node name="LedgeLow" parent="." instance=ExtResource("2_block")]
-position = Vector2(964, 512)
+position = Vector2(964, 502)
 size = Vector2(632, 24)
 
 [node name="Wall" parent="." instance=ExtResource("2_block")]
-position = Vector2(640, 100)
+position = Vector2(640, 90)
 size = Vector2(16, 800)
 
 [node name="Floor" parent="." instance=ExtResource("2_block")]
@@ -30,7 +30,7 @@ position = Vector2(640, 700)
 size = Vector2(1280, 40)
 
 [node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(400, 270)
+position = Vector2(400, 250)
 
 [node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
 position = Vector2(780, 612)

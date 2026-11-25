@@ -140,6 +140,73 @@ t=10,96) igual con el código anterior: falla previa del bot, no de esta mecáni
 
 Rojo mata al jugador y no al emboque; naranja mata a ambos; el muro no se salta por arriba; extremos y jugadores recogen. Rutas: J1 baja con cuidado a la izquierda del rojo, engancha el gancho de abajo (tirar al mínimo, soltar un poco y volver a tirar) y se balancea hasta la T en 10/12 combinaciones largo/ángulo; J2 acorta la cuerda, corre a la izquierda, el palito engancha el gancho derecho y salta a la T en 4/4 ángulos; con la cuerda a 170 el palito roza el bloque naranja; desde la T los extremos cuelgan bajo el muro, se juntan a 5 px y recogen los 2 coleccionables de abajo.
 
+## Tanda 1 de los niveles que faltaban
+
+`run_all.sh` 29/29; `run_controls.sh` 29/29 (ningún control se gana). Mono (1000–1200 s por prueba): ningún atajo salvo
+tronco_2, que sin cuerda ganó una vez en 436 s (el palito se balancea por debajo del muro hasta la campana); se dejó.
+
+| Nivel | Gana | Notas |
+|---|---|---|
+| tronco_2 | 12–18 s | J1 285–320 y J2 85–100; con J2 en 120 no |
+| tronco_4 | 18 s | 4 pares de largos (140/280 a 180/320); a veces basta con J2 |
+| peligro_1 | 25–32 s | 5 de 6; con cuerda 150 no se juntó en 60 s |
+| peligro_3 | 15–18 s | cuerda 100–155, los dos a la vez |
+| caja_1 | 17–36 s | 6 de 6; paredes de 250 (con 200 se saltaban) |
+| level_4 | 20–34 s | 5 de 6 |
+| lanzar_1 | 20 s | mira 8–16° con cuerda 65–80; 4–12° con 100 |
+| placa_1 | 11–13 s | 6 de 6; sin una de las placas de la meta el mono no gana |
+| movil_1 | 25 s | 6 de 6 |
+
+Prototipos (fuera del repo): mecedora (vaivén 80–100 px), bandera (cuerda 220–280 según J2) y ráfagas hacia adentro
+(fuerza 350 + balanceo) se ganan; "al pasar" todavía no.
+
+## Segundo pase de las zonas de emboque (tras el playtest) y escala 0,8
+
+`run_all.sh` 29/29; `run_controls.sh` 14/14; `run_shortcuts.sh`: ningún atajo (1000–3000 s de mono por prueba).
+Las pruebas de peligro_2, caja_2, lanzar_3, placa_4, movil_3, viento_1 y viento_3 de la tabla de más abajo son de la
+versión anterior de esos niveles.
+
+Antes de rehacerlos, confirmado con el bot: peligro_2 se ganaba sin tocar la cuerda en 4,7 s; lanzar_3 se cruzaba
+saltando (cuerda 60); placa_4 se ganaba sin el gancho central en 7 de 9. Alcance del salto corriendo (misma altura):
+380 / 339 / 314 / 410 / 401 px con cuerda 60 / 120 / 170 / 240 / 320; alto 139–151.
+
+| Nivel | Gana | Atajos probados (no se gana / no se llega) |
+|---|---|---|
+| peligro_2 | 33 s; m 30–70 con cuerda 140 | sin cuerda, 3 × 3000 s |
+| caja_2 | 43 s; asomar 10–44 px | sin cajas; sin dos de las tres; sin las de arriba (con 200 px de pared SÍ se saltaba: quedó en 250) |
+| lanzar_3 | 29 s; mira 2–6° | sin lanzar y sin gancho, en cada repisa |
+| placa_4 | 29 s; saltar entre 520 y 565 | sin gancho central, 2000 s; balanceándose desde las islas tampoco |
+| movil_3 | 20 s; cuerda 140–220, vaivén 40–80 | — (sin cuerda el mono ganó 1 vez en 215 vidas, cayendo los dos) |
+| viento_1 | 15 s | sin viento; sin el segundo chorro |
+| viento_3 | 17 s; J1 110–150 con J2 110–145 | sin viento; un chorro sin esperar; con viento en contra el salto muere (3/3) |
+
+Nuevo en la caja: en el aire no se empuja; quien empuja se detiene en el borde. Una caja de caja_2 empujada al hoyo de la
+izquierda vuelve arriba y J2 no cae tras ella. caja_1, caja_3, level_4 y placa_3 se siguen ganando. Closeup a escala 0,8
+revisado en captura (emboque del mismo tamaño).
+
+Mono sobre los que faltan (700 s): atajos en **viento_2** (sin viento, 44 s), **lanzar_2** (sin lanzar) y **caja_1** (sin
+caja); ninguno en tronco_4, peligro_3, caja_3, lanzar_1, lanzar_4 y viento_4.
+
+## Zonas de emboque nuevas (9 niveles de muestra) y bonos de estilo
+
+`run_all.sh` 29/29; `run_controls.sh` 13/13 (ningún control se gana). Barridos con el bot (gana = se puede ganar):
+
+| Nivel | Gana | Quietos | Uno solo | Notas |
+|---|---|---|---|---|
+| tronco_3 | 14 s | no | a veces (J1 sí, J2 no) | largos 130–210; con pump 1,2 embocó de rebote al llegar |
+| peligro_2 | 9 s | no | sí (9 s / 43 s) | cuerda < 185 se traba en el diente; balancear con 180 en la meta toca la caca |
+| caja_2 | 25 s | no | a veces (J2 sí, J1 no) | sin asomar (0/10/20 px) no gana; 35–52 gana; 57 el jugador se cae |
+| placa_4 | 25 s | no | no | gancho en y 580/600/620; balanceos de 60 px 9/9, de 30 px 4/9 |
+| movil_3 | 20 s | no | no | largos 120–240 |
+| movil_4 | 36 s | no | no | largos 180–240; con 120 un jugador se cae |
+| lanzar_3 | 18 s | — | — | 10 de 18 combinaciones ángulo × largo; con cuerda 110 y 2–6° al primer tiro |
+| viento_1 | 16 s | no | no | viento 1600: 4/4; 1800: 3/4 y más lento |
+| viento_3 | 10 s | — | — | solo con J1 en 130–140 (110–120 y 155 no) y J2 en 80–125 |
+
+Nadie cruza al lado del otro (caminando o saltando en 3 puntos) en tronco_3, lanzar_3, placa_4, movil_3, caja_2 ni
+viento_1. La caja de caja_2 empujada al foso cae y reaparece en (470, 168). Bonos en las 29 soluciones: "¡Limpio!" en
+6, "¡Al vuelo!" en 11; texto revisado en captura.
+
 ## Bot tras suavizar la cámara lenta: `level_4` corregido (Windows)
 
 Con `min_time_scale` 0,4, en Windows, `placa_3` **se gana** (13,75 s; la falla previa anotada en otras entradas ya no
@@ -158,7 +225,7 @@ Cada nivel se gana con el plan de `tests/solutions/<nivel>.gd` (además se barri
 |---|---|---|
 | tronco_1..4 | 5–15 s | T2: sin ajustar largos no se juntan; T3: el salto directo no cruza (el extremo engancha solo) |
 | peligro_1 Púas | 19 s | — (sopaipillas en zanjas de púas que solo el emboque alcanza) |
-| peligro_2 Cuidado abajo | 8 s | quedarse en el borde con cuerda 170, o bajar el extremo de más → caca |
+| peligro_2 Cuidado abajo | 8 s | (nivel anterior) quedarse en el borde con cuerda 170, o bajar el extremo de más → caca |
 | peligro_3 Brasas | 9 s | cuerda 90–170 sobre las brasas → el extremo se quema; cuerda 60–100 no sube el escalón |
 | level_2 La T (equipo) | 24 s | cuerda 120 de J2 → el palito toca el bloque de fuego |
 | caja_1..3 | 8–14 s | caja_3: si J2 sigue la caja al piso de J1, su extremo cae a la caca |

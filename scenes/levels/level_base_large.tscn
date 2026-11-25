@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+
+[node name="LevelBaseLarge" instance=ExtResource("1_base")]
+
+[node name="Background" parent="." index="0"]
+position = Vector2(800, 450)
+scale = Vector2(1.25, 1.25)
+
+[node name="Camera2D" parent="." index="1"]
+position = Vector2(800, 450)
+zoom = Vector2(0.8, 0.8)
+
+[node name="WallLeft" parent="." index="2"]
+position = Vector2(-20, 250)
+size = Vector2(40, 1500)
+
+[node name="WallRight" parent="." index="3"]
+position = Vector2(1620, 250)
+size = Vector2(40, 1500)
+
+[node name="Player1" parent="." index="4"]
+position = Vector2(200, 300)
+
+[node name="Player2" parent="." index="5"]
+position = Vector2(1400, 300)
+
+[node name="CloseupManager" parent="." index="7"]
+max_zoom = 2.5
+level_size = Vector2(1600, 900)
