@@ -18,7 +18,7 @@ static func plan(ctx) -> Dictionary:
 			["until", func(c): return pingpong(c.e(2)._aim_time * c.e(2).aim_sweep_speed_deg, c.e(2).aim_max_angle_deg) >= ctx.var_f("aim", 13) - 0.5, 3.0],
 			["tap", "throw"], ["wait", 0.6], ["until", func(c): return c.won(), 0.9]]
 	return {
-		"p1": [["wait_floor"], ["rope", ctx.var_f("long", 220)], ["wait", 0.4]] + M.path(1, [[138, 272], ["go", 350]]) + [["rope", 60, 1], ["wait", 0.3], ["tap", "pull"], ["until", func(c): return c.e(1)._throw_state == 1, 1.0]] + M.path(1, [["go", 115]]) + [["tap", "release"], ["wait", 0.5]] + M.path(1, [["over", 182, 208], [270, 362], ["go", 300]])
+		"p1": [["wait_floor"], ["rope", ctx.var_f("long", 220)], ["wait", 0.4]] + [["hold_jump", ctx.var_f("h", 0.5)]] + M.path(1, [[124, 288], ["go", 350]]) + [["hold_jump", 0.5], ["rope", 60, 1], ["wait", 0.3], ["tap", "pull"], ["until", func(c): return c.e(1)._throw_state == 1, 1.0]] + M.path(1, [["go", 115]]) + [["tap", "release"], ["wait", 0.5]] + M.path(1, [["over", 182, 208], [270, 362], ["go", 300]])
 			+ [["walk_to", ctx.var_f("tx", 250), 3], ["wait", 0.4]] + M.throw_at(1, -1, ctx.var_f("deg", 0.0))
 			+ [["wait", 1.0], ["until", func(c): return c.level.get_node("GateLeft").is_open, 30.0], ["rope", 60, 1], ["wait", 0.8], ["walk_to", 440.0, 3], ["sync", "j1_paso"]]
 			+ M.path(1, [[462, 565], [555, 465], ["run", 480, 680]])

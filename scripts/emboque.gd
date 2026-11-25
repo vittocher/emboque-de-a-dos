@@ -99,6 +99,7 @@ func _ready() -> void:
 		if _player != null:
 			# Saltar desde la cuerda suelta el gancho (lo decide el jugador).
 			_player.swing_jumped.connect(_unhook)
+			_player.jump_cut.connect(_on_jump_cut)
 		_end.global_position = _anchor.global_position + Vector2(0, rope_length)
 		_end.anchor_position = _anchor.global_position
 		_end.rope_length = rope_length
@@ -227,6 +228,12 @@ func _unhook() -> void:
 		# El extremo sale junto al jugador: si quedara quieto en el gancho, la
 		# cuerda frenaría de golpe el lanzamiento.
 		_end.linear_velocity = _player.velocity
+
+## El jugador cortó su salto: el extremo que venía subiendo con él también (si no,
+## seguiría de largo y le pasaría por encima).
+func _on_jump_cut() -> void:
+	if _throw_state == ThrowState.NONE and not _hooked and not _end.is_attached():
+		_end.linear_velocity.y = maxf(_end.linear_velocity.y, _player.velocity.y)
 
 # --- Tomar y lanzar (solo si el nivel lo permite: LevelRules.throw_enabled) ---
 

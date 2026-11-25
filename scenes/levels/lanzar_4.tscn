@@ -142,13 +142,13 @@ position = Vector2(190, 237)
 size = Vector2(220, 24)
 
 [node name="CacaF1" parent="." instance=ExtResource("n_caca")]
-position = Vector2(207, 71)
+position = Vector2(217, 72)
 rotation = 3.1415927
-scale = Vector2(0.7, 5.4)
+scale = Vector2(0.74, 5.46667)
 
 [node name="SpikesF1" parent="." instance=ExtResource("n_puas")]
-position = Vector2(209, 213)
-scale = Vector2(0.54, 0.8)
+position = Vector2(217, 202.5)
+scale = Vector2(0.58, 1.5)
 
 [node name="F2" parent="." instance=ExtResource("n_block")]
 position = Vector2(270, 397)

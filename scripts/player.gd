@@ -16,6 +16,8 @@ class_name Player
 
 ## Se emite cuando el jugador salta para soltarse del gancho (el Emboque lo desengancha).
 signal swing_jumped
+## Se emite al cortar el salto (soltar la tecla subiendo): el Emboque frena también al extremo.
+signal jump_cut
 
 ## Prefijo de las acciones del Input Map: "p1" o "p2".
 @export var input_prefix: String = "p1"
@@ -32,6 +34,9 @@ signal swing_jumped
 ## Impulso vertical del salto (negativo = hacia arriba): 112 px de alto, con cualquier largo de
 ## cuerda (ver limit_stretch en el Emboque).
 @export var jump_velocity: float = -470.0
+## Salto variable: al soltar la tecla mientras sube, la velocidad hacia arriba se multiplica
+## por esto (0 = se detiene en seco, 1 = sin corte).
+@export_range(0.0, 1.0) var jump_cut_factor: float = 0.25
 ## Qué tan rápido alcanza la velocidad objetivo en el suelo (px/s^2).
 @export var acceleration: float = 2200.0
 ## Qué tan rápido frena al soltar la dirección (px/s^2).
@@ -115,6 +120,7 @@ var _swing_length: float = 0.0
 var _taut: bool = false         # colgando en el aire con la cuerda tensa → péndulo
 var _swing_radius: float = 0.0
 var _swing_omega: float = 0.0   # velocidad angular (rad/s); + = hacia la derecha abajo
+var _jumping: bool = false      # subiendo de un salto desde el piso con la tecla apretada
 var _launched: bool = false     # conserva el impulso tras soltarse de la cuerda
 var _push_dir := 0.0            # sentido en que viene empujando con esta pulsación
 var _wind := Vector2.ZERO       # aceleración del viento de este tick (WindZone.add_wind)
@@ -158,11 +164,13 @@ func _process_platformer(delta: float) -> void:
 	# Gravedad.
 	if not is_on_floor():
 		velocity.y += _gravity * delta
+	_update_jump_cut()
 	_apply_wind(delta)
 
 	# Salto (solo desde el suelo).
 	if not aiming and is_on_floor() and Input.is_action_just_pressed(input_prefix + "_jump"):
 		velocity.y = jump_velocity
+		_jumping = true
 		Sfx.play(&"jump")
 		_squash(Vector2(0.88, 1.14), FEET)
 
@@ -190,6 +198,18 @@ func _process_platformer(delta: float) -> void:
 	if _launched and (is_on_floor() or is_on_wall()):
 		_launched = false
 	_update_footsteps(delta)
+
+## Salto variable: termina al soltar la tecla. Solo el salto desde el piso (no el
+## impulso de la cuerda) y no dentro de una corriente de aire (ahí sube por ella).
+func _update_jump_cut() -> void:
+	if not _jumping:
+		return
+	if velocity.y >= 0.0 or _hooked or _wind != Vector2.ZERO:
+		_jumping = false
+	elif not Input.is_action_pressed(input_prefix + "_jump"):
+		_jumping = false
+		velocity.y *= jump_cut_factor
+		jump_cut.emit()
 
 ## Al aterrizar de una caída fuerte: aplastón (mayor cuanto más rápido) y un
 ## golpe sordo (el sonido de paso, más grave).

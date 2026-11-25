@@ -301,3 +301,13 @@ movil_2 se gana con 11 de 16 combinaciones de vaivén (40/55 px, cuerda 170/200,
   fosos y púas que solo cuidan del jugador.
 - **Largo de cuerda que pide cada tramo** (bot, barrido 60–300): peligro_3 J1 ≥ 190 y J2 ≥ 150; placa_1 ≥ 150; placa_2 J1 ≥ 150;
   movil_2 J1 ≥ 150 y J2 ≥ 180. Con 60 mueren todos.
+
+## Salto variable (termina al soltar la tecla)
+
+- **Alto / largo según cuánto se mantiene la tecla** (corriendo; igual con cuerda 60 y 200): 0,02 s → 11 / 93 px; 0,05 → 25 / 125;
+  0,1 → 44 / 163; 0,15 → 61 / 192; 0,2 → 76 / 216; 0,3 → 98 / 256; 0,5 → 115 / 315. El extremo nunca pasa por encima del jugador.
+- **Púas con caca colgando** (barrido de cuerda 60 / 110 / 220 × tecla 0,07–0,5 s, en peligro_3, lanzar_2, lanzar_4, placa_2 y los dos
+  lados de movil_2): con 60 no se pasa con ninguna duración (antes de subir las púas a 45 px, un salto de 44 px pasaba); con 110,
+  solo con un salto medio justo; con 220 se pasa.
+- **Bot** 29/29; **controles** OK; **mono** (500 s × 65, también con saltos cortos): sin atajos, salvo viento_4 sin ráfagas (embocan
+  cayendo los dos, por azar; ya pasaba).

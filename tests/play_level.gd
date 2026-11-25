@@ -22,6 +22,7 @@ extends SceneTree
 ##   --start=x1,y1,x2,y2  para probar un tramo: parten desde ahí, con la cuerda al mínimo
 ##                   (el punto va ~100 px sobre el piso, para que el extremo nazca arriba)
 ##   --jump=V        otra velocidad de salto (px/s), para ver con cuánto margen se gana
+##   --hold=S        cuánto mantiene la tecla de salto (default 0.5 = salto completo)
 ##   --hazards       auditoría de peligros: imprime las púas que ningún EXTREMO tocó y las
 ##                   cacas que ningún JUGADOR tocó (ahí, un fuego daría lo mismo)
 ##
@@ -37,6 +38,7 @@ extends SceneTree
 ##   ["wait_floor"]                 espera a estar en el piso
 ##   ["jump_to", x]                 salta hacia x manteniendo la dirección hasta llegar/aterrizar
 ##   ["leap_to", x]                 igual, pero frena en el aire para caer en x
+##   ["hold_jump", s]               desde acá mantiene la tecla de salto s segundos (0.5 = salto completo)
 ##   ["fly_to", x]                  en el aire (p. ej. tras soltarse de un gancho): se frena para caer en x
 ##   ["rope", largo, tol=4]         tira/suelta hasta ese largo de cuerda
 ##   ["sync", "tag"]                espera a que el otro jugador llegue al mismo tag
@@ -85,6 +87,9 @@ var _still := ""
 var _starts: PackedFloat64Array = []
 var _win_manager: Node
 var _jump := 0.0
+var _jump_hold := {"p1": 0.5, "p2": 0.5}
+var _jump_asked := {"p1": false, "p2": false}
+var _jump_until := {"p1": 0.0, "p2": 0.0}
 var _hazards := {}     # zona → la tocó alguien a quien no daña (solo con --hazards)
 
 const FRICTION := 2600.0
@@ -114,6 +119,8 @@ func _initialize() -> void:
 			_still = a.get_slice("=", 1)
 		elif a.begins_with("--jump="):
 			_jump = float(a.get_slice("=", 1))
+		elif a.begins_with("--hold="):
+			_jump_hold = {"p1": float(a.get_slice("=", 1)), "p2": float(a.get_slice("=", 1))}
 		elif a == "--hazards":
 			_hazards["_on"] = true
 		elif a.begins_with("--linger="):
@@ -215,6 +222,7 @@ func _tick() -> void:
 		return
 	var dt := 1.0 / float(Engine.physics_ticks_per_second)
 	time += dt * Engine.time_scale
+	_release_jumps()
 	for who in ["p1", "p2"]:
 		_run_player(who, dt)
 	if _trace > 0.0:
@@ -275,10 +283,30 @@ func _finish(result: String) -> void:
 
 func _act(who: String, action: String, on: bool) -> void:
 	var full := who + "_" + action
+	if action == "jump":
+		_act_jump(who, on)
+		return
 	if on:
 		Input.action_press(full)
 	else:
 		Input.action_release(full)
+
+## El salto dura lo que se mantiene la tecla: los planes la "tocan" y acá se mantiene
+## _jump_hold s (--hold=S), hasta pasar el punto más alto.
+func _act_jump(who: String, on: bool) -> void:
+	var full := who + "_jump"
+	if on and not _jump_asked[who]:
+		if Input.is_action_pressed(full):
+			Input.action_release(full)  # venía del salto anterior: se aprieta de nuevo el próximo tick
+			return
+		Input.action_press(full)
+		_jump_until[who] = time + _jump_hold[who]
+	_jump_asked[who] = on
+
+func _release_jumps() -> void:
+	for who: String in ["p1", "p2"]:
+		if time >= _jump_until[who] and Input.is_action_pressed(who + "_jump"):
+			Input.action_release(who + "_jump")
 
 func _next(who: String) -> void:
 	_idx[who] += 1
@@ -344,6 +372,9 @@ func _do_step(who: String, step: Array, dt: float) -> bool:
 				_act(who, "left", false)
 				return true
 			return t > 6.0
+		"hold_jump":
+			_jump_hold[who] = float(step[1])
+			return true
 		"fly_to":
 			# En el aire: corrige la velocidad (también frenando en contra) para caer en x.
 			var want_v := clampf((float(step[1]) - pl.global_position.x) * 4.0, -420.0, 420.0)

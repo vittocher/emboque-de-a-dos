@@ -128,7 +128,7 @@ func _pick(i: int) -> void:
 		d = _rng.randf_range(0.05, 0.9)
 	elif r < 0.52:
 		hold = [dir, "jump"]
-		d = _rng.randf_range(0.25, 1.1)
+		d = _rng.randf_range(0.05, 1.1)
 	elif r < 0.57:
 		hold = ["jump"]
 		d = 0.3

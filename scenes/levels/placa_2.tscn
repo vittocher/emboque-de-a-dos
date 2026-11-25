@@ -159,13 +159,13 @@ position = Vector2(432, 274)
 size = Vector2(232, 24)
 
 [node name="SpikesTop" parent="." instance=ExtResource("n_puas")]
-position = Vector2(435, 250)
-scale = Vector2(0.54, 0.8)
+position = Vector2(434, 239.5)
+scale = Vector2(0.6, 1.5)
 
 [node name="CacaTop" parent="." instance=ExtResource("n_caca")]
-position = Vector2(435, 89.5)
+position = Vector2(434, 90.5)
 rotation = 3.1415927
-scale = Vector2(0.66, 6.63333)
+scale = Vector2(0.76, 6.7)
 
 [node name="F1" parent="." instance=ExtResource("n_block")]
 position = Vector2(1550, 192)

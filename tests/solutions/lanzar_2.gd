@@ -31,5 +31,5 @@ static func shoot(i: int, d: int, ctx) -> Array:
 	return out
 
 static func plan(ctx) -> Dictionary:
-	return {"p1": [["wait_floor"], ["rope", 60], ["walk_to", 245, 5], ["wait_floor"]] + [["rope", ctx.var_f("long", 220)], ["wait", 0.4]] + M.path(1, [[215, 90], ["go", 42]]) + [["rope", 60], ["wait", 0.4]] + M.path(1, [["over", 115, 148], ["go", 235]]) + side(1, 1, ctx) + [["sync", "listos"]] + shoot(1, 1, ctx),
+	return {"p1": [["wait_floor"], ["rope", 60], ["walk_to", 245, 5], ["wait_floor"]] + [["rope", ctx.var_f("long", 220)], ["wait", 0.4]] + [["hold_jump", ctx.var_f("h", 0.5)]] + M.path(1, [[233, 80], ["go", 42]]) + [["hold_jump", 0.5], ["rope", 60], ["wait", 0.4]] + M.path(1, [["over", 115, 148], ["go", 235]]) + side(1, 1, ctx) + [["sync", "listos"]] + shoot(1, 1, ctx),
 		"p2": [["wait_floor"], ["rope", 60]] + M.path(2, [["go", 1430]]) + [["rope", 60, 1], ["wait", 0.3], ["tap", "pull"], ["until", func(c): return c.e(2)._throw_state == 1, 1.0]] + M.path(2, [["go", 1560], ["go", 1362], ["go", 1550], ["go", 1465]]) + [["tap", "release"], ["wait", 0.4]] + side(2, -1, ctx) + [["sync", "listos"], ["until", func(c): return c.hooked(1), 10.0], ["wait", 1.0]] + shoot(2, -1, ctx)}

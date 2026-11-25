@@ -483,7 +483,8 @@ con esos jugadores quietos en la meta (`--still`: llegan, pero se saltan `swing`
 `const SHORTCUTS` de cada solución (~1500 s de juego cada uno, en ~1 min). Que no encuentre un atajo no prueba que no exista.
 
 **Auditoría de peligros:** `--hazards` (qué púas y cacas podrían ser fuego). **Margen:** `--jump=V` juega con otra velocidad de salto
-(465 y 475 además de 470): si solo gana con una, está muy justo. **Alcance:** `python tests/reach.py NIVEL x0,piso0 x1,piso1`.
+(465 y 475 además de 470): si solo gana con una, está muy justo. El bot mantiene la tecla de salto 0,5 s (salto completo);
+`--hold=S` o el paso `["hold_jump", s]` lo cambian, para probar saltos cortos. **Alcance:** `python tests/reach.py NIVEL x0,piso0 x1,piso1`.
 
 Cada `tests/solutions/<nivel>.gd` declara `const SCENE` y `static func plan(ctx)` con los pasos de cada jugador
 (`walk_to`, `jump_to`, `leap_to` (frena en el aire para caer justo), `fly_to` (tras soltarse de un gancho), `pump_until`, `rope`, `tap`/`hold`, `sync`, `until`, `pump` (columpio), `pump_end` (balancear el
@@ -677,7 +678,8 @@ Leer antes de diseñar o cambiar un nivel.
       encima.
     - **Púas con caca colgando** (peligro_3, lanzar_2, lanzar_4, placa_1, placa_2, movil_2): el jugador salta A TRAVÉS de la caca
       y el extremo tiene que ir abajo, arrastrando por las púas: cuerda ≥ 150. Caca hasta 70 px sobre el piso (retraída, el
-      extremo sube con el jugador y la toca); púas de ~60 px.
+      extremo sube con el jugador y la toca); púas ALTAS (45 px, escala y 1,5) de ~60 px de ancho y despegue a ≥ 65 px. Con púas
+      bajas (24), un saltito corto las pasaba con la cuerda retraída.
     - **Puente de caca** (peligro_3, placa_1, placa_2): tabla flotante tapada de caca, más larga que un salto; antes, una ranura
       de 36 px por donde baja el extremo, que cruza por DEBAJO (cuerda ~125; la cuerda atraviesa la madera).
     - **Cortina baja** (level_4, placa_2): caca colgando hasta ~50 px del piso: se cruza caminando, con el extremo arrastrando;
@@ -702,6 +704,10 @@ Leer antes de diseñar o cambiar un nivel.
 cualquier cuerda** (antes -680 y de 139 a 239 px según la cuerda): 115 px de alto, 0,98 s, 315 px de largo a la misma altura; hasta
 un piso 75 px más arriba, ~240; con techo a 146 px, ~185. A los 0,2 s lleva 75 px de alto y 64 de largo (para pasar sobre unas púas
 de 24 px hay que despegar con el centro a ≥ 45 px de su borde).
+
+**Salto variable:** al soltar la tecla mientras sube, el salto termina (`jump_cut_factor` 0,25 de la velocidad hacia arriba; señal
+`jump_cut`, con la que el Emboque frena también al extremo). Esas medidas son con la tecla mantenida (~0,5 s); tecla 0,05 s → 25 px de
+alto y 125 de largo; 0,1 → 44 / 163; 0,2 → 76 / 216; 0,3 → 98 / 256. No vale para el salto desde la cuerda ni dentro de un viento.
 
 Es igual porque la cuerda ya no frena al jugador por pesar: `_limit_player` deja que se estire `limit_stretch` (10 px) antes de
 tirar de él, y `RopeEnd._apply_rope` iguala la velocidad del extremo a la de la mano a lo largo de la cuerda. Si el extremo está
@@ -985,7 +991,7 @@ Hecho (el detalle de lo verificado con tests headless está en `docs/REGISTRO_TE
 - **Extremos como emboque real:** palito y campana `RigidBody2D` que rotan y chocan entre sí; victoria = palito dentro de la campana. Partes a ~1/3 del jugador y física a 120 Hz contra el tunneling. Proyecto en Godot 4.7.2 (antes 4.6).
 - **Balanceo estilo DKC:** enganche instantáneo, péndulo propio del jugador, bombeo, salto desde la cuerda, soltarse con abajo, rapel, inclinación + squash/stretch.
 - **Animaciones** jump/fall/swing/push provisorias (cuadros existentes) + estirón al saltar, aplastón y golpe al aterrizar, inclinación al empujar.
-- **Salto parejo y más bajo** (115 px con cualquier cuerda) y el emboque que sigue como una cola (ver "El salto").
+- **Salto parejo, más bajo y variable** (115 px con cualquier cuerda; termina al soltar la tecla) y el emboque que sigue como una cola (ver "El salto").
 - **Tomar y lanzar el emboque** (por nivel, `LevelRules`), con mira en ping-pong y vuelo recto; la misma tecla lo recoge rápido a la mano. Se usa en lanzar_1..4 y en el final.
 - **Magnetismo con curva + trabado:** suave a distancia, resorte fuerte una vez embocado.
 - **Closeup + cámara lenta** al acercarse los extremos (estilo Peggle).

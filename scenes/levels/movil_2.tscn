@@ -115,37 +115,37 @@ position = Vector2(800, 1010)
 scale = Vector2(1.25, 1)
 
 [node name="CacaTop" parent="." instance=ExtResource("n_caca")]
-position = Vector2(1264, 104)
+position = Vector2(1276, 104.5)
 rotation = 3.1415927
-scale = Vector2(0.72, 7.6)
+scale = Vector2(0.76, 7.63333)
 
 [node name="SpikesTop" parent="." instance=ExtResource("n_puas")]
-position = Vector2(1264, 278)
-scale = Vector2(0.56, 0.8)
+position = Vector2(1276, 267.5)
+scale = Vector2(0.6, 1.5)
 
 [node name="CacaLeft" parent="." instance=ExtResource("n_caca")]
-position = Vector2(370, 349)
+position = Vector2(370, 352)
 rotation = 3.1415927
-scale = Vector2(0.8, 3.93333)
+scale = Vector2(0.8, 4.13333)
 
 [node name="PostLeft" parent="." instance=ExtResource("n_block")]
 position = Vector2(370, 514)
 size = Vector2(56, 24)
 
 [node name="SpikesLeft" parent="." instance=ExtResource("n_puas")]
-position = Vector2(370, 479.5)
-scale = Vector2(0.44, 1.5)
+position = Vector2(370, 469)
+scale = Vector2(0.44, 2.2)
 
 [node name="FireCorridor" parent="." instance=ExtResource("n_fire")]
 position = Vector2(1310, 585)
 scale = Vector2(3.8, 1)
 
 [node name="FlameRight" parent="." instance=ExtResource("n_fire")]
-position = Vector2(1360, 521)
+position = Vector2(1370, 521)
 scale = Vector2(0.2, 4.3)
 
 [node name="FlameRight2" parent="." instance=ExtResource("n_fire")]
-position = Vector2(1232, 521)
+position = Vector2(1210, 521)
 scale = Vector2(0.2, 4.3)
 
 [node name="Collectible6" parent="." instance=ExtResource("n_col")]

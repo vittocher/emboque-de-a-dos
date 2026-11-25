@@ -22,5 +22,5 @@ static func side(i: int, d: int, ctx) -> Array:
 		["swing", x.call(750), ctx.var_f("m", 55) * d, 24]]
 
 static func plan(ctx) -> Dictionary:
-	return {"p1": [["wait_floor"], ["rope", 60]] + M.path(1, [[105, 210], [210, 85], [104, 222], [212, 98], [100, 224], [212, 70], [72, 210], [238, 350]]) + [["rope", ctx.var_f("long", 220)], ["wait", 0.5]] + M.path(1, [[362, 500]]) + [["rope", 60], ["wait", 0.6]] + M.path(1, [["go", 575], ["go", 345]]) + side(1, 1, ctx),
+	return {"p1": [["wait_floor"], ["rope", 60]] + M.path(1, [[105, 210], [210, 85], [104, 222], [212, 98], [100, 224], [212, 70], [72, 210], [238, 350]]) + [["rope", ctx.var_f("long", 220)], ["wait", 0.5]] + [["hold_jump", ctx.var_f("h", 0.5)]] + M.path(1, [[338, 515]]) + [["hold_jump", 0.5], ["rope", 60], ["wait", 0.6]] + M.path(1, [["go", 575], ["go", 345]]) + side(1, 1, ctx),
 		"p2": [["wait_floor"], ["rope", 60]] + [["walk_to", 1484, 3], ["wait", 0.6], ["rope", ctx.var_f("under", 130)], ["wait", 0.8], ["walk_to", 1258, 5], ["wait_floor"], ["wait", 0.3]] + M.path(2, [[1270, 1445], ["go", 1550]]) + [["rope", 60], ["wait", 0.5], ["walk_to", 1330, 4]] + side(2, -1, ctx)}
