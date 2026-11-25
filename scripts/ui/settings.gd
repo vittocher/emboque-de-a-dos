@@ -48,6 +48,18 @@ func _ready() -> void:
 	_erase_button.pressed.connect(_on_erase_pressed)
 	_back_button.pressed.connect(_on_back_pressed)
 	_back_button.grab_focus()
+	_animate_entrance()
+
+## El panel aparece subiendo un poco (se mueve el CenterContainer: al panel, que
+## está dentro, el contenedor le fija la posición).
+func _animate_entrance() -> void:
+	var center := $Center as Control
+	center.modulate.a = 0.0
+	center.position.y = 24.0
+	var tween := create_tween().set_parallel()
+	tween.tween_property(center, "modulate:a", 1.0, 0.25)
+	tween.tween_property(center, "position:y", 0.0, 0.4) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 ## Muestra los valores guardados sin disparar las señales (no re-guarda ni suena).
 func _show_values() -> void:
@@ -87,9 +99,10 @@ func _disarm_erase(timer: SceneTreeTimer) -> void:
 		_erase_button.text = "SETTINGS_ERASE"
 
 func _on_back_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	UiFx.go_to("res://scenes/ui/main_menu.tscn")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
+		Sfx.play(&"ui_back")
 		_on_back_pressed()

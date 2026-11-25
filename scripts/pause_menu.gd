@@ -4,13 +4,16 @@ extends CanvasLayer
 ## navegador se queda con Esc para salir de ella, por eso existe P). Único para
 ## todos los niveles: se instancia desde ui/pause_menu.tscn. El diseño es una
 ## imagen (assets/ui/pause_menu.webp) y los botones son áreas invisibles encima
-## de los botones pintados; el brillo dorado lo dibuja el botón con foco (o bajo
-## el mouse).
+## de los botones pintados; el brillo dorado (borde que respira + luz cálida
+## encima del botón pintado) lo dibuja el botón con foco, y el mouse le pasa el
+## foco. Al abrir, el tablero entra deslizándose y suena ui_open; al cerrar, lo
+## mismo más grave. Sonido de cada botón, cursor de mano: autoload UiFx.
 
 @onready var pause_panel: Control = $PausePanel
 ## Indicador "P · Pausa" de la esquina superior izquierda (ui/hud_pause.tscn):
 ## visible mientras se juega; un clic en él también pausa.
 @onready var hud_pause: Control = $HudPause
+@onready var board: Control = $PausePanel/Board
 @onready var buttons: Control = $PausePanel/Board/Buttons
 @onready var continue_button: Button = $PausePanel/Board/Buttons/ContinueButton
 @onready var restart_button: Button = $PausePanel/Board/Buttons/RestartButton
@@ -28,6 +31,8 @@ extends CanvasLayer
 
 var _is_paused := false
 var _settings: Node
+var _board_y := 0.0
+var _menu_buttons: Array[Button] = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -46,34 +51,63 @@ func _ready() -> void:
 	_show_language_flag()
 	hud_pause.pressed.connect(_set_paused.bind(true))
 	# El mouse mueve el foco: así brilla un solo botón a la vez.
-	for button: Button in [continue_button, restart_button, settings_button, main_menu_button]:
+	_menu_buttons = [continue_button, restart_button, settings_button, main_menu_button]
+	for button: Button in _menu_buttons:
 		button.mouse_entered.connect(button.grab_focus)
+	_board_y = board.position.y
 	pause_panel.visible = false
 	_show_pause_menu()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause"):
-		_toggle_pause()
 		get_viewport().set_input_as_handled()
+		if not UiFx.is_transitioning():
+			_toggle_pause()
+
+## El borde dorado del botón con foco respira (en tiempo real: corre en la pausa).
+func _process(_delta: float) -> void:
+	if not _is_paused or not buttons.visible:
+		return
+	var focused := get_viewport().gui_get_focus_owner()
+	var breath := 0.78 + 0.22 * sin(Time.get_ticks_msec() * 0.006)
+	for button: Button in _menu_buttons:
+		button.self_modulate.a = breath if button == focused else 1.0
 
 func _toggle_pause() -> void:
 	_set_paused(not _is_paused)
 
 func _set_paused(paused: bool) -> void:
+	if paused == _is_paused:
+		return
 	_is_paused = paused
 	pause_panel.visible = paused
 	hud_pause.visible = not paused
 	get_tree().paused = paused
+	Sfx.play(&"ui_open", 1.0 if paused else 0.8)
 	if paused:
 		_show_pause_menu()
 		continue_button.grab_focus()
+		_animate_open()
+
+## Entrada del menú: el fondo aparece y el tablero baja un poco con rebote.
+func _animate_open() -> void:
+	pause_panel.modulate.a = 0.0
+	board.position.y = _board_y - 36.0
+	var tween := _ui_tween().set_parallel()
+	tween.tween_property(pause_panel, "modulate:a", 1.0, 0.14)
+	tween.tween_property(board, "position:y", _board_y, 0.35) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+## Tween de la interfaz: corre en la pausa (este nodo es ALWAYS) y a velocidad
+## real aunque el closeup tenga la cámara lenta.
+func _ui_tween() -> Tween:
+	return create_tween().set_ignore_time_scale(true)
 
 func _continue_game() -> void:
 	_set_paused(false)
 
 func _restart_level() -> void:
-	get_tree().paused = false
-	get_tree().reload_current_scene()
+	UiFx.reload()
 
 func _show_pause_menu() -> void:
 	buttons.visible = true
@@ -82,6 +116,8 @@ func _show_pause_menu() -> void:
 func _back_from_settings() -> void:
 	_show_pause_menu()
 	settings_button.grab_focus()
+	buttons.modulate.a = 0.0
+	_ui_tween().tween_property(buttons, "modulate:a", 1.0, 0.15)
 
 func _show_settings() -> void:
 	buttons.visible = false
@@ -92,6 +128,14 @@ func _show_settings() -> void:
 	settings_sfx_volume.set_value_no_signal(_settings.sfx_volume)
 	settings_fullscreen.set_pressed_no_signal(_settings.fullscreen)
 	settings_back_button.grab_focus()
+	# El panel aparece con un pequeño rebote desde su centro.
+	settings_box.pivot_offset = settings_box.size * 0.5
+	settings_box.scale = Vector2.ONE * 0.9
+	settings_box.modulate.a = 0.0
+	var tween := _ui_tween().set_parallel()
+	tween.tween_property(settings_box, "modulate:a", 1.0, 0.12)
+	tween.tween_property(settings_box, "scale", Vector2.ONE, 0.3) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _on_master_volume_changed(value: float) -> void:
 	_settings.set_master_volume(value)
@@ -107,8 +151,7 @@ func _on_fullscreen_toggled(enabled: bool) -> void:
 	_settings.set_fullscreen(enabled)
 
 func _go_to_main_menu() -> void:
-	get_tree().paused = false
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	UiFx.go_to("res://scenes/ui/main_menu.tscn")
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
