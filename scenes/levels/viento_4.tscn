@@ -21,12 +21,12 @@ position = Vector2(270, 890)
 size = Vector2(540, 140)
 
 [node name="Wind1Left" parent="." instance=ExtResource("n_wind")]
-position = Vector2(320, 560)
-size = Vector2(160, 520)
+position = Vector2(320, 575)
 player_factor = 0.0
+size = Vector2(160, 490)
 
 [node name="Hook1Left" parent="." instance=ExtResource("n_hook")]
-position = Vector2(320, 470)
+position = Vector2(320, 445)
 
 [node name="ShelfLeft" parent="." instance=ExtResource("n_block")]
 position = Vector2(480, 532)
@@ -41,7 +41,7 @@ player_factor = 0.0
 position = Vector2(500, 185)
 
 [node name="LedgeLeft" parent="." instance=ExtResource("n_block")]
-position = Vector2(645, 252)
+position = Vector2(639, 252)
 size = Vector2(100, 24)
 
 [node name="GustLeft" parent="." instance=ExtResource("n_wind")]
@@ -58,12 +58,12 @@ position = Vector2(1330, 890)
 size = Vector2(540, 140)
 
 [node name="Wind1Right" parent="." instance=ExtResource("n_wind")]
-position = Vector2(1280, 560)
-size = Vector2(160, 520)
+position = Vector2(1280, 575)
 player_factor = 0.0
+size = Vector2(160, 490)
 
 [node name="Hook1Right" parent="." instance=ExtResource("n_hook")]
-position = Vector2(1280, 470)
+position = Vector2(1280, 445)
 
 [node name="ShelfRight" parent="." instance=ExtResource("n_block")]
 position = Vector2(1120, 532)
@@ -78,7 +78,7 @@ player_factor = 0.0
 position = Vector2(1100, 185)
 
 [node name="LedgeRight" parent="." instance=ExtResource("n_block")]
-position = Vector2(955, 252)
+position = Vector2(961, 252)
 size = Vector2(100, 24)
 
 [node name="GustRight" parent="." instance=ExtResource("n_wind")]

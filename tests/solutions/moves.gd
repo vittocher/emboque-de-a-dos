@@ -12,17 +12,16 @@ static func run_jump(i: int, dir: int, jump_x: float) -> Array:
 		["until", func(c): return (c.p(i).global_position.x - jump_x) * dir >= 0.0, 4.0],
 		["tap", "jump"]]
 
-## Tras saltar: espera engancharse, bombea [param pump] s, deja que vuelva y
-## salta cuando va hacia dir pasando release_x; luego mantiene dir hasta stop_x
-## y espera aterrizar.
-static func swing_launch(i: int, dir: int, pump: float, release_x: float, stop_x: float) -> Array:
+## Tras saltar: espera engancharse, deja la cuerda en [param rope], bombea [param pump] s y sigue
+## bombeando hasta que va hacia dir pasando release_x: ahí salta; luego vuela hasta caer en stop_x.
+static func swing_launch(i: int, dir: int, pump: float, release_x: float, stop_x: float, rope: float = 150.0) -> Array:
 	return [["until", func(c): return c.hooked(i), 2.5],
-		["release", _side(dir)], ["pump", pump],
-		["until", func(c): return c.p(i)._swing_omega * dir < -0.3, 4.0],
-		["until", func(c): return c.p(i)._swing_omega * dir > 0.0 and (c.p(i).global_position.x - release_x) * dir > 0.0, 6.0],
-		["tap", "jump"], ["press", _side(dir)],
-		["until", func(c): return (c.p(i).global_position.x - stop_x) * dir >= 0.0 or c.p(i).is_on_floor(), 3.0],
-		["release", _side(dir)], ["wait_floor"]]
+		# Sigue apretando hasta pasar al otro lado del gancho (si no, caería encima de él).
+		["until", func(c): return not c.hooked(i) or c.p(i).is_swing_taut() and c.p(i).global_position.y > c.e(i)._hook_position.y, 1.0],
+		["release", _side(dir)], ["rope", rope], ["pump", pump],
+		["pump_until", func(c): return c.p(i)._swing_omega * dir < -0.3, 4.0],
+		["pump_until", func(c): return c.p(i)._swing_omega * dir > 1.0 and (c.p(i).global_position.x - release_x) * dir > 0.0, 8.0],
+		["tap", "jump"], ["fly_to", stop_x], ["wait_floor"]]
 
 ## Va y vuelve para balancear el extremo que cuelga (hasta ganar o [param times] veces).
 static func nudge(i: int, home_x: float, back: float, times: int = 6) -> Array:

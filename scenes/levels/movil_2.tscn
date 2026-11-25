@@ -39,19 +39,19 @@ speed = 110.0
 wait_time = 1.2
 
 [node name="IslandA" parent="." instance=ExtResource("n_block")]
-position = Vector2(137.5, 752)
-size = Vector2(75, 24)
+position = Vector2(155, 752)
+size = Vector2(62, 24)
 
 [node name="Lift" parent="." instance=ExtResource("n_mp")]
-position = Vector2(50, 752)
-size = Vector2(80, 20)
+position = Vector2(59, 752)
 travel = Vector2(0, -263)
 speed = 110.0
 wait_time = 1.2
+size = Vector2(116, 20)
 
 [node name="CorridorStart" parent="." instance=ExtResource("n_block")]
-position = Vector2(135, 492)
-size = Vector2(70, 24)
+position = Vector2(148, 492)
+size = Vector2(48, 24)
 
 [node name="PlatLeft" parent="." instance=ExtResource("n_mp")]
 position = Vector2(225, 490)
@@ -61,36 +61,20 @@ speed = 130.0
 wait_time = 0.8
 
 [node name="CeilLeft" parent="." instance=ExtResource("n_block")]
-position = Vector2(345, -15)
-size = Vector2(490, 770)
-
-[node name="CacaFloorL" parent="." instance=ExtResource("n_block")]
-position = Vector2(340, 612)
-size = Vector2(300, 24)
-
-[node name="CacaL" parent="." instance=ExtResource("n_caca")]
-position = Vector2(340, 585)
-scale = Vector2(3, 1)
+position = Vector2(345, -55)
+size = Vector2(490, 690)
 
 [node name="IslandLeft" parent="." instance=ExtResource("n_block")]
 position = Vector2(630, 492)
 size = Vector2(100, 24)
 
 [node name="CeilRight" parent="." instance=ExtResource("n_block")]
-position = Vector2(1310, 330)
-size = Vector2(400, 80)
+position = Vector2(1310, 302)
+size = Vector2(400, 24)
 
 [node name="CeilWall" parent="." instance=ExtResource("n_block")]
 position = Vector2(1118, -55)
 size = Vector2(16, 690)
-
-[node name="SpikesTop" parent="." instance=ExtResource("n_puas")]
-position = Vector2(1252.5, 278)
-scale = Vector2(0.35, 0.8)
-
-[node name="CacaTop" parent="." instance=ExtResource("n_caca")]
-position = Vector2(1435, 278)
-scale = Vector2(0.4, 0.8)
 
 [node name="StartRight" parent="." instance=ExtResource("n_block")]
 position = Vector2(1550, 720)
@@ -106,10 +90,6 @@ wait_time = 0.8
 [node name="CacaFloorR" parent="." instance=ExtResource("n_block")]
 position = Vector2(1310, 780)
 size = Vector2(380, 360)
-
-[node name="CacaR" parent="." instance=ExtResource("n_caca")]
-position = Vector2(1310, 585)
-scale = Vector2(3.8, 1)
 
 [node name="IslandRight" parent="." instance=ExtResource("n_block")]
 position = Vector2(1091, 492)
@@ -134,6 +114,40 @@ scale = Vector2(5.4, 1)
 position = Vector2(800, 1010)
 scale = Vector2(1.25, 1)
 
+[node name="CacaTop" parent="." instance=ExtResource("n_caca")]
+position = Vector2(1264, 104)
+rotation = 3.1415927
+scale = Vector2(0.72, 7.6)
+
+[node name="SpikesTop" parent="." instance=ExtResource("n_puas")]
+position = Vector2(1264, 278)
+scale = Vector2(0.56, 0.8)
+
+[node name="CacaLeft" parent="." instance=ExtResource("n_caca")]
+position = Vector2(370, 349)
+rotation = 3.1415927
+scale = Vector2(0.8, 3.93333)
+
+[node name="PostLeft" parent="." instance=ExtResource("n_block")]
+position = Vector2(370, 514)
+size = Vector2(56, 24)
+
+[node name="SpikesLeft" parent="." instance=ExtResource("n_puas")]
+position = Vector2(370, 479.5)
+scale = Vector2(0.44, 1.5)
+
+[node name="FireCorridor" parent="." instance=ExtResource("n_fire")]
+position = Vector2(1310, 585)
+scale = Vector2(3.8, 1)
+
+[node name="FlameRight" parent="." instance=ExtResource("n_fire")]
+position = Vector2(1360, 521)
+scale = Vector2(0.2, 4.3)
+
+[node name="FlameRight2" parent="." instance=ExtResource("n_fire")]
+position = Vector2(1232, 521)
+scale = Vector2(0.2, 4.3)
+
 [node name="Collectible6" parent="." instance=ExtResource("n_col")]
 position = Vector2(760, 590)
 
@@ -141,7 +155,7 @@ position = Vector2(760, 590)
 position = Vector2(1310, 420)
 
 [node name="Collectible4" parent="." instance=ExtResource("n_col")]
-position = Vector2(1375, 200)
+position = Vector2(1240, 420)
 
 [node name="Collectible3" parent="." instance=ExtResource("n_col")]
 position = Vector2(340, 420)

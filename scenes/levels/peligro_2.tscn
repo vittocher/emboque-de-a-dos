@@ -42,8 +42,8 @@ position = Vector2(310, 605)
 scale = Vector2(0.4, 6.33333)
 
 [node name="Step1" parent="." instance=ExtResource("2_block")]
-position = Vector2(452.5, 355)
-size = Vector2(75, 90)
+position = Vector2(452.5, 365)
+size = Vector2(75, 70)
 
 [node name="Ceiling1B" parent="." instance=ExtResource("2_block")]
 position = Vector2(617.5, 64)
@@ -58,8 +58,8 @@ position = Vector2(662, 605)
 scale = Vector2(0.4, 6.33333)
 
 [node name="Step2" parent="." instance=ExtResource("2_block")]
-position = Vector2(1447.5, 355)
-size = Vector2(85, 90)
+position = Vector2(1447.5, 365)
+size = Vector2(85, 70)
 
 [node name="Ceiling2" parent="." instance=ExtResource("2_block")]
 position = Vector2(1112.5, 64)

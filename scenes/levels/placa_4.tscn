@@ -12,10 +12,10 @@
 [node name="Placa4" instance=ExtResource("1_base")]
 
 [node name="Player1" parent="."]
-position = Vector2(60, 400)
+position = Vector2(60, 300)
 
 [node name="Player2" parent="."]
-position = Vector2(1540, 400)
+position = Vector2(1540, 300)
 
 [node name="LedgeLeft" parent="." instance=ExtResource("2_block")]
 position = Vector2(65, 492)
@@ -66,13 +66,15 @@ position = Vector2(496, 570)
 channel = 1
 
 [node name="HookLeft" parent="." instance=ExtResource("4_hook")]
-position = Vector2(260, 500)
+position = Vector2(260, 505)
+scale = Vector2(1.5, 1.5)
 
 [node name="HookRight" parent="." instance=ExtResource("4_hook")]
-position = Vector2(1340, 500)
+position = Vector2(1340, 505)
+scale = Vector2(1.5, 1.5)
 
 [node name="HookCenter" parent="." instance=ExtResource("4_hook")]
-position = Vector2(800, 500)
+position = Vector2(800, 530)
 scale = Vector2(1.6, 1.6)
 
 [node name="PitFire" parent="." instance=ExtResource("5_fire")]
@@ -84,7 +86,7 @@ position = Vector2(800, 1010)
 scale = Vector2(1.25, 1)
 
 [node name="WallCenter" parent="." instance=ExtResource("2_block")]
-position = Vector2(800, -150)
+position = Vector2(800, -135)
 size = Vector2(16, 1200)
 
 [node name="Collectible1" parent="." instance=ExtResource("3_collectible")]

@@ -144,26 +144,6 @@ scale = Vector2(2.8, 1)
 position = Vector2(1475, 895)
 scale = Vector2(2.5, 1)
 
-[node name="E1" parent="." instance=ExtResource("n_block")]
-position = Vector2(1435, 782)
-size = Vector2(70, 24)
-
-[node name="E2" parent="." instance=ExtResource("n_block")]
-position = Vector2(1565, 692)
-size = Vector2(70, 24)
-
-[node name="E3" parent="." instance=ExtResource("n_block")]
-position = Vector2(1435, 602)
-size = Vector2(70, 24)
-
-[node name="E4" parent="." instance=ExtResource("n_block")]
-position = Vector2(1565, 512)
-size = Vector2(70, 24)
-
-[node name="E5" parent="." instance=ExtResource("n_block")]
-position = Vector2(1425, 422)
-size = Vector2(70, 24)
-
 [node name="LedgeRight" parent="." instance=ExtResource("n_block")]
 position = Vector2(1195, 312)
 size = Vector2(130, 24)
@@ -171,6 +151,34 @@ size = Vector2(130, 24)
 [node name="Curtain" parent="." instance=ExtResource("n_block")]
 position = Vector2(1065, -65)
 size = Vector2(16, 670)
+
+[node name="E1" parent="." instance=ExtResource("n_block")]
+position = Vector2(1435, 798)
+size = Vector2(70, 24)
+
+[node name="E2" parent="." instance=ExtResource("n_block")]
+position = Vector2(1565, 726)
+size = Vector2(70, 24)
+
+[node name="E3" parent="." instance=ExtResource("n_block")]
+position = Vector2(1435, 654)
+size = Vector2(70, 24)
+
+[node name="E4" parent="." instance=ExtResource("n_block")]
+position = Vector2(1565, 582)
+size = Vector2(70, 24)
+
+[node name="E5" parent="." instance=ExtResource("n_block")]
+position = Vector2(1435, 510)
+size = Vector2(70, 24)
+
+[node name="E6" parent="." instance=ExtResource("n_block")]
+position = Vector2(1565, 438)
+size = Vector2(70, 24)
+
+[node name="E7" parent="." instance=ExtResource("n_block")]
+position = Vector2(1435, 372)
+size = Vector2(70, 24)
 
 [node name="Collectible6" parent="." instance=ExtResource("n_col")]
 position = Vector2(1565, 440)

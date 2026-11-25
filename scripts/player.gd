@@ -29,8 +29,9 @@ signal swing_jumped
 @export_group("Movimiento")
 ## Velocidad horizontal máxima (px/s).
 @export var speed: float = 320.0
-## Impulso vertical del salto (negativo = hacia arriba).
-@export var jump_velocity: float = -680.0
+## Impulso vertical del salto (negativo = hacia arriba): 112 px de alto, con cualquier largo de
+## cuerda (ver limit_stretch en el Emboque).
+@export var jump_velocity: float = -470.0
 ## Qué tan rápido alcanza la velocidad objetivo en el suelo (px/s^2).
 @export var acceleration: float = 2200.0
 ## Qué tan rápido frena al soltar la dirección (px/s^2).
@@ -57,7 +58,7 @@ signal swing_jumped
 
 @export_group("Salto desde la cuerda")
 ## Impulso vertical que se suma al saltar desde la cuerda (negativo = arriba).
-@export var swing_jump_velocity: float = -450.0
+@export var swing_jump_velocity: float = -410.0
 ## Multiplica la velocidad del balanceo al saltar.
 @export var swing_launch_multiplier: float = 1.1
 ## Frenado horizontal suave mientras se conserva el impulso del lanzamiento (px/s^2).

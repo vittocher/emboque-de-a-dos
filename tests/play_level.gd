@@ -21,6 +21,9 @@ extends SceneTree
 ##                   (se saltan sus pasos swing / jiggle); ver tests/run_controls.sh
 ##   --start=x1,y1,x2,y2  para probar un tramo: parten desde ahí, con la cuerda al mínimo
 ##                   (el punto va ~100 px sobre el piso, para que el extremo nazca arriba)
+##   --jump=V        otra velocidad de salto (px/s), para ver con cuánto margen se gana
+##   --hazards       auditoría de peligros: imprime las púas que ningún EXTREMO tocó y las
+##                   cacas que ningún JUGADOR tocó (ahí, un fuego daría lo mismo)
 ##
 ## Imprime al final una línea:  RESULT WIN|DEATH|TIMEOUT t=… collected=a/b ...
 ##
@@ -34,11 +37,13 @@ extends SceneTree
 ##   ["wait_floor"]                 espera a estar en el piso
 ##   ["jump_to", x]                 salta hacia x manteniendo la dirección hasta llegar/aterrizar
 ##   ["leap_to", x]                 igual, pero frena en el aire para caer en x
+##   ["fly_to", x]                  en el aire (p. ej. tras soltarse de un gancho): se frena para caer en x
 ##   ["rope", largo, tol=4]         tira/suelta hasta ese largo de cuerda
 ##   ["sync", "tag"]                espera a que el otro jugador llegue al mismo tag
 ##   ["until", Callable(ctx) -> bool, timeout_s=20]
 ##   ["do", Callable(ctx)]          ejecuta algo una vez
 ##   ["pump", s]                    colgando: empuja a favor del balanceo durante s
+##   ["pump_until", Callable(ctx) -> bool, timeout_s]  igual, hasta que se cumpla la condición
 ##   ["pump_end", s, centro_x, margen]  en el suelo: camina hacia donde se mueve su
 ##                                  extremo (como empujar un columpio) sin alejarse
 ##                                  más de margen de centro_x; agranda el balanceo
@@ -79,6 +84,8 @@ var _linger := 0.0
 var _still := ""
 var _starts: PackedFloat64Array = []
 var _win_manager: Node
+var _jump := 0.0
+var _hazards := {}     # zona → la tocó alguien a quien no daña (solo con --hazards)
 
 const FRICTION := 2600.0
 const ACTIONS := ["left", "right", "jump", "down", "release", "pull", "throw"]
@@ -105,6 +112,10 @@ func _initialize() -> void:
 			_shot_every = float(a.get_slice("=", 1))
 		elif a.begins_with("--still="):
 			_still = a.get_slice("=", 1)
+		elif a.begins_with("--jump="):
+			_jump = float(a.get_slice("=", 1))
+		elif a == "--hazards":
+			_hazards["_on"] = true
 		elif a.begins_with("--linger="):
 			_linger = float(a.get_slice("=", 1))
 		elif a.begins_with("--lang="):
@@ -131,6 +142,11 @@ func _initialize() -> void:
 	root.add_child(level)
 	current_scene = level
 	_bind_actors()
+	if _jump > 0.0:
+		for who: String in players:
+			players[who].jump_velocity = -_jump
+	if _hazards.erase("_on"):
+		_audit_hazards(level)
 	_plans = solution.plan(self)
 	physics_frame.connect(_tick)
 
@@ -152,6 +168,22 @@ func _bind_actors() -> void:
 				players[n.input_prefix] = n
 			elif n.has_method("get_end"):
 				emboques[n.input_prefix] = n
+
+## Pone sobre cada púa / caca un sensor igual que detecta a quien NO mata.
+func _audit_hazards(node: Node) -> void:
+	for c in node.get_children():
+		_audit_hazards(c)
+	if not node is Area2D or not "reload_on_death" in node or node.get_parent() != level 			or (node as Area2D).collision_mask not in [2, 12] or node.scene_file_path.contains("fall_zone"):
+		return
+	var sensor := Area2D.new()
+	sensor.collision_layer = 0
+	sensor.collision_mask = 14 - (node as Area2D).collision_mask
+	for c in node.get_children():
+		if c is CollisionShape2D:
+			sensor.add_child(c.duplicate())
+	node.add_child(sensor)
+	_hazards[node.name] = false
+	sensor.body_entered.connect(func(_b: Node) -> void: _hazards[node.name] = true)
 
 # --- Consultas para los planes ---
 
@@ -226,6 +258,8 @@ func _finish(result: String) -> void:
 			missing.append("%s(%.0f,%.0f)" % [c.name, c.global_position.x, c.global_position.y])
 	if not missing.is_empty():
 		print("MISSING ", " ".join(missing))
+	if not _hazards.is_empty():
+		print("HAZARDS sin aprovechar: ", " ".join(_hazards.keys().filter(func(k: StringName) -> bool: return not _hazards[k])))
 	print("RESULT %s t=%.2f collected=%s steps=%d/%d,%d/%d" % [result, time, collected,
 		_idx.p1, _plans.get("p1", []).size(), _idx.p2, _plans.get("p2", []).size()])
 	for a in ACTIONS:
@@ -310,6 +344,17 @@ func _do_step(who: String, step: Array, dt: float) -> bool:
 				_act(who, "left", false)
 				return true
 			return t > 6.0
+		"fly_to":
+			# En el aire: corrige la velocidad (también frenando en contra) para caer en x.
+			var want_v := clampf((float(step[1]) - pl.global_position.x) * 4.0, -420.0, 420.0)
+			var fly_v: float = pl.velocity.x
+			_act(who, "right", fly_v < want_v - 25.0)
+			_act(who, "left", fly_v > want_v + 25.0)
+			if t > 0.1 and pl.is_on_floor():
+				_act(who, "right", false)
+				_act(who, "left", false)
+				return true
+			return t > 5.0
 		"rope":
 			var target := float(step[1])
 			var tol := float(step[2]) if step.size() > 2 else 4.0
@@ -356,11 +401,16 @@ func _do_step(who: String, step: Array, dt: float) -> bool:
 			return false
 		"hang":
 			# Solo mira (y salta) tras estar quieto en el borde un momento.
-			_act(who, "pull", emboques[who].rope_length > 61.0)
 			var at_edge: bool = _walk_to(who, pl, float(step[1]), 2.0, 0.0) and pl.is_on_floor()
+			# Si el extremo quedó bajo la repisa, se recoge recién en el borde y colgando
+			# derecho (antes se trabaría, y con balanceo tiraría al jugador).
+			var below: bool = emboques[who].get_end_position().y > pl.global_position.y + 36.0
+			var end_body: RigidBody2D = emboques[who].get_end()
+			var calm: bool = absf(end_body.global_position.x - pl.global_position.x) < 30.0 or end_body.linear_velocity.length() < 30.0
+			_act(who, "pull", emboques[who].rope_length > 61.0 and (not below or at_edge and calm))
 			st["still"] = float(st.get("still", 0.0)) + dt if at_edge else 0.0
 			var ready: bool = st["still"] > 0.5 and emboques[who].rope_length <= 61.0
-			if ready and emboques[who].get_end_position().y > pl.global_position.y + 36.0:
+			if ready and below:
 				_act(who, "pull", false)
 				return true
 			_act(who, "jump", ready)
@@ -399,11 +449,12 @@ func _do_step(who: String, step: Array, dt: float) -> bool:
 				_act(who, "left", false)
 				return true
 			return false
-		"pump":
+		"pump", "pump_until":
 			var omega: float = pl._swing_omega
 			_act(who, "right", omega > 0.0)
 			_act(who, "left", omega <= 0.0)
-			if t >= float(step[1]):
+			var done: bool = t >= float(step[1]) if step[0] == "pump" 				else (step[1] as Callable).call(self) or t > float(step[2])
+			if done:
 				_act(who, "right", false)
 				_act(who, "left", false)
 				return true

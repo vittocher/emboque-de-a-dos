@@ -14,13 +14,13 @@ static func plan(ctx) -> Dictionary:
 	var r: float = ctx.var_f("r", 150)
 	return {
 		"p1": [["wait_floor"], ["rope", 175], ["walk_to", 330, 4], ["wait", 0.6], ["walk_to", 400, 3], ["wait", 2.0], ["rope", 312, 3], ["walk_to", 360, 3], ["wait", 0.5], ["walk_to", 400, 3], ["sync", "j2_placa"],
-			["rope", 200], ["wait", 0.5]] + M.path(1, [["over", 462, 492]]) + [["walk_to", 520, 4], ["wait", 0.8], ["rope", 245, 3],
+			["rope", 200], ["wait", 0.5]] + M.path(1, [["over", 462, 492]]) + [["walk_to", 520, 4], ["wait", 0.8], ["rope", 265, 3],
 			["until", func(c): return c.level.get_node("GateWire").is_open, 10.0], ["wait", 0.8], ["walk_to", 640, 4], ["wait", 0.8], ["sync", "j1_paso"], ["walk_to", 700, 4], ["wait", 0.5], ["walk_to", 738, 4], ["wait", 0.8],
 			["rope", 180, 3], ["wait", 0.5], ["walk_to", 925, 3], ["wait", 2.0], ["until", func(c): return c.end_pos(1).x > 915.0 and c.end_pos(1).x < 935.0, 5.0], ["rope", 312, 3], ["walk_to", 895, 3], ["wait", 0.5], ["walk_to", 925, 3], ["sync", "j2_paso"], ["rope", r], ["wait", 0.5], ["walk_to", 960, 3], ["sync", "arriba"], ["walk_to", 1012, 3],
 			["wait", 0.8], ["sync", "listos"], ["swing", 1012, m, 24]],
 		"p2": [["wait_floor"], ["rope", 60]] + M.path(2, [[92, 215], [245, 370], ["over", 410, 440]])
 			+ [["walk_to", 485, 4], ["until", func(c): return c.level.get_node("Gate1").is_open, 25.0], ["walk_to", 630, 4], ["sync", "j2_placa"], ["sync", "j1_paso"]]
 			+ M.path(2, [[700, 790], [820, 905]]) + [["walk_to", 925, 4], ["until", func(c): return c.level.get_node("Gate2").is_open, 25.0], ["walk_to", 1010, 4], ["sync", "j2_paso"]]
-			+ M.path(2, [["over", 1060, 1115], ["over", 1245, 1280], [1342, 1435], [1460, 1560], [1545, 1435], [1460, 1560], [1545, 1425], [1400, 1225]])
+			+ M.path(2, [["over", 1060, 1115], ["over", 1245, 1280], [1342, 1440], [1460, 1560], [1545, 1440], [1460, 1560], [1545, 1440], [1460, 1560], [1545, 1440], [1415, 1225]])
 			+ [["sync", "arriba"], ["hang", 1118], ["rope", r], ["wait", 0.8], ["sync", "listos"], ["swing", 1118, -m, 24]],
 	}

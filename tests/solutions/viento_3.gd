@@ -26,13 +26,13 @@ static func ride(i: int, jet: String, jet_x: float, jump: bool, top: float, out_
 static func plan(ctx) -> Dictionary:
 	return {
 		"p1": [["wait_floor"], ["rope", ctx.var_f("rope", 100)], ["walk_to", 115.0, 4]] + ride(1, "JetLeft", 220.0, true, 540.0, 335.0)
-			+ [["walk_to", 375.0, 4]] + gust_ends("HeadwindLeft") + [["press", "right"], ["wait", 0.06], ["tap", "jump"],
+			+ [["walk_to", 400.0, 4]] + gust_ends("HeadwindLeft") + [["press", "right"], ["wait", 0.06], ["tap", "jump"],
 			["until", func(c): return c.p(1).global_position.x > 640.0, 3.0], ["release", "right"], ["wait_floor"],
 			["rope", 60], ["walk_to", ctx.var_f("x1", 766), 3], ["wait", 0.5], ["rope", ctx.var_f("r1", 130)], ["sync", "listos"],
 			["wait", 2.0], ["jiggle", ctx.var_f("x1", 766), 12, 20]],
 		"p2": [["wait_floor"], ["rope", 100], ["walk_to", 1485.0, 4]] + ride(2, "JetRight", 1380.0, true, 540.0, 1260.0)
 			+ [["walk_to", 1275.0, 4]] + ride(2, "JetRight", 1380.0, true, 280.0, 1260.0)
-			+ [["walk_to", 1225.0, 4]] + gust_ends("HeadwindRight") + [["press", "left"], ["wait", 0.06], ["tap", "jump"],
+			+ [["walk_to", 1210.0, 4]] + gust_ends("HeadwindRight") + [["press", "left"], ["wait", 0.06], ["tap", "jump"],
 			["until", func(c): return c.p(2).global_position.x < 960.0, 3.0], ["release", "left"], ["wait_floor"],
 			["walk_to", 800.0, 3], ["rope", 60, 1], ["walk_to", 764.0, 3], ["tap", "jump"], ["wait_floor"], ["wait", 0.5], ["rope", ctx.var_f("r2", 125)], ["sync", "listos"]],
 	}

@@ -1,7 +1,7 @@
 extends RefCounted
 const SHORTCUTS := ["--no=throw --goal=500,418,1100,418", "--no=hook --goal=500,418,1100,418", "--no=throw --start=500,350,1100,350", "--start=500,350,1100,350 --goal=1100,418,500,418"]
 const SCENE := "res://scenes/levels/lanzar_2.tscn"
-## Lanzar 2 "Puntería": J1 baja por un pasillo con caca y púas, J2 por unas repisas. Cada uno lanza al gancho de su lado, sube la cuerda, se columpia sobre
+## Lanzar 2 "Puntería": J1 baja por un pasillo con caca y púas, J2 por unas repisas (una, de techo bajo y tapada de caca: con el extremo en la mano). Cada uno lanza al gancho de su lado, sube la cuerda, se columpia sobre
 ## el fuego y salta a su repisa (270 px más arriba: no se llega saltando). En el medio, un muro
 ## con un agujero y UN gancho adentro para los dos: cada uno le lanza su extremo desde su
 ## repisa; con los dos en el mismo gancho, se embocan.
@@ -31,5 +31,5 @@ static func shoot(i: int, d: int, ctx) -> Array:
 	return out
 
 static func plan(ctx) -> Dictionary:
-	return {"p1": [["wait_floor"], ["rope", 60], ["walk_to", 245, 5], ["wait_floor"]] + M.path(1, [["over", 170, 115], ["go", 42], ["over", 125, 160], ["go", 235]]) + side(1, 1, ctx) + [["sync", "listos"]] + shoot(1, 1, ctx),
-		"p2": [["wait_floor"], ["rope", 60]] + M.path(2, [["go", 1415], ["go", 1530], ["go", 1420], ["go", 1545], ["go", 1465]]) + side(2, -1, ctx) + [["sync", "listos"], ["until", func(c): return c.hooked(1), 10.0], ["wait", 1.0]] + shoot(2, -1, ctx)}
+	return {"p1": [["wait_floor"], ["rope", 60], ["walk_to", 245, 5], ["wait_floor"]] + [["rope", ctx.var_f("long", 220)], ["wait", 0.4]] + M.path(1, [[215, 90], ["go", 42]]) + [["rope", 60], ["wait", 0.4]] + M.path(1, [["over", 115, 148], ["go", 235]]) + side(1, 1, ctx) + [["sync", "listos"]] + shoot(1, 1, ctx),
+		"p2": [["wait_floor"], ["rope", 60]] + M.path(2, [["go", 1430]]) + [["rope", 60, 1], ["wait", 0.3], ["tap", "pull"], ["until", func(c): return c.e(2)._throw_state == 1, 1.0]] + M.path(2, [["go", 1560], ["go", 1362], ["go", 1550], ["go", 1465]]) + [["tap", "release"], ["wait", 0.4]] + side(2, -1, ctx) + [["sync", "listos"], ["until", func(c): return c.hooked(1), 10.0], ["wait", 1.0]] + shoot(2, -1, ctx)}

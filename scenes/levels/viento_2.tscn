@@ -20,16 +20,16 @@ position = Vector2(310, 830)
 size = Vector2(140, 260)
 
 [node name="A1" parent="." instance=ExtResource("n_block")]
-position = Vector2(152.5, 632)
+position = Vector2(162.5, 637)
 size = Vector2(85, 24)
 
 [node name="B1" parent="." instance=ExtResource("n_block")]
-position = Vector2(35, 552)
-size = Vector2(70, 24)
+position = Vector2(45, 562)
+size = Vector2(90, 24)
 
 [node name="C1" parent="." instance=ExtResource("n_block")]
-position = Vector2(247.5, 472)
-size = Vector2(85, 24)
+position = Vector2(242.5, 487)
+size = Vector2(115, 24)
 
 [node name="Headwind" parent="." instance=ExtResource("n_wind")]
 position = Vector2(393, 370)
@@ -41,8 +41,8 @@ gust_on = 1.6
 gust_off = 1.4
 
 [node name="LedgeLeft" parent="." instance=ExtResource("n_block")]
-position = Vector2(590, 432)
-size = Vector2(180, 24)
+position = Vector2(570, 432)
+size = Vector2(220, 24)
 
 [node name="Stop" parent="." instance=ExtResource("n_block")]
 position = Vector2(674, 413)
@@ -68,7 +68,7 @@ position = Vector2(1540, 830)
 size = Vector2(120, 260)
 
 [node name="A2" parent="." instance=ExtResource("n_block")]
-position = Vector2(1370, 622)
+position = Vector2(1370, 642)
 size = Vector2(80, 24)
 
 [node name="Jet" parent="." instance=ExtResource("n_wind")]

@@ -22,7 +22,7 @@ strength = 1600.0
 
 [node name="Column" parent="." instance=ExtResource("2_block")]
 position = Vector2(800, 385)
-size = Vector2(60, 270)
+size = Vector2(84, 270)
 
 [node name="Plateau" parent="." instance=ExtResource("2_block")]
 position = Vector2(800, 532)

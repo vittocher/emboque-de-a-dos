@@ -12,12 +12,12 @@ static func plan(ctx) -> Dictionary:
 	var m: float = ctx.var_f("m", 45)
 	var r: float = ctx.var_f("r", 150)
 	return {
-		"p1": [["wait_floor"], ["rope", 60]] + M.path(1, [[115, 240], [272, 390], [370, 250], [220, 110], ["go", 95]]) + [["wait", 0.3]]
-			+ M.path(1, [["go", 245], ["go", 390], ["go", 520]])
-			+ [["until", func(c): return c.level.get_node("GateLeft").is_open, 25.0], ["wait", 1.0], ["walk_to", 660], ["sync", "arriba"], ["hang", 763], ["rope", r],
+		"p1": [["wait_floor"], ["rope", 60]] + M.path(1, [[79, 205], [194, 60], [70, 200], [188, 55], [70, 205], [189, 55]]) + [["rope", ctx.var_f("long", 200)], ["wait", 0.4]] + M.path(1, [[72, 205]]) + [["walk_to", 176, 3], ["wait", 0.8], ["rope", 60], ["wait", 0.4]] + M.path(1, [[198, 45], [52, 268], ["go", 436], [434, 340], ["go", 450], ["go", 530]])
+			+ [["until", func(c): return c.level.get_node("GateLeft").is_open, 40.0], ["wait", 1.0], ["walk_to", 660], ["sync", "arriba"], ["hang", 763], ["rope", r],
 			["wait", 0.8], ["sync", "listos"], ["swing", 754, m, 24]],
-		"p2": [["wait_floor"], ["rope", 60]] + M.path(2, [["go", 1400], ["go", 1520], ["go", 1390]])
+		"p2": [["wait_floor"], ["rope", 60]] + M.path(2, [[1535, 1465], [1472, 1565], [1553, 1462], [1469, 1545], [1536, 1468], [1472, 1560], [1548, 1440]])
+			+ [["walk_to", 1387, 3], ["wait", 0.6], ["rope", ctx.var_f("under", 125)], ["wait", 0.8], ["walk_to", 1105, 6], ["wait", 0.5], ["wait_floor"], ["rope", 60], ["wait", 0.5]] + M.path(2, [["run", 1125, 1310]])
 			+ [["walk_to", 1277, 3], ["wait", 2.5], ["rope", 225], ["wait", 1.2], ["rope", 60], ["wait", 0.4]] + M.path(2, [[1300, 1105]])
-			+ [["walk_to", 1080, 4], ["until", func(c): return c.level.get_node("GateRight").is_open, 25.0], ["wait", 1.0], ["walk_to", 940], ["sync", "arriba"], ["hang", 837], ["rope", r],
+			+ [["walk_to", 1080, 4], ["until", func(c): return c.level.get_node("GateRight").is_open, 40.0], ["wait", 1.0], ["walk_to", 940], ["sync", "arriba"], ["hang", 837], ["rope", r],
 			["wait", 0.8], ["sync", "listos"], ["swing", 846, -m, 24]],
 	}

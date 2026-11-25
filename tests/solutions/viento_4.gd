@@ -10,7 +10,7 @@ const SCENE := "res://scenes/levels/viento_4.tscn"
 static func lift(i: int, d: int, hook_x: float, land: float) -> Array:
 	var x := func(v: float) -> float: return v if d == 1 else 1600.0 - v
 	var dir := "right" if d == 1 else "left"
-	return [["walk_to", x.call(hook_x), 3], ["wait", 0.8], ["press", "release"], ["until", func(c): return c.hooked(i), 5.0], ["release", "release"],
+	return [["walk_to", x.call(hook_x), 3], ["wait", 2.4], ["press", "release"], ["until", func(c): return c.hooked(i), 5.0], ["release", "release"],
 		["rope", 60, 2], ["wait", 0.8], ["tap", "jump"], ["press", dir],
 		["until", func(c): return (c.p(i).global_position.x - x.call(land)) * d > 0.0 or c.p(i).is_on_floor(), 3.0],
 		["release", dir], ["wait_floor"], ["wait", 0.4]]

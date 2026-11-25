@@ -285,3 +285,19 @@ el control no probaba nada). Mono tramposo, 900 s por opción (38 opciones): sin
 
 El bot no pasa por todas las sopaipillas (faltan 1–4 por nivel): no se comprobó una por una que se alcancen.
 movil_2 se gana con 11 de 16 combinaciones de vaivén (40/55 px, cuerda 170/200, espera 0–1,2 s).
+
+## Salto nuevo y tipo de peligro (tras el feedback de los recorridos)
+
+- **Salto** (headless, `jump_velocity` 470, cuerda 60 / 110 / 170 / 240 / 320, parado y corriendo): 115 px de alto, 315 de largo y
+  0,98 s en los 10 casos. Antes (680): 139–239 px de alto y 297–379 de largo según la cuerda.
+- **Extremo al saltar corriendo** (cuánto sube sobre el piso): 60 → 106, 110 → 78, 170 → 57, 240 → 38 px. Nunca por encima del jugador.
+- **Bot:** `run_all` 29/29 (470). Los niveles rehechos se ganan también con 465 y 475, salvo alguna corrida (errores del bot al
+  aterrizar: peligro_1 con 465, placa_1 con 474 y 478).
+- **Controles:** todos OK. Se ajustaron tronco_3 (hueco 130), viento_1 (columna 84) y viento_4 (S 196), que con la cuerda nueva se
+  ganaban con alguien quieto.
+- **Mono** (500 s × 65 opciones; 1000 s en 11 niveles rehechos): sin atajos en los rehechos. En viento_4, sin la segunda corriente
+  se llegaba igual (se acortó la primera: ya no); sin ráfagas, una victoria en 445 s cayendo los dos al fuego (azar).
+- **Auditoría `--hazards`** (púas sin extremo / cacas sin jugador): ninguna en peligro_3, lanzar_2 y movil_2; en el resto quedan
+  fosos y púas que solo cuidan del jugador.
+- **Largo de cuerda que pide cada tramo** (bot, barrido 60–300): peligro_3 J1 ≥ 190 y J2 ≥ 150; placa_1 ≥ 150; placa_2 J1 ≥ 150;
+  movil_2 J1 ≥ 150 y J2 ≥ 180. Con 60 mueren todos.

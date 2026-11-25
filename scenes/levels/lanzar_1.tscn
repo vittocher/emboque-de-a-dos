@@ -17,24 +17,30 @@ script = ExtResource("5_rules")
 throw_enabled = true
 
 [node name="Player1" parent="."]
-position = Vector2(55, 360)
+position = Vector2(370, 760)
 
 [node name="Player2" parent="."]
-position = Vector2(1550, 640)
+position = Vector2(1550, 800)
+
+[node name="Emboque1" parent="." index="8"]
+rope_length = 80.0
+
+[node name="Emboque2" parent="." index="9"]
+rope_length = 80.0
 
 [node name="HookLeft" parent="." instance=ExtResource("4_hook")]
-position = Vector2(565, 253)
+position = Vector2(565, 241)
 
 [node name="HookRight" parent="." instance=ExtResource("4_hook")]
-position = Vector2(1035, 375)
+position = Vector2(1035, 363)
 
 [node name="GroundLeft" parent="." instance=ExtResource("2_block")]
-position = Vector2(295, 759)
-size = Vector2(590, 402)
+position = Vector2(345, 570)
+size = Vector2(490, 24)
 
 [node name="GroundRight" parent="." instance=ExtResource("2_block")]
-position = Vector2(1195, 692)
-size = Vector2(370, 24)
+position = Vector2(1173, 692)
+size = Vector2(326, 24)
 
 [node name="TowerLeft" parent="." instance=ExtResource("2_block")]
 position = Vector2(640, 624)
@@ -53,34 +59,90 @@ position = Vector2(800, -100)
 size = Vector2(16, 716)
 
 [node name="LowCeiling" parent="." instance=ExtResource("2_block")]
-position = Vector2(225, 34)
-size = Vector2(210, 868)
+position = Vector2(255, 34)
+size = Vector2(180, 868)
 
 [node name="CacaLeft" parent="." instance=ExtResource("n_caca")]
-position = Vector2(225, 546)
-scale = Vector2(1.7, 0.8)
+position = Vector2(262, 546)
+scale = Vector2(1.45, 0.8)
+
+[node name="StartLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(445, 920)
+size = Vector2(290, 80)
+
+[node name="PillarLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(575, 731)
+size = Vector2(30, 298)
+
+[node name="SpikeFloorL" parent="." instance=ExtResource("2_block")]
+position = Vector2(150, 945)
+size = Vector2(300, 30)
+
+[node name="SpikesFloorL" parent="." instance=ExtResource("n_puas")]
+position = Vector2(150, 915)
+scale = Vector2(3, 1)
+
+[node name="L1" parent="." instance=ExtResource("2_block")]
+position = Vector2(222.5, 818)
+size = Vector2(65, 24)
+
+[node name="L2" parent="." instance=ExtResource("2_block")]
+position = Vector2(114, 744)
+size = Vector2(68, 24)
+
+[node name="L3" parent="." instance=ExtResource("2_block")]
+position = Vector2(26, 662)
+size = Vector2(52, 24)
+
+[node name="StartRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(1540, 920)
+size = Vector2(120, 80)
+
+[node name="SpikeFloorR" parent="." instance=ExtResource("2_block")]
+position = Vector2(1270, 945)
+size = Vector2(420, 30)
+
+[node name="SpikesFloorR" parent="." instance=ExtResource("n_puas")]
+position = Vector2(1270, 915)
+scale = Vector2(4.2, 1)
 
 [node name="R1" parent="." instance=ExtResource("2_block")]
-position = Vector2(1550, 910)
-size = Vector2(100, 100)
+position = Vector2(1403, 818)
+size = Vector2(66, 24)
 
 [node name="R2" parent="." instance=ExtResource("2_block")]
-position = Vector2(1410, 787)
-size = Vector2(60, 24)
-
-[node name="R3" parent="." instance=ExtResource("2_block")]
-position = Vector2(1535, 702)
+position = Vector2(1525, 744)
 size = Vector2(70, 24)
 
-[node name="SpikesRight" parent="." instance=ExtResource("n_puas")]
-position = Vector2(1255, 668)
-scale = Vector2(0.3, 0.8)
+[node name="CacaR2" parent="." instance=ExtResource("n_caca")]
+position = Vector2(1525, 720)
+scale = Vector2(0.7, 0.8)
+
+[node name="R3" parent="." instance=ExtResource("2_block")]
+position = Vector2(1405, 668)
+size = Vector2(70, 24)
+
+[node name="CacaR3" parent="." instance=ExtResource("n_caca")]
+position = Vector2(1405, 644)
+scale = Vector2(0.7, 0.8)
+
+[node name="R4" parent="." instance=ExtResource("2_block")]
+position = Vector2(1530, 592)
+size = Vector2(80, 24)
+
+[node name="R5" parent="." instance=ExtResource("2_block")]
+position = Vector2(1415, 518)
+size = Vector2(50, 24)
+
+[node name="WallRightIn" parent="." instance=ExtResource("2_block")]
+position = Vector2(1346, 568)
+size = Vector2(20, 272)
 
 [node name="Collectible5" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(1410, 700)
+position = Vector2(1530, 680)
 
 [node name="Collectible4" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(225, 520)
+position = Vector2(240, 520)
 
 [node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
 position = Vector2(540, 350)

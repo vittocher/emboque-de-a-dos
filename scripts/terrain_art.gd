@@ -160,7 +160,8 @@ func _tile(parent: Node2D, size: Vector2, center: Vector2, tex: Texture2D, is_fl
 	var tex_size := tex.get_size()
 	var fit := minf(size.x / tex_size.x, size.y / tex_size.y)
 	var cols := maxi(1, roundi(size.x / (tex_size.x * fit)))
-	var rows := maxi(1, roundi(size.y / (tex_size.y * fit)))
+	# Una plataforma delgada es siempre UNA tabla, aunque sea corta (no dos apiladas).
+	var rows := 1 if is_floor else maxi(1, roundi(size.y / (tex_size.y * fit)))
 	var tile := Vector2(size.x / cols, size.y / rows)
 	for r in rows:
 		for c in cols:

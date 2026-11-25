@@ -23,12 +23,12 @@ position = Vector2(670, 120)
 size = Vector2(140, 640)
 
 [node name="LedgeRight" parent="." instance=ExtResource("2_block")]
-position = Vector2(890, 342)
-size = Vector2(220, 24)
+position = Vector2(905, 342)
+size = Vector2(250, 24)
 
 [node name="TowerRight" parent="." instance=ExtResource("2_block")]
-position = Vector2(950, 627)
-size = Vector2(100, 546)
+position = Vector2(965, 627)
+size = Vector2(130, 546)
 
 [node name="WindCenter" parent="." instance=ExtResource("4_wind")]
 position = Vector2(820, 635)
@@ -57,16 +57,16 @@ position = Vector2(1230, 885)
 scale = Vector2(4.6, 1)
 
 [node name="ShelfLeft" parent="." instance=ExtResource("2_block")]
-position = Vector2(350, 602)
-size = Vector2(100, 24)
+position = Vector2(365, 602)
+size = Vector2(130, 24)
 
 [node name="ShelfRight1" parent="." instance=ExtResource("2_block")]
 position = Vector2(1250, 602)
 size = Vector2(100, 24)
 
 [node name="ShelfRight2" parent="." instance=ExtResource("2_block")]
-position = Vector2(1250, 342)
-size = Vector2(100, 24)
+position = Vector2(1240, 342)
+size = Vector2(120, 24)
 
 [node name="JetLeft" parent="." instance=ExtResource("4_wind")]
 position = Vector2(220, 640)

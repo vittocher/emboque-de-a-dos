@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/gate.tscn" id="n_gate"]
 [ext_resource type="PackedScene" path="res://scenes/fall_zone.tscn" id="n_fall"]
 [ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="n_col"]
+[ext_resource type="PackedScene" path="res://scenes/both_death_zone.tscn" id="n_fire"]
 
 [node name="Lanzar4" instance=ExtResource("1_base")]
 
@@ -17,7 +18,7 @@ script = ExtResource("5_rules")
 throw_enabled = true
 
 [node name="Player1" parent="." index="4"]
-position = Vector2(115, 130)
+position = Vector2(115, 105)
 
 [node name="Player2" parent="." index="5"]
 position = Vector2(1570, 470)
@@ -42,30 +43,6 @@ position = Vector2(30, 760)
 [node name="GroundLeft" parent="." instance=ExtResource("n_block")]
 position = Vector2(235, 860)
 size = Vector2(470, 200)
-
-[node name="F1" parent="." instance=ExtResource("n_block")]
-position = Vector2(190, 262)
-size = Vector2(220, 24)
-
-[node name="F2" parent="." instance=ExtResource("n_block")]
-position = Vector2(284, 442)
-size = Vector2(208, 24)
-
-[node name="F3" parent="." instance=ExtResource("n_block")]
-position = Vector2(190, 612)
-size = Vector2(220, 24)
-
-[node name="SpikesF1" parent="." instance=ExtResource("n_puas")]
-position = Vector2(222.5, 238)
-scale = Vector2(0.35, 0.8)
-
-[node name="CacaF2" parent="." instance=ExtResource("n_caca")]
-position = Vector2(265, 418)
-scale = Vector2(0.4, 0.8)
-
-[node name="SpikesF3" parent="." instance=ExtResource("n_puas")]
-position = Vector2(217.5, 588)
-scale = Vector2(0.35, 0.8)
 
 [node name="DividerLeft" parent="." instance=ExtResource("n_block")]
 position = Vector2(400, 95)
@@ -160,6 +137,43 @@ scale = Vector2(1.75, 0.8)
 position = Vector2(800, 1010)
 scale = Vector2(1.25, 1)
 
+[node name="F1" parent="." instance=ExtResource("n_block")]
+position = Vector2(190, 237)
+size = Vector2(220, 24)
+
+[node name="CacaF1" parent="." instance=ExtResource("n_caca")]
+position = Vector2(207, 71)
+rotation = 3.1415927
+scale = Vector2(0.7, 5.4)
+
+[node name="SpikesF1" parent="." instance=ExtResource("n_puas")]
+position = Vector2(209, 213)
+scale = Vector2(0.54, 0.8)
+
+[node name="F2" parent="." instance=ExtResource("n_block")]
+position = Vector2(270, 397)
+size = Vector2(236, 24)
+
+[node name="CacaF2" parent="." instance=ExtResource("n_caca")]
+position = Vector2(235, 373)
+scale = Vector2(1.26, 0.8)
+
+[node name="F3" parent="." instance=ExtResource("n_block")]
+position = Vector2(205, 552)
+size = Vector2(250, 24)
+
+[node name="EmberF3" parent="." instance=ExtResource("n_fire")]
+position = Vector2(195, 528)
+scale = Vector2(0.26, 0.8)
+
+[node name="SpikesF3" parent="." instance=ExtResource("n_puas")]
+position = Vector2(321, 528)
+scale = Vector2(0.18, 0.8)
+
+[node name="F4" parent="." instance=ExtResource("n_block")]
+position = Vector2(365, 652)
+size = Vector2(46, 24)
+
 [node name="Collectible6" parent="." instance=ExtResource("n_col")]
 position = Vector2(1330, 625)
 
@@ -173,7 +187,7 @@ position = Vector2(800, 592)
 position = Vector2(465, 530)
 
 [node name="Collectible2" parent="." instance=ExtResource("n_col")]
-position = Vector2(345, 560)
+position = Vector2(236, 360)
 
 [node name="Collectible1" parent="." instance=ExtResource("n_col")]
 position = Vector2(34, 712)
