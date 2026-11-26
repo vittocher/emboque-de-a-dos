@@ -136,14 +136,17 @@ scenes/
                          tecla / clic / botón (mensaje abajo). Ver "Intro (video)".
   ui/main_menu.tscn      Menú: portada (assets/ui/portada.png, con el título y los controles ya dibujados) de fondo
                          + botones Jugar / Ajustes (sin Salir: el juego es para web).
-  ui/boton_madera.tscn   Botón de madera reutilizable del menú principal (boton_madera.gd + shader procedural
-                         shaders/madera_boton.gdshader).
+  ui/boton_madera.tscn   Botón de madera reutilizable (class BotonMadera: menú principal, mapa, victoria). Tabla con
+                         canto y sombra (shader madera_boton) que se hunde al apretarla; resaltada crece, se aclara,
+                         halo dorado y un destello la cruza. Cara (lo visual) + Btn (Button transparente: clic y foco).
+                         `press_sound` = sonido al apretarlo. Ver "Interfaz: respuesta y transiciones".
   ui/level_selector.tscn MAPA de niveles (ver "Mapa de niveles y progreso"): nodos de madera (ui/level_node.tscn)
                          unidos por cuerdas, panel con nombre/récord/sopaipillas, fondo con círculos (map_decor.gd).
   ui/settings.tscn       Ajustes (panel de madera, tema compartido ui/tema_madera.tres): volumen general / música /
                          efectos, pantalla completa, idioma, restaurar valores y borrar progreso (pide confirmar).
-  ui/tema_madera.tres    Tema de madera de los paneles (Ajustes y el panel de ajustes de la pausa): botones-tabla,
-                         sliders dorados, checkbox (assets/ui/check_on|off.png), listas.
+  ui/tema_madera.tres    Tema de madera de los paneles (Ajustes y el panel de ajustes de la pausa): botones-tabla
+                         con canto (se aclaran con el mouse, se hunden al apretar, anillo dorado con foco), sliders
+                         con perilla dorada (GradientTexture2D), checkbox (assets/ui/check_on|off.png), listas.
   ui/pause_menu.tscn     Menú de pausa (Esc / P), ÚNICO para todos los niveles: instanciarlo en cada nivel.
                          Diseño = imagen assets/ui/pause_menu.webp con botones invisibles encima (ver "Menú de pausa").
                        Trae también el indicador HUD de pausa (ui/hud_pause.tscn), así está en todos los niveles,
@@ -217,6 +220,9 @@ scripts/
                    desbloqueo del mapa. `unlock_all` (solo desarrollo, F9 en el mapa) desbloquea todo.
   sfx.gd           AUTOLOAD (Sfx): registro único de efectos de sonido (SOUNDS: nombre → ruta + volumen base),
                    pool de AudioStreamPlayer, play(nombre, pitch, volumen). Sobrevive a la recarga del nivel.
+  ui_fx.gd         AUTOLOAD (UiFx): respuesta de TODA la interfaz (sonido, cursor de mano, foco con el mouse de
+                   cada botón/slider/lista, conectados solos) + cambios de pantalla con fundido (go_to / reload /
+                   reveal). Ver "Interfaz: respuesta y transiciones".
   ui/level_hint.gd class LevelHint (escena ui/level_hint.tscn): cartel de controles DENTRO de un nivel, sobre madera,
                    uno por jugador en su mitad de la pantalla (`player` p1/p2 = etiqueta). Cada fila de `rows` es
                    "@accion texto": `@p1_release` = tecla del Input Map, `/` = barra, lo demás = clave de i18n.
@@ -225,7 +231,7 @@ scripts/
                    (flechas dibujadas con líneas: la fuente por defecto no trae ← → en la web).
   ui/wood_plaque.gd  class WoodPlaque: ColorRect con el shader de madera de los botones (madera_boton.gdshader):
                    le pasa su tamaño y prende el brillo (`active`). Fondo de las placas del HUD.
-  ui/*.gd          Lógica de los menús (navegación con change_scene_to_file); intro.gd (class IntroScreen) = la intro; victory.gd muestra puntaje + récord;
+  ui/*.gd          Lógica de los menús (navegación con UiFx.go_to, con fundido); intro.gd (class IntroScreen) = la intro; victory.gd muestra puntaje + récord;
                    boton_madera.gd = el botón de madera; level_selector.gd = el mapa; level_node.gd = un nivel
                    del mapa; map_decor.gd = fondo del mapa y de la victoria.
 
@@ -233,7 +239,9 @@ assets/            TODO el arte (sprites, fondos, UI), por tema: jugadores/, emb
                    No crear otras carpetas de imágenes. jugadores/p1|p2/alternativos/ guarda poses que hoy
                    no se usan. Ojo: el export web es `all_resources`, así que igual entran al build. No dejar copias
                    `-old` de un sprite al reemplazarlo: la versión anterior ya queda en git.
-shaders/           madera_boton.gdshader (madera procedural de los botones del menú principal); silueta.gdshader
+shaders/           madera_boton.gdshader (madera procedural de los botones: veta, borde dorado, brillo al resaltar
+                   `active`; opcionales `pad` sombra/halo afuera, `depth` canto, `press` hundido, `shine` destello;
+                   en 0 queda la tabla plana de las placas del HUD); silueta.gdshader
                    (sombra/brillo con la forma de un sprite) y caja_suave.gdshader (sombra/luz difusa de un
                    rectángulo). Ver "Sombras y brillos". resaltar.gdshader: ajuste HSV (tono/saturación/brillo) +
                    contraste + contorno que late (la caja empujable; sin contorno, en los personajes). fondo.gdshader: el
@@ -259,7 +267,7 @@ GUIA_ASSETS.md     Guía para diseño: qué archivo reemplazar para cambiar cada
 EmboqueDA2 Concepto.pdf  Documento de concepto del juego.
 ```
 
-Autoloads (en `project.godot`): **`SettingsManager`** (volumen Master/Música/Efectos, pantalla completa, persistencia; va **primero** en la lista), **`ScoreBoard`** (puntaje entre escenas + highscore por nivel) y **`Sfx`** (efectos de sonido, usa el bus SFX).
+Autoloads (en `project.godot`): **`SettingsManager`** (volumen Master/Música/Efectos, pantalla completa, persistencia; va **primero** en la lista), **`ScoreBoard`** (puntaje entre escenas + highscore por nivel) **`Sfx`** (efectos de sonido, usa el bus SFX) y **`UiFx`** (respuesta de la interfaz y transiciones; va después de `Sfx`, que usa).
 
 ### Volumen y buses de audio
 
@@ -293,6 +301,14 @@ Para poner el arte definitivo: reemplazar los hijos de `Visual/Art` por el dibuj
 | `emboque_click` | `win_manager.gd` `_celebrate` | Al embocar: "cli-click" de madera (el palito entra y se asienta), saturado suave para sonar fuerte sin subir el pico (+1 dB base). |
 | `sparkle` | `win_manager.gd` `_celebrate` | Al embocar, con las partículas doradas: campanitas agudas sutiles (−15 dB). |
 | `confetti_pop` | `win_manager.gd` `_celebrate` | Al embocar, con el confetti: dos pops (una esquina cada uno) y papel que cruje. Suena 0,06 s después del click (se oye el click solo y la suma no satura). |
+| `ui_hover` | `ui_fx.gd` | Mouse encima de un botón/slider/opción, o foco movido con flechas (no el foco que pone el código). Tic de madera suave, tono ±4 %. |
+| `ui_click` | `ui_fx.gd` | Al apretar un botón (default). En un toggle (checkbox), más agudo al prender (1,12) y grave al apagar (0,88). |
+| `ui_confirm` | `ui_fx.gd` (Jugar, Continuar), `level_selector.gd` | El sonido "especial": golpe de madera + dos notas de cuerda que suben (como un charango). Entrar a un nivel. |
+| `ui_back` | `ui_fx.gd` (botones Volver / Menú principal), Esc en los menús | Golpe grave + dos notas que bajan. |
+| `ui_locked` | `level_selector.gd` | Elegir un nivel bloqueado ("tuc-tuc" apagado, con la sacudida). |
+| `ui_tick` | `ui_fx.gd` (sliders), `victory.gd` (conteo) | Tic corto; el tono sube con el valor del slider / mientras se cuenta el puntaje. |
+| `ui_open` | `pause_menu.gd` | Abrir la pausa (soplo + nota); al cerrarla, el mismo más grave (0,8). |
+| `ui_unlock` | `level_selector.gd`, `victory.gd` | Arpegio que sube: nivel nuevo desbloqueado en el mapa, récord nuevo en la victoria. |
 
 `Sfx.play` ignora el mismo sonido repetido en el mismo tick de física (p. ej. las dos partes de una zona "ambos"). Emite `played(nombre)` (útil para tests).
 
@@ -301,6 +317,41 @@ Para poner el arte definitivo: reemplazar los hijos de `Visual/Art` por el dibuj
 `Area2D` que al ser tocadas (`body_entered`) recargan el nivel. El **filtro por máscara** decide a quién matan: jugadores = `mask 2`; emboque = `mask 12`. Hay **dos scripts separados** (jugador / emboque) para poder darles mecánicas distintas a futuro; la zona "ambos" los **compone** (dos `Area2D` hijas, una con cada script) y tiene su propio arte (fuego). Cada script setea su `collision_mask` en `_ready`, expone `signal triggered(body)` y `@export reload_on_death` (ponerlo en `false` en tests para no recargar). Guard `_fired` evita disparos repetidos.
 
 La recarga se hace con `LevelFlow.restart(tree)` (diferida: **recargar dentro de `body_entered`, un callback de física, está prohibido** en Godot, libera CollisionObjects a mitad del callback; y una sola vez aunque se toquen dos zonas en el mismo instante). **Desde que se emboca** (`LevelFlow.mark_won`, lo llama el WinManager) las zonas ya no matan ni los coleccionables suman: si no, caer al fuego en los 2,5 s del cartel de victoria recargaba el nivel en vez de ir a la pantalla de victoria.
+
+### Interfaz: respuesta y transiciones (`UiFx` + `BotonMadera` + `tema_madera.tres`)
+
+Todo control interactivo tiene que **verse y sentirse** como tal. El autoload **`UiFx`** (`scripts/ui_fx.gd`) se
+conecta solo, con `SceneTree.node_added`, a cada `BaseButton`, `Slider` y `PopupMenu` que entra al árbol (en
+cualquier escena, sin tocarla): cursor de mano, **el mouse le pasa el foco** (brilla uno solo; mouse y teclado van
+juntos), `ui_hover` al pasar el mouse o mover el foco con flechas, sonido al apretar, tic con tono en los sliders,
+tic/click en las listas. Al cargar una escena hay 0,3 s sin hover (el foco inicial y el mouse que ya estaba encima
+no suenan). Lo **visual** es de cada control:
+
+- **`BotonMadera`** (menú, mapa, victoria): tabla con canto (7 px) y sombra; resaltada (hover o foco) crece a 1,045,
+  la madera se aclara, borde dorado + halo afuera y un destello diagonal la cruza; apretada se hunde (cara y texto
+  bajan el canto). `appear(delay)` = entrada desde abajo (solo mueve la `Cara`: sirve dentro de contenedores).
+- **Tema de madera** (Ajustes y ajustes de la pausa): `Style_plank*` con canto (sombra sólida corrida 5 px), hover más
+  claro con borde dorado, pressed baja 4 px (expand_margin_top −4 / bottom +4, canto de 1 px), foco = anillo dorado.
+- **Mapa** (`LevelNode`): fichas con canto que crecen, se aclaran y se hunden; `bump()` al entrar con Enter.
+- **Pausa** (botones invisibles sobre la imagen): con foco, luz cálida encima (`Style_glow` con fondo 14 %) y el borde
+  dorado respira; al abrir, el tablero baja con rebote y suena `ui_open`; Ajustes aparece con un pequeño rebote.
+- **HUD de pausa**: crece y brilla con el mouse, con tic.
+
+Por control, como **metadata** (Inspector → Metadata): `ui_fx = false` (no conectarlo), `ui_press_sound = &"ui_back"`
+(otro sonido; `&""` = ninguno, cuando el script pone el suyo, como Continuar de la pausa o los niveles del mapa),
+`ui_slider_sound = false` (el slider de Efectos, que ya suena con `Sfx.preview`). En `BotonMadera`, el export
+`press_sound`.
+
+**Transiciones**: `UiFx.go_to(escena)` / `UiFx.reload()` funden al azul de los menús (0,2 s), cambian (despausando el
+árbol) y vuelven (0,3 s), en tiempo real (`set_ignore_time_scale`, aunque haya cámara lenta). Durante el fundido el
+velo bloquea el mouse y un segundo cambio se ignora (doble clic, Enter repetido); `UiFx.is_transitioning()` para
+no sonar dos veces. `UiFx.reveal()` = solo aparecer (la victoria, a la que se llega desde el WinManager sin `go_to`).
+La recarga por muerte (`LevelFlow.restart`) y el paso del nivel a la victoria siguen sin fundido.
+
+**Entradas animadas**: menú (botones uno tras otro), Ajustes (el panel sube), mapa (el panel de info se asoma al
+cambiar de nivel), victoria (título que cae y rebota con estrellitas `fx/emboque_burst.tscn` detrás, puntaje y
+sopaipillas que se cuentan con tic, "¡Nuevo récord!" dorado que late con `ui_unlock`, botones escalonados). Los
+botones funcionan desde el primer cuadro.
 
 ### Intro (video) (`ui/intro.tscn` + `ui/intro.gd`)
 
@@ -727,6 +778,17 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
   hasta 180° y con los jugadores tirando se separaban 57 px. Para unir dos cuerpos de forma exacta, uno va
   montado en el otro (congelado, sin colisiones, copiando la transformación) y el que lleva aplica las fuerzas
   del otro (ver `RopeEnd.attach_to`).
+- **Un `Container` le reinicia posición y ESCALA a sus hijos cada vez que se reordena** (al cambiar el texto o
+  el tamaño mínimo de cualquier hijo): animar `scale`/`position` de un hijo directo de un VBox/HBox/CenterContainer
+  se pierde a mitad de camino. Animar un hijo propio que no maneje el contenedor (la `Cara` de BotonMadera, el
+  `Title` dentro de `TitleBox` en la victoria) o el contenedor entero desde un padre que no sea contenedor.
+- **Un `Label` con `label_settings` ignora `add_theme_color_override("font_color")`**: el color va en sus
+  LabelSettings (duplicarlas antes de cambiarlas: son un recurso compartido). Por eso "¡Nuevo récord!" nunca
+  salía dorado.
+- **Conectar los controles con `SceneTree.node_added` (UiFx) ve la metadata de la escena** (se asigna al
+  instanciar, antes de entrar al árbol), pero no lo que el `_ready` de un padre le ponga después: lo que se lee
+  al apretar (el sonido) puede ir en `_ready`, lo que se decide al conectar (`ui_fx = false`) tiene que estar
+  en la escena.
 - **Arte hecho en paralelo por dos personas se pisa en el merge sin conflicto de texto:** pasó con los jugadores (sprites `Abierto`/`Cruzado` de una rama + `Sprite` animado de otra, los dos visibles). Tras un merge, correr y mirar cada nivel; todo el arte va en `assets/` para que se note cuando alguien ya tomó un asset.
 
 ## Estado de desarrollo
@@ -766,7 +828,11 @@ Hecho (el detalle de lo verificado con tests headless está en `docs/REGISTRO_TE
 - **HUD de madera** (estilo de los botones del menú): indicador "P · PAUSA" arriba a la izquierda (en todos los
   niveles, vía el PauseMenu; clic = pausar) y puntaje con la sopaipilla arriba a la derecha (salta al sumar).
 - **Menús:** principal (portada, botones de madera, botón de idioma; sin Salir), mapa de niveles ramificado con progreso, ajustes con el tema de madera (y borrar progreso), pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
-- **Audio:** autoload `Sfx` con 14 efectos placeholder (incluye click, brillo y pop de confetti del emboque), música (cueca, sigue en la pausa) y volumen por categoría (General / Música / Efectos, con muestra al mover Efectos).
+- **Audio:** autoload `Sfx` con 22 efectos placeholder (incluye click, brillo y pop de confetti del emboque y 8 de la interfaz), música (cueca, sigue en la pausa) y volumen por categoría (General / Música / Efectos, con muestra al mover Efectos).
+- **Interfaz pulida** (autoload `UiFx`): todo botón/slider/lista con cursor de mano, foco con el mouse y sonidos de
+  madera y cuerda (hover, click, confirmar, volver, bloqueado, abrir pausa, desbloquear); botones de madera con
+  canto que se hunden, se aclaran, halo y destello al resaltar; perillas doradas; cambios de pantalla con fundido;
+  entradas animadas (menú, Ajustes, pausa, victoria con conteo de puntaje y estrellitas).
 - **Arte (`assets/`):** jugadores animados (idle / caminata a 10 FPS / THROW al apuntar), palito, campana y cuerda, cajas, zonas de muerte animadas (fuego / púas / caca), sopaipillas, ganchos, terreno (piso por piezas + pared) y fondo.
 
 Pendiente:
@@ -777,7 +843,7 @@ Pendiente:
   con el texto reescrito por código; diseño puede reemplazarlas con el mismo nombre.
 - **Niveles del equipo fuera del mapa** (`main`, `level_3`): corregir el inicio (ver Lecciones) si se quieren sumar.
 - **Tráiler:** los `start` de los clips en `trailer/edit.py` son tiempos fijos del bot; al regrabar hay que revisarlos (p. ej. `level_4` ahora emboca a los ~20 s de juego; antes, ~14).
-- **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos.
+- **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos (también los `ui_*` de la interfaz).
 
 Post-prototipo (del concepto): más objetos dinámicos, más niveles.
 

@@ -26,6 +26,15 @@ const SOUNDS := {
 	&"emboque_click": ["res://audio/sfx/emboque_click.wav", 1.0],
 	&"sparkle": ["res://audio/sfx/sparkle.wav", -15.0],
 	&"confetti_pop": ["res://audio/sfx/confetti_pop.wav", -7.0],
+	# Interfaz (los reproduce el autoload UiFx: menús, mapa, pausa).
+	&"ui_hover": ["res://audio/sfx/ui_hover.wav", -19.0],
+	&"ui_tick": ["res://audio/sfx/ui_tick.wav", -20.0],
+	&"ui_click": ["res://audio/sfx/ui_click.wav", -9.0],
+	&"ui_confirm": ["res://audio/sfx/ui_confirm.wav", -6.0],
+	&"ui_back": ["res://audio/sfx/ui_back.wav", -8.0],
+	&"ui_locked": ["res://audio/sfx/ui_locked.wav", -8.0],
+	&"ui_open": ["res://audio/sfx/ui_open.wav", -10.0],
+	&"ui_unlock": ["res://audio/sfx/ui_unlock.wav", -7.0],
 }
 ## Cuántos efectos pueden sonar a la vez.
 const POOL_SIZE := 12

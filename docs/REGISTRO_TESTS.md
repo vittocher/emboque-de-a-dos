@@ -98,6 +98,27 @@ Puntaje con borde derecho en x=1264 con "Puntos: 0", "100" y "2500" (crece hacia
 "Points: 2500"; la placa salta 1,13 → 1 en 0,3 s al sumar (escalar el ícono dentro del HBox no funcionaba: el
 contenedor reinicia la escala de sus hijos). PASS 24/24. Bot: tronco_1, peligro_1, level_2, lanzar_1 ganados.
 
+## Interfaz pulida (UiFx, botones de madera, transiciones) — PASS 36/36
+
+Test headless del flujo (macOS, Godot 4.7.2), escuchando `Sfx.played`: con el mouse ya encima de un botón al
+cargar el menú no suena hover; `ui_down` da el foco y suena `ui_hover`, un `grab_focus` por código no; el mouse
+suena, le pasa el foco al botón y tiene cursor de mano; Enter en Jugar suena `ui_confirm` y funde al mapa, y un
+segundo `go_to` durante el fundido se ignora (llega al mapa, no a Ajustes); al terminar el velo queda en alpha 0 y
+sin bloquear el mouse; Esc en el mapa suena `ui_back` y vuelve al menú; el slider General hace tic que sube de tono
+(0,90 → 1,42) y el de Efectos no (suena su muestra); Volver de Ajustes suena `ui_back`; en el nivel, P pausa con
+`ui_open`, el tablero termina en su lugar, P reanuda con el sonido grave; Reiniciar suena, el juego sigue pausado
+durante el fundido, recarga el nivel y queda sin pausa; Menú principal desde la pausa llega al menú sin pausa; en
+la victoria el puntaje termina de contar en 300 y las sopaipillas en 2 / 3; Esc va al mapa.
+
+Capturas (ventana, retina) de menú, mapa, Ajustes, victoria y pausa, con hover y botón apretado: canto visible,
+cara hundida al apretar (texto abajo), halo dorado + borde al resaltar, perillas doradas, tablas del tema que se
+aclaran y bajan 4 px apretadas, luz cálida y borde en el botón de la pausa, estrellitas tras el título de la
+victoria y "¡Nuevo récord!" en dorado (antes salía blanco: el LabelSettings le ganaba al override). Los WAV `ui_*`
+tienen pico −3 dB, sin NaN y terminan en silencio.
+
+Bot (`run_all.sh`, macOS): 27/29. `caja_1` y `placa_3` dan TIMEOUT **también en `develop` sin estos cambios**
+(probado en un worktree limpio en el mismo Mac); el registro de abajo (29/29) se corrió en Windows.
+
 ## Animación del emboque
 
 Con el bot (tronco_1 + script que sigue tras ganar, en Forward+ y Compatibility): las piezas quedan pegadas

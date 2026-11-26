@@ -7,9 +7,13 @@
 [sub_resource type="ShaderMaterial" id="Mat_disco"]
 resource_local_to_scene = true
 shader = ExtResource("2_shader")
-shader_parameter/rect_size = Vector2(64, 64)
+shader_parameter/rect_size = Vector2(84, 84)
 shader_parameter/active = 0.0
 shader_parameter/corner = 32.0
+shader_parameter/pad = 10.0
+shader_parameter/depth = 5.0
+shader_parameter/press = 0.0
+shader_parameter/shine = -1.0
 shader_parameter/wood_dark = Color(0.24, 0.13, 0.07, 1)
 shader_parameter/wood_light = Color(0.52, 0.33, 0.17, 1)
 shader_parameter/gold = Color(0.98, 0.82, 0.3, 1)
@@ -38,6 +42,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
 mouse_filter = 2
 
 [node name="Number" type="Label" parent="."]
@@ -45,6 +53,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_bottom = -5.0
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.96, 0.93, 0.85, 1)
 theme_override_colors/font_outline_color = Color(0.12, 0.06, 0.03, 1)
 theme_override_constants/outline_size = 6
@@ -74,3 +84,4 @@ theme_override_styles/hover = SubResource("Empty")
 theme_override_styles/pressed = SubResource("Empty")
 theme_override_styles/focus = SubResource("Empty")
 flat = true
+metadata/ui_press_sound = &""
