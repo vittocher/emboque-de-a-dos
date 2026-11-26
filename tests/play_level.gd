@@ -17,6 +17,14 @@ extends SceneTree
 ##   --linger=S      al terminar sigue S s más (el closeup y el cartel de victoria)
 ##   --lang=CÓDIGO   idioma del juego ("es", "en")
 ##   --music=V       volumen de la música (0 = muda, para montarla aparte)
+##   --still=1|2|12  control: esos jugadores llegan a la meta pero NO se balancean
+##                   (se saltan sus pasos swing / jiggle); ver tests/run_controls.sh
+##   --start=x1,y1,x2,y2  para probar un tramo: parten desde ahí, con la cuerda al mínimo
+##                   (el punto va ~100 px sobre el piso, para que el extremo nazca arriba)
+##   --jump=V        otra velocidad de salto (px/s), para ver con cuánto margen se gana
+##   --hold=S        cuánto mantiene la tecla de salto (default 0.5 = salto completo)
+##   --hazards       auditoría de peligros: imprime las púas que ningún EXTREMO tocó y las
+##                   cacas que ningún JUGADOR tocó (ahí, un fuego daría lo mismo)
 ##
 ## Imprime al final una línea:  RESULT WIN|DEATH|TIMEOUT t=… collected=a/b ...
 ##
@@ -29,17 +37,28 @@ extends SceneTree
 ##   ["wait", s]
 ##   ["wait_floor"]                 espera a estar en el piso
 ##   ["jump_to", x]                 salta hacia x manteniendo la dirección hasta llegar/aterrizar
+##   ["leap_to", x]                 igual, pero frena en el aire para caer en x
+##   ["hold_jump", s]               desde acá mantiene la tecla de salto s segundos (0.5 = salto completo)
+##   ["fly_to", x]                  en el aire (p. ej. tras soltarse de un gancho): se frena para caer en x
 ##   ["rope", largo, tol=4]         tira/suelta hasta ese largo de cuerda
 ##   ["sync", "tag"]                espera a que el otro jugador llegue al mismo tag
 ##   ["until", Callable(ctx) -> bool, timeout_s=20]
 ##   ["do", Callable(ctx)]          ejecuta algo una vez
 ##   ["pump", s]                    colgando: empuja a favor del balanceo durante s
+##   ["pump_until", Callable(ctx) -> bool, timeout_s]  igual, hasta que se cumpla la condición
 ##   ["pump_end", s, centro_x, margen]  en el suelo: camina hacia donde se mueve su
 ##                                  extremo (como empujar un columpio) sin alejarse
 ##                                  más de margen de centro_x; agranda el balanceo
 ##   ["release_all"]
 ##   ["jiggle", home_x, back, veces=6]  va y vuelve (home_x-back ↔ home_x) para
 ##                                  balancear el extremo; termina antes si ya ganó
+##   ["hang", x]                en el borde x: acorta la cuerda y salta en el lugar hasta
+##                                  que el extremo quede colgando afuera (apoyado en la
+##                                  repisa, al mínimo, no cae solo)
+##   ["swing", home_x, back, veces=14, g=980]  balanceo al RITMO del péndulo: va y vuelve
+##                                  entre home_x y home_x-back, un tramo por cada medio
+##                                  período (según el largo de su cuerda). Con los dos
+##                                  sincronizados (sync antes), se balancean a la vez
 ## Los nombres de clases del proyecto NO se usan acá (el script se compila antes
 ## que los autoloads, ver CLAUDE.md): todo se accede por nombre de propiedad.
 
@@ -64,7 +83,14 @@ var _shot_acc := 0.0
 var _shot_n := 0
 var _done := false
 var _linger := 0.0
+var _still := ""
+var _starts: PackedFloat64Array = []
 var _win_manager: Node
+var _jump := 0.0
+var _jump_hold := {"p1": 0.5, "p2": 0.5}
+var _jump_asked := {"p1": false, "p2": false}
+var _jump_until := {"p1": 0.0, "p2": 0.0}
+var _hazards := {}     # zona → la tocó alguien a quien no daña (solo con --hazards)
 
 const FRICTION := 2600.0
 const ACTIONS := ["left", "right", "jump", "down", "release", "pull", "throw"]
@@ -89,12 +115,22 @@ func _initialize() -> void:
 			_shots_dir = a.get_slice("=", 1)
 		elif a.begins_with("--shot-every="):
 			_shot_every = float(a.get_slice("=", 1))
+		elif a.begins_with("--still="):
+			_still = a.get_slice("=", 1)
+		elif a.begins_with("--jump="):
+			_jump = float(a.get_slice("=", 1))
+		elif a.begins_with("--hold="):
+			_jump_hold = {"p1": float(a.get_slice("=", 1)), "p2": float(a.get_slice("=", 1))}
+		elif a == "--hazards":
+			_hazards["_on"] = true
 		elif a.begins_with("--linger="):
 			_linger = float(a.get_slice("=", 1))
 		elif a.begins_with("--lang="):
 			root.get_node("SettingsManager").set_language(a.get_slice("=", 1))
 		elif a.begins_with("--music="):
 			root.get_node("SettingsManager").set_music_volume(float(a.get_slice("=", 1)))
+		elif a.begins_with("--start="):
+			_starts = a.get_slice("=", 1).split_floats(",")
 		elif a.begins_with("--var="):
 			var kv := a.trim_prefix("--var=")
 			vars[kv.get_slice("=", 0)] = kv.get_slice("=", 1)
@@ -106,9 +142,18 @@ func _initialize() -> void:
 		return
 	level = scene.instantiate()
 	_disable_reloads(level)
+	if _starts.size() == 4:
+		for i in [1, 2]:
+			level.get_node("Player%d" % i).position = Vector2(_starts[i * 2 - 2], _starts[i * 2 - 1])
+			level.get_node("Emboque%d" % i).rope_length = 60.0
 	root.add_child(level)
 	current_scene = level
 	_bind_actors()
+	if _jump > 0.0:
+		for who: String in players:
+			players[who].jump_velocity = -_jump
+	if _hazards.erase("_on"):
+		_audit_hazards(level)
 	_plans = solution.plan(self)
 	physics_frame.connect(_tick)
 
@@ -130,6 +175,22 @@ func _bind_actors() -> void:
 				players[n.input_prefix] = n
 			elif n.has_method("get_end"):
 				emboques[n.input_prefix] = n
+
+## Pone sobre cada púa / caca un sensor igual que detecta a quien NO mata.
+func _audit_hazards(node: Node) -> void:
+	for c in node.get_children():
+		_audit_hazards(c)
+	if not node is Area2D or not "reload_on_death" in node or node.get_parent() != level 			or (node as Area2D).collision_mask not in [2, 12] or node.scene_file_path.contains("fall_zone"):
+		return
+	var sensor := Area2D.new()
+	sensor.collision_layer = 0
+	sensor.collision_mask = 14 - (node as Area2D).collision_mask
+	for c in node.get_children():
+		if c is CollisionShape2D:
+			sensor.add_child(c.duplicate())
+	node.add_child(sensor)
+	_hazards[node.name] = false
+	sensor.body_entered.connect(func(_b: Node) -> void: _hazards[node.name] = true)
 
 # --- Consultas para los planes ---
 
@@ -161,6 +222,7 @@ func _tick() -> void:
 		return
 	var dt := 1.0 / float(Engine.physics_ticks_per_second)
 	time += dt * Engine.time_scale
+	_release_jumps()
 	for who in ["p1", "p2"]:
 		_run_player(who, dt)
 	if _trace > 0.0:
@@ -204,6 +266,8 @@ func _finish(result: String) -> void:
 			missing.append("%s(%.0f,%.0f)" % [c.name, c.global_position.x, c.global_position.y])
 	if not missing.is_empty():
 		print("MISSING ", " ".join(missing))
+	if not _hazards.is_empty():
+		print("HAZARDS sin aprovechar: ", " ".join(_hazards.keys().filter(func(k: StringName) -> bool: return not _hazards[k])))
 	print("RESULT %s t=%.2f collected=%s steps=%d/%d,%d/%d" % [result, time, collected,
 		_idx.p1, _plans.get("p1", []).size(), _idx.p2, _plans.get("p2", []).size()])
 	for a in ACTIONS:
@@ -219,10 +283,30 @@ func _finish(result: String) -> void:
 
 func _act(who: String, action: String, on: bool) -> void:
 	var full := who + "_" + action
+	if action == "jump":
+		_act_jump(who, on)
+		return
 	if on:
 		Input.action_press(full)
 	else:
 		Input.action_release(full)
+
+## El salto dura lo que se mantiene la tecla: los planes la "tocan" y acá se mantiene
+## _jump_hold s (--hold=S), hasta pasar el punto más alto.
+func _act_jump(who: String, on: bool) -> void:
+	var full := who + "_jump"
+	if on and not _jump_asked[who]:
+		if Input.is_action_pressed(full):
+			Input.action_release(full)  # venía del salto anterior: se aprieta de nuevo el próximo tick
+			return
+		Input.action_press(full)
+		_jump_until[who] = time + _jump_hold[who]
+	_jump_asked[who] = on
+
+func _release_jumps() -> void:
+	for who: String in ["p1", "p2"]:
+		if time >= _jump_until[who] and Input.is_action_pressed(who + "_jump"):
+			Input.action_release(who + "_jump")
 
 func _next(who: String) -> void:
 	_idx[who] += 1
@@ -247,6 +331,8 @@ func _do_step(who: String, step: Array, dt: float) -> bool:
 	var pl: Node2D = players[who]
 	var st: Dictionary = _step_state[who]
 	var t: float = _step_time[who]
+	if step[0] in ["swing", "jiggle"] and _still.contains(who.right(1)):
+		return true
 	match step[0]:
 		"wait":
 			return t >= float(step[1])
@@ -278,6 +364,28 @@ func _do_step(who: String, step: Array, dt: float) -> bool:
 			return _walk_to(who, pl, float(step[1]), float(step[2]) if step.size() > 2 else 6.0, t)
 		"jump_to":
 			return _jump_to(who, pl, float(step[1]), st, t)
+		"leap_to":
+			_act(who, "jump", t < 0.05)
+			_walk_to(who, pl, float(step[1]), 4.0, 0.0)
+			if t > 0.1 and pl.is_on_floor():
+				_act(who, "right", false)
+				_act(who, "left", false)
+				return true
+			return t > 6.0
+		"hold_jump":
+			_jump_hold[who] = float(step[1])
+			return true
+		"fly_to":
+			# En el aire: corrige la velocidad (también frenando en contra) para caer en x.
+			var want_v := clampf((float(step[1]) - pl.global_position.x) * 4.0, -420.0, 420.0)
+			var fly_v: float = pl.velocity.x
+			_act(who, "right", fly_v < want_v - 25.0)
+			_act(who, "left", fly_v > want_v + 25.0)
+			if t > 0.1 and pl.is_on_floor():
+				_act(who, "right", false)
+				_act(who, "left", false)
+				return true
+			return t > 5.0
 		"rope":
 			var target := float(step[1])
 			var tol := float(step[2]) if step.size() > 2 else 4.0
@@ -322,6 +430,39 @@ func _do_step(who: String, step: Array, dt: float) -> bool:
 					st["n"] += 1
 					st["wait_until"] = t + 0.6
 			return false
+		"hang":
+			# Solo mira (y salta) tras estar quieto en el borde un momento.
+			var at_edge: bool = _walk_to(who, pl, float(step[1]), 2.0, 0.0) and pl.is_on_floor()
+			# Si el extremo quedó bajo la repisa, se recoge recién en el borde y colgando
+			# derecho (antes se trabaría, y con balanceo tiraría al jugador).
+			var below: bool = emboques[who].get_end_position().y > pl.global_position.y + 36.0
+			var end_body: RigidBody2D = emboques[who].get_end()
+			var calm: bool = absf(end_body.global_position.x - pl.global_position.x) < 30.0 or end_body.linear_velocity.length() < 30.0
+			_act(who, "pull", emboques[who].rope_length > 61.0 and (not below or at_edge and calm))
+			st["still"] = float(st.get("still", 0.0)) + dt if at_edge else 0.0
+			var ready: bool = st["still"] > 0.5 and emboques[who].rope_length <= 61.0
+			if ready and below:
+				_act(who, "pull", false)
+				return true
+			_act(who, "jump", ready)
+			return t > 10.0
+		"swing":
+			# Medio período = pi * raíz(L / g); en tiempo de juego (la cámara lenta no
+			# cambia el ritmo del péndulo).
+			if not st.has("leg"):
+				st["leg"] = 0
+				st["start"] = time
+			var legs := 2 * (int(step[3]) if step.size() > 3 else 14)
+			if won() or st["leg"] >= legs:
+				_act(who, "left", false)
+				_act(who, "right", false)
+				return true
+			_walk_to(who, pl, float(step[1]) - (float(step[2]) if st["leg"] % 2 == 0 else 0.0), 4.0, 0.0)
+			var half: float = PI * sqrt(emboques[who].rope_length / (float(step[4]) if step.size() > 4 else 980.0))
+			if time - st["start"] >= half:
+				st["start"] += half
+				st["leg"] += 1
+			return false
 		"pump_end":
 			var center := float(step[2])
 			var margin := float(step[3])
@@ -339,11 +480,12 @@ func _do_step(who: String, step: Array, dt: float) -> bool:
 				_act(who, "left", false)
 				return true
 			return false
-		"pump":
+		"pump", "pump_until":
 			var omega: float = pl._swing_omega
 			_act(who, "right", omega > 0.0)
 			_act(who, "left", omega <= 0.0)
-			if t >= float(step[1]):
+			var done: bool = t >= float(step[1]) if step[0] == "pump" 				else (step[1] as Callable).call(self) or t > float(step[2])
+			if done:
 				_act(who, "right", false)
 				_act(who, "left", false)
 				return true

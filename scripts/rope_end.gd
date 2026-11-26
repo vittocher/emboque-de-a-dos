@@ -8,13 +8,27 @@ class_name RopeEnd
 
 # El Emboque actualiza estos valores cada frame.
 var anchor_position: Vector2 = Vector2.ZERO
+var anchor_velocity: Vector2 = Vector2.ZERO
+var calm_whip: bool = true  # false lanzado o recogiéndolo (ahí va rápido a propósito)
 var rope_length: float = 170.0
 var hooked: bool = false
 var hook_position: Vector2 = Vector2.ZERO
 var constrained: bool = false  # el Emboque lo activa tras posicionar el extremo
 
 ## Fracción del exceso de largo que se corrige por frame (estabilización).
-@export var stiffness: float = 0.5
+@export var stiffness: float = 0.4
+## Tope de la velocidad con que se corrige ese exceso (px/s).
+@export var max_correction_speed: float = 1500.0
+
+## Velocidad máxima de lado (px/s) del extremo en el sentido en que se mueve el jugador (que
+## corre a 320) mientras él se mueve.
+@export var whip_max_speed: float = 380.0
+## Bajo esta velocidad del jugador (px/s) no se limita.
+const WHIP_MIN_SPEED := 120.0
+
+## Segundos (de juego) desde que tocó por última vez el terreno, una caja o un gancho
+## (el otro extremo no cuenta). Lo usa el bono "¡Limpio!" del WinManager.
+var untouched_time: float = 0.0
 
 var _held: bool = false
 var _saved_layer: int = 0
@@ -27,6 +41,8 @@ var _carry_xform := Transform2D.IDENTITY
 
 func _ready() -> void:
 	_base_gravity_scale = gravity_scale
+	# Para que _integrate_forces vea los contactos (untouched_time).
+	max_contacts_reported = 4
 
 ## En la mano del jugador (mecánica de lanzar): congelado y SIN colisiones, así
 ## no empuja al otro extremo, no entra en la cavidad de la campana ni activa
@@ -98,6 +114,7 @@ func end_flight() -> void:
 	gravity_scale = _base_gravity_scale
 
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
+	_update_untouched(state)
 	if not constrained:
 		return
 
@@ -110,25 +127,45 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 		state.transform = t
 		return
 
-	_apply_rope(state, state.transform.origin, anchor_position, rope_length)
+	_calm_whip(state)
+	_apply_rope(state, state.transform.origin, anchor_position, anchor_velocity, rope_length)
 	# Lleva pegado al otro extremo: también lo sostiene la cuerda de ese, en el punto
 	# donde está (su Emboque le sigue pasando el ancla y el largo cada frame).
 	if _carried != null and is_instance_valid(_carried):
 		var point := (state.transform * _carried._carry_xform).origin
-		_apply_rope(state, point, _carried.anchor_position, _carried.rope_length)
+		_apply_rope(state, point, _carried.anchor_position, _carried.anchor_velocity, _carried.rope_length)
+
+## Al arrastrarlo (correr, saltar), el tirón de la cuerda le da más velocidad que la del
+## jugador y lo pasaría de largo como un látigo: de lado va a lo más un poco más rápido que
+## él corriendo. Con el jugador quieto no hace nada (el balanceo queda libre).
+func _calm_whip(state: PhysicsDirectBodyState2D) -> void:
+	if not calm_whip or absf(anchor_velocity.x) < WHIP_MIN_SPEED:
+		return
+	var side := signf(anchor_velocity.x)
+	if state.linear_velocity.x * side > whip_max_speed:
+		state.linear_velocity.x = side * whip_max_speed
+
+func _update_untouched(state: PhysicsDirectBodyState2D) -> void:
+	untouched_time += state.step
+	if hooked:
+		untouched_time = 0.0
+	for i in state.get_contact_count():
+		if not state.get_contact_collider_object(i) is RopeEnd:
+			untouched_time = 0.0
 
 ## Restricción de una cuerda (ancla, largo) sobre el punto [param point] del cuerpo,
 ## por velocidad (sobre la velocidad lineal del cuerpo).
-func _apply_rope(state: PhysicsDirectBodyState2D, point: Vector2, anchor: Vector2, length: float) -> void:
+func _apply_rope(state: PhysicsDirectBodyState2D, point: Vector2, anchor: Vector2, anchor_vel: Vector2, length: float) -> void:
 	var to_end := point - anchor
 	var dist := to_end.length()
 	if dist > length and dist > 0.001:
 		var n := to_end / dist  # ancla → extremo
-		# Quitar la velocidad radial hacia afuera → solo queda swing tangencial.
-		var radial := state.linear_velocity.dot(n)
-		if radial > 0.0:
-			state.linear_velocity -= n * radial
-		# Corregir el exceso con velocidad (no se fija la posición, así el motor
-		# resuelve las colisiones y el extremo nunca atraviesa geometría).
-		var overshoot := dist - length
-		state.linear_velocity -= n * (overshoot / state.step) * stiffness
+		# A lo largo de la cuerda, el extremo no se puede alejar de la mano (velocidad
+		# RELATIVA a ella: si el jugador salta, el extremo sube igual de rápido) y además
+		# vuelve un poco para corregir el exceso. Se fija la velocidad, no la posición: el
+		# motor resuelve las colisiones y el extremo nunca atraviesa geometría. Solo queda
+		# el balanceo tangencial.
+		var back := minf((dist - length) / state.step * stiffness, max_correction_speed)
+		var away := (state.linear_velocity - anchor_vel).dot(n) + back
+		if away > 0.0:
+			state.linear_velocity -= n * away

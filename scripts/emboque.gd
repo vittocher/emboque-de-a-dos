@@ -23,6 +23,10 @@ class_name Emboque
 @export var min_length: float = 60.0
 @export var max_length: float = 320.0
 @export var length_speed: float = 240.0
+## Cuánto se puede estirar la cuerda (px) antes de frenar al jugador. Da tiempo a que el extremo,
+## si está libre, lo siga (la restricción del extremo lo trae en pocos ticks): así el salto mide lo
+## mismo con cualquier largo. Si el extremo está trabado, igual lo detiene.
+@export var limit_stretch: float = 10.0
 ## Si la cuerda tensa puede frenar/tirar del jugador cuando el extremo se traba.
 @export var limit_player_movement: bool = true
 
@@ -56,6 +60,8 @@ enum ThrowState { NONE, HELD, AIMING, FLYING, REELING }
 ## Dónde queda el extremo tomado, desde la mano (x hacia donde mira el jugador).
 ## Un poco más abajo que la mano para no tapar el ojo; sigue dentro del cuerpo.
 const HOLD_OFFSET := Vector2(8, 10)
+## Tope de la velocidad de la mano que se le pasa a la cuerda (px/s).
+const MAX_ANCHOR_SPEED := 1200.0
 ## Qué tan rápido llega el extremo a la mano al tomarlo (1/s).
 const REEL_SHARPNESS := 30.0
 ## Margen de tiempo sobre lo que tarda el vuelo en llegar a max_length (s).
@@ -93,7 +99,9 @@ func _ready() -> void:
 		if _player != null:
 			# Saltar desde la cuerda suelta el gancho (lo decide el jugador).
 			_player.swing_jumped.connect(_unhook)
+			_player.jump_cut.connect(_on_jump_cut)
 		_end.global_position = _anchor.global_position + Vector2(0, rope_length)
+		_end.anchor_position = _anchor.global_position
 		_end.rope_length = rope_length
 		_end.constrained = true
 	var rules := LevelRules.of(get_tree())
@@ -127,6 +135,8 @@ func _physics_process(delta: float) -> void:
 	if _throw_enabled:
 		_update_throw(delta)
 		if is_held():
+			_end.anchor_position = _anchor.global_position
+			_end.anchor_velocity = Vector2.ZERO
 			return
 	# Recogiendo, el largo lo maneja _update_reel.
 	if _throw_state != ThrowState.REELING:
@@ -140,6 +150,8 @@ func _physics_process(delta: float) -> void:
 
 	# Pasar los parámetros de la cuerda al extremo rígido (los usa en su
 	# _integrate_forces, que corre después en el mismo frame).
+	_end.calm_whip = _throw_state == ThrowState.NONE
+	_end.anchor_velocity = ((_anchor.global_position - _end.anchor_position) / delta).limit_length(MAX_ANCHOR_SPEED)
 	_end.anchor_position = _anchor.global_position
 	_end.rope_length = rope_length
 	_end.hooked = _hooked
@@ -175,8 +187,9 @@ func _limit_player() -> void:
 	var target := _hook_position if _hooked else _end.global_position
 	var to_end := target - anchor_pos
 	var dist := to_end.length()
-	if dist > rope_length + 1.0 and dist > 0.001:
-		_move_sliding(_player, (to_end / dist) * (dist - rope_length))
+	var limit := rope_length + (0.0 if _hooked else limit_stretch)
+	if dist > limit + 1.0 and dist > 0.001:
+		_move_sliding(_player, (to_end / dist) * (dist - limit))
 
 ## Mueve un cuerpo por 'motion' deslizando sobre las superficies con las que
 ## choca (como move_and_slide, pero con un desplazamiento explícito).
@@ -215,6 +228,12 @@ func _unhook() -> void:
 		# El extremo sale junto al jugador: si quedara quieto en el gancho, la
 		# cuerda frenaría de golpe el lanzamiento.
 		_end.linear_velocity = _player.velocity
+
+## El jugador cortó su salto: el extremo que venía subiendo con él también (si no,
+## seguiría de largo y le pasaría por encima).
+func _on_jump_cut() -> void:
+	if _throw_state == ThrowState.NONE and not _hooked and not _end.is_attached():
+		_end.linear_velocity.y = maxf(_end.linear_velocity.y, _player.velocity.y)
 
 # --- Tomar y lanzar (solo si el nivel lo permite: LevelRules.throw_enabled) ---
 
