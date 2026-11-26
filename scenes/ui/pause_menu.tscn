@@ -10,7 +10,7 @@
 [sub_resource type="StyleBoxEmpty" id="Style_none"]
 
 [sub_resource type="StyleBoxFlat" id="Style_glow"]
-draw_center = false
+bg_color = Color(1, 0.88, 0.6, 0.14)
 border_width_left = 8
 border_width_top = 8
 border_width_right = 8
@@ -26,7 +26,7 @@ expand_margin_right = 6.0
 expand_margin_bottom = 6.0
 
 [sub_resource type="StyleBoxFlat" id="Style_glow_pressed"]
-bg_color = Color(1, 0.9, 0.5, 0.12)
+bg_color = Color(1, 0.9, 0.55, 0.22)
 border_width_left = 8
 border_width_top = 8
 border_width_right = 8
@@ -139,8 +139,9 @@ offset_top = 294.0
 offset_right = 792.0
 offset_bottom = 392.0
 tooltip_text = "PAUSE_RESUME"
+metadata/ui_press_sound = &""
 theme_override_styles/normal = SubResource("Style_none")
-theme_override_styles/hover = SubResource("Style_glow")
+theme_override_styles/hover = SubResource("Style_none")
 theme_override_styles/pressed = SubResource("Style_glow_pressed")
 theme_override_styles/focus = SubResource("Style_glow")
 
@@ -152,7 +153,7 @@ offset_right = 792.0
 offset_bottom = 528.0
 tooltip_text = "PAUSE_RESTART"
 theme_override_styles/normal = SubResource("Style_none")
-theme_override_styles/hover = SubResource("Style_glow")
+theme_override_styles/hover = SubResource("Style_none")
 theme_override_styles/pressed = SubResource("Style_glow_pressed")
 theme_override_styles/focus = SubResource("Style_glow")
 
@@ -164,7 +165,7 @@ offset_right = 792.0
 offset_bottom = 666.0
 tooltip_text = "MENU_SETTINGS"
 theme_override_styles/normal = SubResource("Style_none")
-theme_override_styles/hover = SubResource("Style_glow")
+theme_override_styles/hover = SubResource("Style_none")
 theme_override_styles/pressed = SubResource("Style_glow_pressed")
 theme_override_styles/focus = SubResource("Style_glow")
 
@@ -176,9 +177,10 @@ offset_right = 792.0
 offset_bottom = 806.0
 tooltip_text = "PAUSE_MAIN_MENU"
 theme_override_styles/normal = SubResource("Style_none")
-theme_override_styles/hover = SubResource("Style_glow")
+theme_override_styles/hover = SubResource("Style_none")
 theme_override_styles/pressed = SubResource("Style_glow_pressed")
 theme_override_styles/focus = SubResource("Style_glow")
+metadata/ui_press_sound = &"ui_back"
 
 [node name="ControlsP1" parent="PausePanel" instance=ExtResource("6_controls")]
 layout_mode = 1
@@ -282,6 +284,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 4
 max_value = 1.0
 step = 0.01
+metadata/ui_slider_sound = false
 
 [node name="FullscreenRow" type="HBoxContainer" parent="PausePanel/SettingsPanel/SettingsVBox"]
 layout_mode = 2
@@ -315,3 +318,4 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 46)
 text = "PAUSE_BACK"
 theme_override_font_sizes/font_size = 20
+metadata/ui_press_sound = &"ui_back"

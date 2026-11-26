@@ -133,6 +133,14 @@ nombre → archivo + volumen). Reemplazar el archivo con el mismo nombre (WAV u 
 | `emboque_click.wav` | Al embocar: el "click" del palito entrando en la campana |
 | `sparkle.wav` | Al embocar: brillo sutil de las partículas doradas |
 | `confetti_pop.wav` | Al embocar: pop del confetti desde las esquinas |
+| `ui_hover.wav` | Interfaz: mouse encima de un botón / mover el foco con flechas (muy corto y suave) |
+| `ui_click.wav` | Interfaz: apretar un botón (más agudo al prender una casilla) |
+| `ui_confirm.wav` | Interfaz: Jugar, entrar a un nivel, Continuar (el sonido "especial") |
+| `ui_back.wav` | Interfaz: Volver, Menú principal, Esc |
+| `ui_locked.wav` | Mapa: elegir un nivel bloqueado |
+| `ui_tick.wav` | Sliders de volumen y conteo del puntaje en la victoria (se le cambia el tono) |
+| `ui_open.wav` | Abrir la pausa (al cerrarla suena más grave) |
+| `ui_unlock.wav` | Nivel nuevo desbloqueado en el mapa / récord nuevo |
 | `audio/cueca.ogg` | Música |
 
 Los efectos actuales son placeholders sintetizados con `tools/generate_sfx.py`.
