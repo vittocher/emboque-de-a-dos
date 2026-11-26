@@ -39,6 +39,23 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 - **Zonas de muerte:** detección, aislamiento por máscara (la de jugador no mata al emboque y viceversa), zona "ambos". PASS. Tras ponerles arte (HazardArt) se volvió a verificar que siguen disparando.
 - **Caja empujable:** asentarse, empuje parejo, frenar al soltar, muro, pararse encima, pasajero, golpe de campana, empujes opuestos, caída de borde, pila. PASS.
 
+## Música instrumental (playlist de `audio/musica/`) — PASS 16/16
+
+Test headless (macOS) sobre `SettingsManager`: encuentra las 4 cuecas de `audio/musica/` y "La Consentida"
+(`audio/cueca.ogg`) no está en la rotación; al arrancar suena una cueca de la carpeta por el bus Music, con el
+loop del archivo apagado; al terminar una suena la siguiente; en 12 canciones nunca se repite una seguida y cada
+vuelta del mazo toca las 4 (orden de ejemplo: nortina, puerto, emboque, chilota · nortina, chilota, puerto,
+emboque · puerto, emboque, chilota, nortina); con `stop_music` no arranca la siguiente y `play_music` vuelve a sonar; el tono de
+la cámara lenta (0,85) se mantiene al cambiar de canción; cada pista dura 84–100 s. **El mismo test pasa contra
+el `.pck` exportado con el preset Web** (`--export-pack`): `ResourceLoader.list_directory` encuentra las 4 ahí
+también. Segunda versión (la primera, sintetizada a mano y con melodías al azar, sonaba "de computador" y las 4
+parecidas): melodías escritas a mano e instrumentos del SoundFont GeneralUser GS. Revisado por script: cada compás
+suma 6 corcheas y cada sección tiene un acorde por compás; las notas en tiempo fuerte o largas que no son del
+acorde son solo la séptima del V (el acompañamiento pasa a V7) o notas de paso en la hemiola; la segunda voz toma
+la nota del acorde en tiempo fuerte. Cada parte se mezcla a un volumen fijo respecto de la melodía (por RMS),
+filtro de graves a 55 Hz, RMS −17 dBFS y pico ≤ −1 dB en las 4. Espectrogramas: las 4 arrancan con 2 compases de
+ritmo y la melodía entra limpia. Falta escucharlas con oído humano.
+
 ## Presentación y sonido
 
 - **Video convertido con `tools/convertir_video.sh`** (fuente 1920×1080 a 60 fps con audio, 12 s): sale Theora 1280×720 30 fps + Vorbis 44,1 kHz estéreo; en la intro avanza a velocidad real (6,08 s a los 6 s) y al terminar (12,5 s) pasa solo al menú; resto del test de la intro igual. PASS 21/21.

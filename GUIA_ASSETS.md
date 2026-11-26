@@ -174,7 +174,8 @@ nombre → archivo + volumen). Reemplazar el archivo con el mismo nombre (WAV u 
 | `ui_tick.wav` | Sliders de volumen y conteo del puntaje en la victoria (se le cambia el tono) |
 | `ui_open.wav` | Abrir la pausa (al cerrarla suena más grave) |
 | `ui_unlock.wav` | Nivel nuevo desbloqueado en el mapa / récord nuevo |
-| `audio/cueca.ogg` | Música |
+| `audio/musica/*` | Música: TODO lo que haya en esta carpeta (.ogg / .mp3 / .wav) suena en orden aleatorio. Para agregar una canción, dejar el archivo; para sacarla, borrarlo. Que tenga un volumen parecido al de las demás. Hoy: 4 cuecas instrumentales originales (campesina, porteña, nortina y chilota), grabadas con `tools/generate_music.py`: para cambiar una melodía o un instrumento, editar el script y volver a correrlo. |
+| `audio/cueca.ogg` | "La Consentida": ya no suena en el juego (era cantada); la usa el tráiler. |
 
 Los efectos actuales son placeholders sintetizados con `tools/generate_sfx.py`.
 

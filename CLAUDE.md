@@ -215,8 +215,8 @@ scripts/
   pause_menu.gd    Menú de pausa del nivel (acción `pause` = Esc / P): Continuar / Reiniciar / Ajustes / Menú principal. Es el
                    script de ui/pause_menu.tscn. La pausa NO es global: cada nivel debe instanciar esa escena.
   settings_manager.gd AUTOLOAD (SettingsManager): volúmenes, buses de audio, pantalla completa, idioma, música,
-                   persistencia.
-                   stop_music() / play_music(fade) (la intro calla la cueca mientras corre el video).
+                   persistencia. Música = playlist de audio/musica/ (ver "Música").
+                   stop_music() / play_music(fade) (la intro calla la música mientras corre el video).
                    set_music_pitch(p): tono/velocidad de la música (lo usa la cámara lenta del closeup).
                    set_music_duck(db) / set_sfx_duck(db): bajada temporal de los buses Music / SFX sin tocar el
                    volumen de Ajustes (el silencio antes del golpe, TensionFx).
@@ -258,13 +258,18 @@ shaders/           madera_boton.gdshader (madera procedural de los botones: veta
                    confeti.gdshader (papelito que gira en 3D fingido): los de la animación del emboque.
                    vineta.gdshader: viñeta de pantalla completa (subida de tensión).
 video/             intro.ogv (Ogg Theora: el único formato de video de Godot) + README.md con cómo convertirlo.
-audio/             cueca.ogg (música, la pone SettingsManager) y sfx/: efectos placeholder (WAV 22 kHz mono):
+audio/             musica/: las cuecas instrumentales de la playlist (MP3; todo lo que haya ahí suena, ver "Música").
+                   cueca.ogg: "La Consentida" (cantada), YA NO suena en el juego: la usa el tráiler (trailer/edit.py).
+                   sfx/: efectos placeholder (WAV 22 kHz mono):
                    step, jump, die, hook, swing, box_push (loop), grab, throw, plate, gate, wind (loop), los
                    de la animación del emboque: emboque_click, sparkle, confetti_pop, y los del Tue Tue:
                    tuetue (grito), boss_hit, gust (ráfaga), swoop (picada).
 i18n/              textos.csv: TODOS los textos del juego, una columna por idioma (ver "Idiomas").
 default_bus_layout.tres  Buses de audio Master / Music / SFX (ver "Volumen y buses de audio"). Obligatorio para web.
 tools/convertir_video.bat|.sh  Convierte el video de la intro a video/intro.ogv (ver "Intro (video)").
+tools/generate_music.py  Graba las cuecas instrumentales originales de audio/musica (partituras escritas en el
+                   script + instrumentos del SoundFont GeneralUser GS; numpy, tinysoundfont y ffmpeg con
+                   libmp3lame): `python tools/generate_music.py [nombres]`. Ver "Música".
 tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python tools/generate_sfx.py [nombres]`
                    (sin nombres, todos; con nombres, solo esos, p. ej. `plate gate wind`).
 tools/generate_tuetue_art.py  Dibuja el arte provisorio del Tue Tue (Pillow + numpy): la cabeza (papel recortado) en
@@ -283,9 +288,39 @@ EmboqueDA2 Concepto.pdf  Documento de concepto del juego.
 
 Autoloads (en `project.godot`): **`SettingsManager`** (volumen Master/Música/Efectos, pantalla completa, persistencia; va **primero** en la lista), **`ScoreBoard`** (puntaje entre escenas + highscore por nivel) **`Sfx`** (efectos de sonido, usa el bus SFX) y **`UiFx`** (respuesta de la interfaz y transiciones; va después de `Sfx`, que usa).
 
+### Música (`SettingsManager` + `audio/musica/`)
+
+**Todo archivo `.ogg` / `.mp3` / `.wav` que haya en `audio/musica/` entra a la rotación**: para agregar o sacar
+una canción basta con poner o quitar el archivo (Godot lo importa al abrir el proyecto; commitear también su
+`.import`). Se toca en orden aleatorio como un mazo barajado: suenan todas antes de repetir y nunca la misma
+dos veces seguidas; entre una y otra, 1,2 s de silencio (`MUSIC_GAP`). Cada canción suena una vez (el loop del
+archivo se apaga por código). La lista se arma con `ResourceLoader.list_directory`, que funciona también en el
+juego exportado (ahí no están los archivos originales). El tono de la cámara lenta (`set_music_pitch`), la bajada
+de la subida de tensión (`set_music_duck`) y el silencio de la intro (`stop_music`) siguen igual entre canciones.
+**Volumen parejo:** las canciones nuevas tienen que venir con un volumen parecido (las actuales: RMS −17 dBFS,
+pico −1 dB), porque no se normaliza al tocar.
+
+Las 4 actuales son **cuecas instrumentales originales** (melodías escritas a mano, sin derechos de terceros)
+grabadas por `tools/generate_music.py` con instrumentos muestreados del SoundFont **GeneralUser GS** (uso libre
+para crear música, también comercial; se descarga solo a `tools/.cache/`, ignorado por git). Cada una en un
+estilo de la tradición, para que no suenen parecidas:
+
+| Archivo | Estilo | Instrumentos | Tempo |
+|---|---|---|---|
+| `cueca_del_emboque` | campesina | arpa (melodía, dúo y bajo), guitarra, pandero, tamboreo en el arpa; acordeón en el 2.º pie | ~121 |
+| `cueca_brava_del_puerto` | chilenera / porteña | piano (melodía y mano izquierda), guitarra, pandero, tormento; acordeón en el 2.º pie | ~135 |
+| `cueca_nortina_de_la_sopaipilla` | nortina (La Tirana) | banda de bronces: trompetas en terceras, trombones a contratiempo, tuba, bombo, caja con redobles, platillos | ~127 |
+| `cueca_chilota_de_los_dos` | chilota | acordeón en terceras, guitarra, bombo; violín en el 2.º pie | ~112 |
+
+Forma de cueca: entrada de ritmo (2 compases), introducción, cuarteta (la 1.ª queda en la dominante, la 2.ª
+cierra), seguidilla que sube al IV por el I7, remate, y el pie dos veces; melodía en 6/8 con el acompañamiento
+alternando 6/8 y 3/4 (sesquiáltera), y segunda voz en terceras (el dúo de la cueca cantada). Las melodías están
+en `EMBOQUE`, `PUERTO`, `SOPAIPILLA` y `CHILOTA` (grados de la escala, una línea por sección); arreglo, tonalidad,
+tempo y volumen de cada parte, en `SONGS`. El script valida que cada compás sume 6 corcheas.
+
 ### Volumen y buses de audio
 
-Los buses están en **`default_bus_layout.tres`** (raíz del proyecto; Godot lo carga solo al arrancar): "Master" + **`"Music"`** y **`"SFX"`**, ambos con `send` hacia `"Master"`. `SettingsManager._ensure_buses()` queda solo como respaldo si faltara el archivo. Así Master es un fader general (afecta a los dos) y Música/Efectos se balancean aparte. `SettingsManager._start_music()` pone la cueca en el bus Music; `Sfx.gd` pone todo su pool de `AudioStreamPlayer` en el bus SFX; `push_box.gd` hace lo mismo con su sonido de arrastre. Tres sliders independientes ("General" / "Música" / "Efectos") en `ui/settings.tscn` y en el panel de pausa de cada nivel, guardados en `user://settings.cfg` (`audio/master_volume`, `audio/music_volume`, `audio/sfx_volume`).
+Los buses están en **`default_bus_layout.tres`** (raíz del proyecto; Godot lo carga solo al arrancar): "Master" + **`"Music"`** y **`"SFX"`**, ambos con `send` hacia `"Master"`. `SettingsManager._ensure_buses()` queda solo como respaldo si faltara el archivo. Así Master es un fader general (afecta a los dos) y Música/Efectos se balancean aparte. `SettingsManager._start_music()` pone la música en el bus Music; `Sfx.gd` pone todo su pool de `AudioStreamPlayer` en el bus SFX; `push_box.gd` hace lo mismo con su sonido de arrastre. Tres sliders independientes ("General" / "Música" / "Efectos") en `ui/settings.tscn` y en el panel de pausa de cada nivel, guardados en `user://settings.cfg` (`audio/master_volume`, `audio/music_volume`, `audio/sfx_volume`).
 
 ### Arte y sonido (para diseño)
 
@@ -1186,7 +1221,11 @@ Hecho (el detalle de lo verificado con tests headless está en `docs/REGISTRO_TE
 - **HUD de madera** (estilo de los botones del menú): indicador "P · PAUSA" arriba a la izquierda (en todos los
   niveles, vía el PauseMenu; clic = pausar) y puntaje con la sopaipilla arriba a la derecha (salta al sumar).
 - **Menús:** principal (portada, botones de madera, botón de idioma; sin Salir), mapa de niveles ramificado con progreso, ajustes con el tema de madera (y borrar progreso), pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
-- **Audio:** autoload `Sfx` con 22 efectos placeholder (incluye click, brillo y pop de confetti del emboque y 8 de la interfaz), música (cueca, sigue en la pausa) y volumen por categoría (General / Música / Efectos, con muestra al mover Efectos).
+- **Audio:** autoload `Sfx` con 22 efectos placeholder (incluye click, brillo y pop de confetti del emboque y 8 de la interfaz), música (sigue en la pausa) y volumen por categoría (General / Música / Efectos, con muestra al mover Efectos).
+- **Música instrumental:** playlist aleatoria de `audio/musica/` (sin repetir la misma seguida) con 4 cuecas
+  instrumentales originales, compuestas a mano y grabadas con instrumentos muestreados, cada una en un estilo
+  (campesina, porteña, nortina, chilota; `tools/generate_music.py`); reemplaza a "La Consentida", que era
+  cantada y distraía.
 - **Interfaz pulida** (autoload `UiFx`): todo botón/slider/lista con cursor de mano, foco con el mouse y sonidos de
   madera y cuerda (hover, click, confirmar, volver, bloqueado, abrir pausa, desbloquear); botones de madera con
   canto que se hunden, se aclaran, halo y destello al resaltar; perillas doradas; cambios de pantalla con fundido;
@@ -1200,10 +1239,12 @@ Pendiente:
 - **Imágenes en inglés definitivas** (`assets/ui/en/portada.png`, `pause_menu.webp`): hoy son el arte original
   con el texto reescrito por código; diseño puede reemplazarlas con el mismo nombre.
 - **Niveles del equipo fuera del mapa** (`main`, `level_3`): corregir el inicio (ver Lecciones) si se quieren sumar.
-- **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos.
 - **Arte del Tue Tue:** el actual es provisorio, dibujado por código (ver GUIA_ASSETS.md).
 - **Tráiler:** los `start` de los clips en `trailer/edit.py` son tiempos fijos del bot; al regrabar hay que revisarlos (p. ej. `level_4` ahora emboca a los ~20 s de juego; antes, ~14).
 - **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos (también los `ui_*` de la interfaz).
+- **Música:** escuchar las 4 cuecas con gente y ajustar (melodías y volúmenes en `tools/generate_music.py`).
+  Siguen siendo instrumentos virtuales: si se consigue una grabación real (un músico, o comprada con licencia
+  para web; ojo con "No Comercial": Newgrounds tiene publicidad), se deja en `audio/musica/`.
 
 Post-prototipo (del concepto): más objetos dinámicos, más niveles.
 

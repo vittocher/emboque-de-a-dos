@@ -5,7 +5,13 @@ extends Node
 ## (Godot lo carga al arrancar); _ensure_buses() solo es un respaldo.
 
 const SETTINGS_PATH := "user://settings.cfg"
-const MUSIC_PATH := "res://audio/cueca.ogg"
+## Carpeta de la música: TODAS las canciones que haya acá (.ogg / .mp3 / .wav)
+## entran a la rotación, en orden aleatorio y sin repetir la misma seguida. Para
+## agregar o sacar una canción basta con poner o quitar el archivo.
+const MUSIC_DIR := "res://audio/musica/"
+const MUSIC_EXTENSIONS: Array[String] = ["ogg", "mp3", "wav"]
+## Silencio entre una canción y la siguiente (s).
+const MUSIC_GAP := 1.2
 const DEFAULT_MASTER_VOLUME := 1.0
 const DEFAULT_MUSIC_VOLUME := 1.0
 const DEFAULT_SFX_VOLUME := 1.0
@@ -26,6 +32,10 @@ var language: String = ""
 
 var _music_player: AudioStreamPlayer
 var _music_tween: Tween
+## Canciones de MUSIC_DIR, y las que faltan por sonar en esta vuelta (mazo barajado).
+var _tracks: Array[String] = []
+var _track_queue: Array[String] = []
+var _current_track := ""
 ## true mientras alguien (la intro) pidió silencio.
 var _music_held := false
 var _music_duck_db := 0.0  # bajada temporal de la música (subida de tensión del emboque)
@@ -165,21 +175,65 @@ func _save_settings() -> void:
 	config.save(SETTINGS_PATH)
 
 func _start_music() -> void:
-	var stream := load(MUSIC_PATH) as AudioStream
-	if stream == null:
-		push_warning("No se pudo cargar la música: %s" % MUSIC_PATH)
+	_tracks = _list_tracks()
+	if _tracks.is_empty():
+		push_warning("No hay música en %s" % MUSIC_DIR)
 		return
-	if stream is AudioStreamOggVorbis:
-		stream.loop = true
 	_music_player = AudioStreamPlayer.new()
-	_music_player.stream = stream
 	_music_player.bus = MUSIC_BUS
 	# Sigue sonando en la pausa (si no, el volumen de música no se oye al ajustarlo).
 	_music_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	_music_player.finished.connect(_on_track_finished)
 	add_child(_music_player)
+	_load_next_track()
 	# Diferido: si la escena de arranque es la intro, alcanza a pedir silencio
-	# (stop_music) antes de que suene el primer instante de la cueca.
+	# (stop_music) antes de que suene el primer instante de la música.
 	_play_initial_music.call_deferred()
+
+## Las canciones de MUSIC_DIR. ResourceLoader.list_directory sirve también en el
+## juego exportado (ahí no están los archivos originales, solo los importados).
+func _list_tracks() -> Array[String]:
+	var result: Array[String] = []
+	for file in ResourceLoader.list_directory(MUSIC_DIR):
+		if file.get_extension().to_lower() in MUSIC_EXTENSIONS:
+			result.append(MUSIC_DIR + file)
+	result.sort()
+	return result
+
+## Siguiente canción: se baraja el mazo completo y se saca de a una; al rebarajar,
+## la que acaba de sonar no puede salir primera.
+func _next_track_path() -> String:
+	if _track_queue.is_empty():
+		_track_queue = _tracks.duplicate()
+		_track_queue.shuffle()
+		if _track_queue.size() > 1 and _track_queue[0] == _current_track:
+			_track_queue.push_back(_track_queue.pop_front())
+	return _track_queue.pop_front()
+
+func _load_next_track() -> void:
+	_current_track = _next_track_path()
+	var stream := load(_current_track) as AudioStream
+	if stream == null:
+		push_warning("No se pudo cargar la música: %s" % _current_track)
+		return
+	# Cada canción suena una vez (la siguiente la elige _on_track_finished).
+	if stream is AudioStreamOggVorbis or stream is AudioStreamMP3:
+		stream.set("loop", false)
+	elif stream is AudioStreamWAV:
+		(stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_DISABLED
+	_music_player.stream = stream
+
+## Terminó una canción: un respiro y la siguiente (si nadie pidió silencio).
+func _on_track_finished() -> void:
+	await get_tree().create_timer(MUSIC_GAP, true).timeout
+	if _music_held or _music_player.playing:
+		return
+	_load_next_track()
+	_music_player.play()
+
+## La canción que está sonando (ruta), para depurar o mostrarla.
+func current_track() -> String:
+	return _current_track
 
 func _play_initial_music() -> void:
 	if not _music_held:
