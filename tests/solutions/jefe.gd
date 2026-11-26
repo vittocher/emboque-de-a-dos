@@ -1,13 +1,20 @@
 extends RefCounted
 const SCENE := "res://scenes/levels/jefe.tscn"
+## Segundos de juego para tests/run_all.sh (el nivel completo dura ~90 s).
+const TIMEOUT := 150
 ## El Tue Tue (jefe final), en sus tres fases:
 ## 1. Pelea: cada uno se para a tiro del Tue Tue (a ~220 px de él, de su lado) y,
 ##    mientras planea, recoge el emboque a la mano, apunta y lo lanza cuando la mira
 ##    pasa por el ángulo que lo apunta. Cuando avisa una PICADA suelta lo que
 ##    apuntaba y salta al pasar el pájaro; en una RÁFAGA camina en contra para no
 ##    terminar en el foso de púas.
-## 2. Subida: con el emboque en la mano (sin cuerda que lo amarre a los escalones)
-##    sube el zigzag de su lado.
+## 2. Subida: con el emboque en la mano (sin cuerda que lo amarre a las islas) salta
+##    de isla en isla por su lado (lee el trazado del nivel: siempre salta a la isla
+##    siguiente a la que está parado, así se recupera si un golpe lo bota). En las
+##    torres lanza el emboque al gancho, trepa la cuerda y salta arriba, pero solo
+##    cuando el Tue Tue no le va a caer encima ni soplar mientras apunta. Contra las
+##    RÁFAGAS se queda en su lugar caminando en contra; si la PICADA va a él, salta
+##    ya a la isla siguiente (o se corre por la repisa).
 ## 3. Cima: cada uno espera en su repisa (lejos de la cortina, bajo la que cae en
 ##    picada) saltando las picadas y caminando contra las ráfagas, y le lanza el
 ##    emboque cuando el Tue Tue pasa por su lado (la cortina tapa el otro) hasta
@@ -16,10 +23,10 @@ const SCENE := "res://scenes/levels/jefe.tscn"
 ## --var=r1=…/r2=… largo de la cuerda al colgar el extremo (120); --var=swing=…
 ## cuánto va y vuelve para balancearlo (40).
 ## --var=start=climb|summit empieza directo en esa fase (para probarlas aparte).
-## Controles: --var=idle=1 (nadie hace nada: el Tue Tue los tira al foso),
+## Controles: --var=idle=1 (nadie hace nada: el Tue Tue los tira al foso; con
+## start=climb, la cámara los deja abajo),
 ## --var=nostun=1 (en la cima no lo marean: los desparrama antes de embocar) y
 ## --var=nododge=1 (en la pelea no esquivan picadas ni ráfagas: terminan en el foso).
-const C := preload("res://tests/solutions/caja_2.gd")
 
 # Estados del Tue Tue (TueTue.State / Mode) y del lanzamiento (Emboque.ThrowState).
 const B_MOVE := 1
@@ -30,20 +37,24 @@ const B_GUST := 5
 const B_HURT := 6
 const B_ORBIT := 7
 const B_STUNNED := 9
+const B_PECK := 11
 const M_IDLE := 0
 const M_FIGHT := 1
+const M_FOLLOW := 3
+const M_HARASS := 4
 const T_NONE := 0
 const T_HELD := 1
 const T_AIMING := 2
 const T_FLYING := 3
 const T_REELING := 4
 
-const RISE := 120.0
 ## Cortina de la cima (x de sus bordes): frena a cada uno junto al hueco.
 const CURTAIN_L := 606.0
 const CURTAIN_R := 674.0
-const FIRST := 500.0
-const STEPS := 14
+## Altura de las torres con gancho (desde la isla en que se lanza hasta arriba).
+const TOWER := 246.0
+## A cuántos px del gancho (en x) se para para lanzar.
+const THROW_DX := 178.0
 
 static func boss(c) -> Node2D:
 	return c.level.get_node("TueTue")
@@ -65,6 +76,10 @@ static func tapping(c, i: int, st: Dictionary) -> bool:
 	if st["tap_n"] >= 3:
 		c._act(who(i), st["tap"], false)
 		st["tap"] = ""
+	else:
+		# Se sigue apretando (el salto, si la tecla venía apretada del anterior, recién
+		# se aprieta de nuevo en el tick siguiente).
+		c._act(who(i), st["tap"], true)
 	return true
 
 static func walk(c, i: int, want: int) -> void:
@@ -144,7 +159,7 @@ static func fight_tick(c, i: int, st: Dictionary) -> bool:
 			walk_toward(c, i, safe, 20.0)
 			var dir: int = b._swoop_dir
 			var ahead: float = (px - b.position.x) * dir
-			if b.state == B_SWOOP and ahead > 0.0 and ahead < 190.0 and pl.is_on_floor():
+			if b.state == B_SWOOP and ahead > 0.0 and ahead < 330.0 and pl.is_on_floor():
 				walk(c, i, 0)
 				tap(c, i, st, "jump")
 		else:
@@ -186,21 +201,341 @@ static func hold_end(i: int) -> Array:
 	var st := {}
 	return [["until", func(c): return hold_tick(c, i, st), 4.0]]
 
-## La subida: del piso de la arena al primer escalón (afuera) y zigzag hasta la cima.
-static func climb(i: int, ctx) -> Array:
-	var s := 1 if i == 1 else -1
-	var x := func(v: float) -> float: return v if i == 1 else 1280.0 - v
-	var out: Array = hold_end(i) + [["walk_to", x.call(222), 2]]
-	out += C.climb_box(i, -s, x, 222, 150, FIRST - 40.0)
-	for k in range(1, STEPS):
-		var top := FIRST - RISE * k
-		if k % 2 == 1:
-			out += C.climb_box(i, s, x, 185, 275, top - 40.0)   # afuera → adentro
-		else:
-			out += C.climb_box(i, -s, x, 255, 165, top - 40.0)  # adentro → afuera
-	var summit := FIRST - RISE * STEPS
-	out += C.climb_box(i, s, x, 385, 480, summit - 40.0)
+# --- Subida ---
+
+## Rectángulo de un bloque del nivel (Rect2 en el mundo).
+static func rect_of(c, name: String) -> Rect2:
+	var n = c.level.get_node(name)
+	var sz: Vector2 = n.size
+	return Rect2(n.global_position - sz * 0.5, sz)
+
+## El recorrido de [param i] en orden: islas, torres (con su gancho) y la repisa de la
+## cima. Cada elemento: {rect, safe_x0, safe_x1, tower (gancho o null)}.
+static func route(c, i: int) -> Array:
+	var p := "L" if i == 1 else "R"
+	var out: Array = []
+	var k := 1
+	while c.level.has_node("%s%d" % [p, k]):
+		var r := rect_of(c, "%s%d" % [p, k])
+		var item := {"rect": r, "x0": r.position.x, "x1": r.end.x, "tower": null, "name": "%s%d" % [p, k], "spikes": 0}
+		var sp = c.level.get_node_or_null("Spikes%s%d" % [p, k])
+		if sp != null:
+			var w: float = 100.0 * sp.scale.x
+			if sp.global_position.x < r.get_center().x:
+				item.x0 = sp.global_position.x + w * 0.5
+				item.spikes = -1
+			else:
+				item.x1 = sp.global_position.x - w * 0.5
+				item.spikes = 1
+		out.append(item)
+		k += 1
+	# Cada torre va después de la isla desde la que se lanza (TOWER px más abajo).
+	for t in [2, 1]:
+		var tn := "%sT%d" % [p, t]
+		var tr := rect_of(c, tn)
+		for j in out.size():
+			if out[j].tower == null and absf(out[j].rect.position.y - (tr.position.y + TOWER)) < 2.0:
+				out[j]["throw"] = c.level.get_node(tn + "Hook").global_position
+				out.insert(j + 1, {"rect": tr, "x0": tr.position.x, "x1": tr.end.x, "tower": true, "name": tn, "spikes": 0})
+				break
+	var sr := rect_of(c, "SummitLeft" if i == 1 else "SummitRight")
+	out.append({"rect": sr, "x0": sr.position.x, "x1": sr.end.x, "tower": null, "name": "Summit", "spikes": 0})
 	return out
+
+## Índice de la plataforma en la que está parado (-1 = el piso de la arena u otra).
+static func standing_on(c, i: int, rt: Array) -> int:
+	var pl = c.p(i)
+	var feet: float = pl.global_position.y + 32.0
+	for k in rt.size():
+		var r: Rect2 = rt[k].rect
+		if absf(feet - r.position.y) < 4.0 and pl.global_position.x > r.position.x - 18.0 and pl.global_position.x < r.end.x + 18.0:
+			return k
+	return -1
+
+## El Tue Tue va a caer (o está cayendo) en picada sobre [param i].
+static func peck_on_me(c, i: int) -> bool:
+	var b := boss(c)
+	if b.mode != M_FOLLOW or b.step.get("do", "") != "peck" or b._peck_target != c.p(i):
+		return false
+	return b.state == B_TELEGRAPH or (b.state == B_PECK and b.position.y < c.p(i).global_position.y)
+
+static func gust_now(c) -> bool:
+	var b := boss(c)
+	return b.mode == M_FOLLOW and b.step.get("do", "") == "gust" and b.state in [B_TELEGRAPH, B_GUST]
+
+## Dónde puede quedar parado (el centro) en [param it] sin tocar púas, como Rect2.
+static func safe_rect(it: Dictionary) -> Rect2:
+	var lo: float = float(it.x0) + (21.0 if int(it.get("spikes", 0)) < 0 else 0.0)
+	var hi: float = float(it.x1) - (21.0 if int(it.get("spikes", 0)) > 0 else 0.0)
+	return Rect2(lo, it.rect.position.y, hi - lo, it.rect.size.y)
+
+## Al medio de donde puede quedar parado en [param it] sin tocar púas.
+static func safe_mid(it: Dictionary) -> float:
+	var lo: float = float(it.x0) + (21.0 if int(it.get("spikes", 0)) < 0 else 0.0)
+	var hi: float = float(it.x1) - (21.0 if int(it.get("spikes", 0)) > 0 else 0.0)
+	return (lo + hi) * 0.5
+
+## Isla con púas en el borde de llegada: hasta qué x no frena en el aire.
+static func set_clear(st: Dictionary, to: Dictionary, d: int) -> void:
+	st.dir = d
+	if int(to.spikes) == -d:
+		st.clear = float(to.x0) + 22.0 if d > 0 else float(to.x1) - 22.0
+	else:
+		st.erase("clear")
+
+## Esperando en una isla angosta con la picada encima: mientras lo sigue se para en
+## un borde (ahí fija la línea) y después corre al otro. True si se encargó.
+static func dodge_on_island(c, i: int, cur: Dictionary) -> bool:
+	if not peck_on_me(c, i) or not cur.has("rect"):
+		return false
+	var b := boss(c)
+	var pl = c.p(i)
+	var r := safe_rect(cur)
+	var locked: bool = b.state == B_PECK or b._t >= b.peck_track_time
+	var x: float = r.position.x + 4.0 if not locked else escape_x(pl.global_position.x, b._peck_x, r)
+	c._walk_to(who(i), pl, x, 3.0, 0.0)
+	return true
+
+## Adónde correrse en la repisa [param r] para que no le caiga la picada en [param line]:
+## al borde de su lado de la línea si alcanza a quedar a 70 px; si no, al otro.
+static func escape_x(px: float, line: float, r: Rect2) -> float:
+	var right := r.end.x - 4.0
+	var left := r.position.x + 4.0
+	if px >= line:
+		return right if right - line >= 70.0 else left
+	return left if line - left >= 70.0 else right
+
+## ¿Se puede lanzar al gancho ahora? (nada le cae encima ni sopla mientras apunta y sube)
+static func tower_safe(c, i: int) -> bool:
+	var b := boss(c)
+	if b.mode != M_FOLLOW or b.state == B_STUNNED:
+		return true
+	var pat: Array = b.CLIMB_PATTERN
+	var nxt: Dictionary = pat[(b._climb_i + 1) % pat.size()]
+	var mine := func(s: Dictionary) -> bool: return s.do == "peck" and int(s.who) == i - 1
+	if b.state == 7:  # ORBIT: descansando (el próximo ataque tarda ~3 s en llegar)
+		return not mine.call(nxt)
+	if b.step.get("do", "") == "gust" or mine.call(b.step):
+		return false
+	return true
+
+## La subida, un tick. Termina cuando empieza la cima (el Tue Tue acosa) y él está
+## en su repisa.
+static func climb_tick(c, i: int, st: Dictionary) -> bool:
+	var b := boss(c)
+	var pl = c.p(i)
+	var em = c.e(i)
+	var who_s := who(i)
+	if not st.has("rt"):
+		st.rt = route(c, i)
+		st.mode = "idle"
+	var rt: Array = st.rt
+	var on: int = standing_on(c, i, rt) if pl.is_on_floor() else -2
+	if c.vars.has("dbg") and (fmod(c.time, 0.5) < 0.009 or c.vars.get("dbg") == "all" or (c.vars.get("dbg") == "win" and c.time > float(c.vars.get("from", 0)) and c.time < float(c.vars.get("to", 0)))):
+		print("p%d t=%.2f v=(%.0f,%.0f) jumpkey=%s pos=(%.0f,%.0f) on=%d mode=%s throw=%d hook=%s stun=%s | boss m=%d s=%d t=%.2f step=%s | cam=%.0f safe=%s" % [i, c.time,
+			pl.velocity.x, pl.velocity.y, Input.is_action_pressed(who_s + "_jump"), pl.global_position.x, pl.global_position.y, on, st.mode, em._throw_state, c.hooked(i), pl.is_stunned(),
+			b.mode, b.state, b._t, b.step, c.level.get_node("Camera2D").global_position.y, tower_safe(c, i)])
+	if b.mode == M_HARASS and on == rt.size() - 1:
+		walk(c, i, 0)
+		return true
+	if tapping(c, i, st):
+		return false
+	if pl.is_stunned():
+		st.mode = "idle"
+		return false
+	# En el aire: sigue el salto (o la cuerda).
+	if st.mode == "air":
+		var tgt_air: float = st.target
+		if peck_on_me(c, i) and (b.state == B_PECK or b._t >= b.peck_track_time) and st.has("land"):
+			# Ya fijó dónde cae: aterrizar lejos de la línea.
+			var lr: Rect2 = st.land
+			tgt_air = clampf(escape_x(tgt_air, b._peck_x, lr), lr.position.x + 4.0, lr.end.x - 4.0)
+		if st.has("clear") and (pl.global_position.x - float(st.clear)) * int(st.dir) < 0.0:
+			# Púas en el borde de llegada: sin frenar hasta pasarlas.
+			walk(c, i, int(st.dir))
+		else:
+			c._walk_to(who_s, pl, tgt_air, 4.0, 0.0)
+		if pl.is_on_floor() and c.time - st.since > 0.1:
+			walk(c, i, 0)
+			st.mode = "idle"
+			st.run = false
+		return false
+	if st.mode.begins_with("t_") and st.mode != "t_walk" and st.mode != "t_wait":
+		return tower_tick(c, i, st)
+	if on == -2:
+		return false
+	# Ráfaga: se queda donde está caminando en contra.
+	if gust_now(c):
+		if not st.has("hold_x"):
+			# Al medio de donde se puede parar (lejos de las púas y de los bordes).
+			st.hold_x = safe_mid(rt[on]) if on >= 0 and not rt[on].has("throw") else pl.global_position.x
+		if em._throw_state == T_AIMING:
+			tap(c, i, st, "release")
+			return false
+		c._walk_to(who_s, pl, st.hold_x, 3.0, 0.0)
+		st.mode = "idle"
+		st.run = false
+		return false
+	st.erase("hold_x")
+	# El emboque en la mano (sin cuerda colgando que se trabe en las islas).
+	if em._throw_state != T_HELD and not st.mode.begins_with("t_"):
+		walk(c, i, 0)
+		hold_tick(c, i, st)
+		return false
+	var nxt := on + 1
+	if nxt >= rt.size():
+		# En la cima antes que la cámara: esquiva la picada corriéndose por la repisa.
+		var r: Rect2 = rt[on].rect
+		var home: float = r.get_center().x
+		if peck_on_me(c, i):
+			home = r.position.x + 30.0 if b._peck_x > r.get_center().x else r.end.x - 30.0
+		walk_toward(c, i, home, 8.0)
+		return false
+	var cur: Dictionary = rt[on] if on >= 0 else {"x0": 140.0, "x1": 1140.0}
+	if cur.has("throw"):
+		return tower_tick(c, i, st)
+	var to: Dictionary = rt[nxt]
+	var tgt: float = safe_mid(to)
+	var px: float = pl.global_position.x
+	var d := 1 if tgt > px else -1
+	var take: float = float(cur.x1) - 30.0 if d > 0 else float(cur.x0) + 30.0
+	var spikes_ahead: bool = int(cur.get("spikes", 0)) == d
+	if spikes_ahead:
+		# Sale por encima de las púas de su propia isla: despega más atrás.
+		take = float(cur.x0) + 54.0 if d < 0 else float(cur.x1) - 54.0
+	elif int(to.spikes) == -d:
+		# Púas en el borde de llegada: despega antes (pasa sobre ellas en lo alto del salto).
+		take = clampf(float(cur.x1) - 62.0 if d > 0 else float(cur.x0) + 62.0, float(cur.x0) + 27.0, float(cur.x1) - 27.0)
+	if on < 0:
+		take = tgt - d * 150.0
+	# Sin pisar las púas de su isla (el cuerpo mide 40 px).
+	var lo: float = float(cur.x0) + (26.0 if int(cur.get("spikes", 0)) < 0 else 2.0)
+	var hi: float = float(cur.x1) - (26.0 if int(cur.get("spikes", 0)) > 0 else 2.0)
+	var start := clampf(take - 25.0 * d, lo, hi)
+	if (take - start) * d < 15.0:
+		# Isla angosta (o con púas atrás): la carrera parte del borde seguro.
+		take = start + 15.0 * d
+	# Llegó tarde a la cima (ya empezó el acoso): salta solo mientras da una vuelta;
+	# espera donde empieza la carrera.
+	if b.mode == M_HARASS and not (b.state == 7 and b._t < 0.9) and not st.get("run", false):
+		c._walk_to(who_s, pl, start, 3.0, 0.0)
+		return false
+	# No subir pegado al borde de arriba de la pantalla (ahí hay techo y vuela el Tue
+	# Tue): espera a que suba la cámara.
+	var top: float = c.level.get_node("Camera2D").global_position.y - 360.0
+	if b.mode == M_FOLLOW and to.rect.position.y < top + 200.0 and not st.get("run", false):
+		if not dodge_on_island(c, i, cur):
+			c._walk_to(who_s, pl, safe_mid(cur) if on >= 0 else pl.global_position.x, 3.0, 0.0)
+		return false
+	if peck_on_me(c, i) and not st.get("run", false):
+		var locked: bool = b.state == B_PECK or b._t >= b.peck_track_time
+		if not locked or absf(px - b._peck_x) >= 75.0:
+			# Lo sigue: espera listo para correr (que fije la línea ahí y salir).
+			c._walk_to(who_s, pl, start, 3.0, 0.0)
+			return false
+		st.run = true  # ya fijó la línea: carrera y salto a la isla siguiente
+	# Carrera corta: se para en start (25 px antes del despegue), corre y salta al pasar.
+	if st.get("run", false):
+		walk(c, i, d)
+		if (px - take) * d >= 0.0 and pl.velocity.x * d < 50.0:
+			st.run = false  # pasó el despegue sin carrera: otra vez desde el comienzo
+		elif (px - take) * d >= 0.0:
+			st.run = false
+			tap(c, i, st, "jump")
+			st.mode = "air"
+			st.target = tgt
+			st.land = safe_rect(to)
+			set_clear(st, to, d)
+			st.since = c.time
+	elif c._walk_to(who_s, pl, start, 3.0, 0.0):
+		st.run = true
+	return false
+
+## Torre: se para a THROW_DX del gancho, espera un momento seguro, lanza el emboque al
+## gancho, trepa la cuerda al mínimo y salta arriba de la torre.
+static func tower_tick(c, i: int, st: Dictionary) -> bool:
+	var pl = c.p(i)
+	var em = c.e(i)
+	var rt: Array = st.rt
+	if not st.mode.begins_with("t_"):
+		st.mode = "t_walk"
+		var k: int = standing_on(c, i, rt)
+		st.hook = rt[k].throw
+		st.tdir = 1 if st.hook.x > pl.global_position.x else -1
+	var hook: Vector2 = st.hook
+	var d: int = st.tdir
+	match st.mode:
+		"t_walk":
+			var b := boss(c)
+			# Tras la picada sube por la misma línea: no volver hasta que pase.
+			var rising: bool = b.mode == M_FOLLOW and absf(b.position.x - st.get("peck_x", -999.0)) < 2.0 \
+				and b.position.y > pl.global_position.y - 170.0
+			if peck_on_me(c, i):
+				st.peck_x = b._peck_x
+			var k: int = standing_on(c, i, rt)
+			var r: Rect2 = rt[k].rect if k >= 0 else Rect2(pl.global_position, Vector2.ZERO)
+			var locked: bool = peck_on_me(c, i) and (b.state == B_PECK or b._t >= b.peck_track_time)
+			if peck_on_me(c, i) and not locked:
+				# Lo está siguiendo: se para cerca de un borde (que fije la línea ahí)…
+				walk_toward(c, i, r.position.x + 22.0, 3.0)
+				return false
+			if locked or rising:
+				# …y después corre al otro extremo de la repisa.
+				walk_toward(c, i, escape_x(pl.global_position.x, st.get("peck_x", b._peck_x), r), 3.0)
+				return false
+			var there: bool = c._walk_to(who(i), pl, hook.x - d * THROW_DX, 3.0, 0.0)
+			if em._throw_state != T_HELD:
+				hold_tick(c, i, st)
+			elif there and absf(pl.velocity.x) < 10.0 and tower_safe(c, i):
+				st.mode = "t_aim"
+				st.since = c.time
+		"t_aim":
+			walk(c, i, 0)
+			match em._throw_state:
+				T_HELD:
+					if pl.facing != d:
+						tap(c, i, st, "right" if d > 0 else "left")
+					else:
+						tap(c, i, st, "throw")
+				T_AIMING:
+					var want := aim_angle(c, i, hook)
+					var a: float = pingpong(em._aim_time * em.aim_sweep_speed_deg, em.aim_max_angle_deg)
+					if absf(a - want) < 1.0:
+						tap(c, i, st, "throw")
+						st.mode = "t_fly"
+						st.since = c.time
+				_:
+					st.mode = "t_walk"
+		"t_fly":
+			if c.hooked(i):
+				st.mode = "t_pull"
+				st.since = c.time
+			elif c.time - st.since > 1.5:
+				st.mode = "t_walk"  # erró: lo recoge y otra vez
+		"t_pull":
+			c._act(who(i), "pull", em.rope_length > 61.0)
+			if em.rope_length <= 61.0:
+				c._act(who(i), "pull", false)
+				if c.time - st.since > 0.4:
+					st.mode = "t_jump"
+			else:
+				st.since = c.time
+			if not c.hooked(i):
+				c._act(who(i), "pull", false)
+				st.mode = "idle"
+		"t_jump":
+			walk(c, i, d)
+			tap(c, i, st, "jump")
+			st.mode = "air"
+			st.target = hook.x + d * 60.0
+			st.erase("land")
+			st.erase("clear")
+			st.since = c.time
+	return false
+
+static func climb(i: int) -> Array:
+	var st := {}
+	return [["until", func(c): return climb_tick(c, i, st), 120.0]]
 
 ## Cima, un tick: en su lugar ([param home], lejos de la cortina, bajo la que cae en
 ## picada), salta las picadas y camina contra las ráfagas; con [param throw] además
@@ -208,6 +543,9 @@ static func climb(i: int, ctx) -> Array:
 ## avisando la caída). True cuando el Tue Tue queda mareado.
 static func summit_tick(c, i: int, st: Dictionary, home: float, throw: bool) -> bool:
 	var b := boss(c)
+	if c.vars.has("dbg") and (c.vars.get("dbg") == "all" or (c.vars.get("dbg") == "win" and c.time > float(c.vars.get("from", 0)) and c.time < float(c.vars.get("to", 0)))):
+		print("s%d t=%.2f pos=(%.0f,%.0f) v=(%.0f,%.0f) stun=%s | boss s=%d t=%.2f pos=(%.0f,%.0f) step=%s" % [i, c.time, c.p(i).global_position.x, c.p(i).global_position.y,
+			c.p(i).velocity.x, c.p(i).velocity.y, c.p(i).is_stunned(), b.state, b._t, b.position.x, b.position.y, b.step])
 	if b.state == B_STUNNED or c.won():
 		walk(c, i, 0)
 		return true
@@ -224,7 +562,7 @@ static func summit_tick(c, i: int, st: Dictionary, home: float, throw: bool) -> 
 		if kind == "swoop":
 			walk_toward(c, i, home, 15.0)
 			var ahead: float = (pl.global_position.x - b.position.x) * b._swoop_dir
-			if b.state == B_SWOOP and ahead > 0.0 and ahead < 190.0 and pl.is_on_floor():
+			if b.state == B_SWOOP and ahead > 0.0 and ahead < 330.0 and pl.is_on_floor():
 				walk(c, i, 0)
 				tap(c, i, st, "jump")
 		else:
@@ -234,6 +572,12 @@ static func summit_tick(c, i: int, st: Dictionary, home: float, throw: bool) -> 
 		walk_toward(c, i, home, 15.0)
 	else:
 		walk(c, i, 0)
+	if throw and em._throw_state == T_NONE and em.get_end_position().y > pl.global_position.y + 60.0:
+		# El extremo quedó colgando bajo la repisa (lanzamiento errado): al borde del
+		# hueco para recogerlo sin que se trabe contra la repisa.
+		var edge: float = CURTAIN_L - 21.0 if i == 1 else CURTAIN_R + 21.0
+		if not walk_toward(c, i, edge, 5.0):
+			return false
 	if throw:
 		var target: Vector2 = b.position + Vector2(0, -6)
 		var own_side: bool = target.x < CURTAIN_L - 10.0 if i == 1 else target.x > CURTAIN_R + 10.0
@@ -298,9 +642,10 @@ static func fight(i: int) -> Array:
 	return [["until", func(c): return fight_tick(c, i, st), 150.0]]
 
 static func plan(ctx) -> Dictionary:
-	if ctx.vars.has("idle"):
-		return {"p1": [["wait", 120.0]], "p2": [["wait", 120.0]]}
 	var start: String = ctx.vars.get("start", "")
+	if ctx.vars.has("idle"):
+		var go: Array = [] if start == "" else [["do", func(c): c.level.get_node("BossFight").debug_start(3 if start == "climb" else 4)]]
+		return {"p1": go + [["wait", 120.0]], "p2": [["wait", 120.0]]}
 	var p1: Array = []
 	var p2: Array = []
 	if start == "":
@@ -309,11 +654,14 @@ static func plan(ctx) -> Dictionary:
 	if start == "" or start == "climb":
 		if start == "climb":
 			p1 += [["do", func(c): c.level.get_node("BossFight").debug_start(3)]]
-		p1 += [["wait", 0.5]] + climb(1, ctx)
-		p2 += [["wait", 0.5]] + climb(2, ctx)
+		p1 += [["wait", 0.5]] + climb(1)
+		p2 += [["wait", 0.5]] + climb(2)
 	else:
 		p1 += [["do", func(c): c.level.get_node("BossFight").debug_start(4)], ["wait_floor"]]
 		p2 += [["wait_floor"]]
+	if ctx.vars.has("guardonly"):
+		# Prueba: solo esquivar en la cima (sin marearlo) durante 40 s.
+		return {"p1": p1 + guard(1, 540.0, false), "p2": p2 + guard(2, 740.0, false)}
 	for n in 6:
 		var a := attempt(n, ctx)
 		p1 += a.p1

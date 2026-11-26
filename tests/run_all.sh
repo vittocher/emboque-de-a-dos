@@ -9,7 +9,10 @@ for f in tests/solutions/*.gd; do
 	name=$(basename "$f" .gd)
 	[[ "$name" == moves || "$name" == _* ]] && continue
 	[[ -n "$1" && "$name" != *"$1"* ]] && continue
-	out=$(timeout 120 "$GODOT" --headless --fixed-fps 120 --path . -s tests/play_level.gd -- "res://$f" --timeout=80 2>&1)
+	# Tiempo de juego máximo: 80 s, o el `const TIMEOUT := N` de la solución (el jefe es largo).
+	limit=$(grep -oE '^const TIMEOUT := [0-9]+' "$f" | grep -oE '[0-9]+$')
+	limit=${limit:-80}
+	out=$(timeout $((limit * 2 + 60)) "$GODOT" --headless --fixed-fps 120 --path . -s tests/play_level.gd -- "res://$f" --timeout="$limit" 2>&1)
 	result=$(echo "$out" | grep -E "^RESULT" | head -1)
 	missing=$(echo "$out" | grep -E "^MISSING" | head -1)
 	printf "%-14s %s %s\n" "$name" "${result:-RESULT ERROR}" "$missing"

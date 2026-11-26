@@ -79,6 +79,8 @@ var _hook_sensor: Area2D
 var _hooked: bool = false
 var _hook_position: Vector2 = Vector2.ZERO
 var _rehook_timer: float = 0.0
+var _hook_area: Area2D            # el gancho del que cuelga (o colgó por última vez)
+var _since_unhook: float = 0.0
 
 var _throw_enabled: bool = false
 var _throw_state: ThrowState = ThrowState.NONE
@@ -103,6 +105,7 @@ func _ready() -> void:
 			# Saltar desde la cuerda suelta el gancho (lo decide el jugador).
 			_player.swing_jumped.connect(_unhook)
 			_player.jump_cut.connect(_on_jump_cut)
+			_player.hurt_taken.connect(_on_player_hurt)
 		_end.global_position = _anchor.global_position + Vector2(0, rope_length)
 		_end.anchor_position = _anchor.global_position
 		_end.rope_length = rope_length
@@ -133,6 +136,7 @@ func _physics_process(delta: float) -> void:
 	if _anchor == null or _end == null:
 		return
 	_rehook_timer = maxf(0.0, _rehook_timer - delta)
+	_since_unhook += delta
 	# Antes de _update_length: tomar el extremo exige que la cuerda YA estuviera
 	# al mínimo antes de esta pulsación.
 	if _throw_enabled:
@@ -167,6 +171,8 @@ func _physics_process(delta: float) -> void:
 
 ## Alarga (soltar) o acorta (tirar) la cuerda de forma continua.
 func _update_length(delta: float) -> void:
+	if _controls_locked():
+		return
 	var change := 0.0
 	if _release_used and not Input.is_action_pressed(input_prefix + "_release"):
 		_release_used = false
@@ -210,11 +216,17 @@ func _on_hook_sensor_area_entered(area: Area2D) -> void:
 	# El sensor solo detecta puntos de enganche (por su máscara de colisión).
 	# En la mano no engancha; lanzado sí (es la gracia de lanzar). Recogiendo
 	# tampoco: se lo está trayendo de vuelta.
+	# Un gancho con metadata "rehook_delay" no vuelve a enganchar el mismo extremo
+	# hasta ese rato después de soltarse (al saltar desde la cuerda a la repisa de al
+	# lado, el extremo pasaría de nuevo por el gancho y lo amarraría).
+	if area == _hook_area and _since_unhook < float(area.get_meta(&"rehook_delay", 0.0)):
+		return
 	if not _hooked and _rehook_timer <= 0.0 and not is_held() and not _end.is_attached() \
 			and _throw_state != ThrowState.REELING:
 		if _throw_state == ThrowState.FLYING:
 			_end_flight()
 		_hooked = true
+		_hook_area = area
 		_hook_position = area.global_position
 		Sfx.play(&"hook")
 		# Enganche instantáneo: la cuerda toma el largo actual y el balanceo parte ya.
@@ -226,6 +238,7 @@ func _on_hook_sensor_area_entered(area: Area2D) -> void:
 func _unhook() -> void:
 	_hooked = false
 	_rehook_timer = rehook_cooldown
+	_since_unhook = 0.0
 	if _player != null:
 		_player.detach_swing()
 		# El extremo sale junto al jugador: si quedara quieto en el gancho, la
@@ -259,20 +272,20 @@ func stop_flight() -> void:
 ## lanzar otra vez lo lanza. En vuelo: lanzar lo recoge. Así lanzar sola hace el
 ## ciclo recoger → apuntar → lanzar.
 func _update_throw(delta: float) -> void:
-	var throw_pressed := Input.is_action_just_pressed(input_prefix + "_throw")
+	var throw_pressed := _just_pressed("_throw")
 	match _throw_state:
 		ThrowState.NONE:
-			if Input.is_action_just_pressed(input_prefix + "_pull") and _can_grab():
+			if _just_pressed("_pull") and _can_grab():
 				_grab()
 			elif throw_pressed and _can_reel():
 				_start_reel()
 		ThrowState.HELD:
-			if Input.is_action_just_pressed(input_prefix + "_release"):
+			if _just_pressed("_release"):
 				_drop()
 			elif throw_pressed:
 				_start_aim()
 		ThrowState.AIMING:
-			if Input.is_action_just_pressed(input_prefix + "_release"):
+			if _just_pressed("_release"):
 				_drop()
 			elif throw_pressed:
 				_throw()
@@ -289,6 +302,20 @@ func _update_throw(delta: float) -> void:
 			_update_reel(delta)
 	if is_held():
 		_carry(delta)
+
+## El jugador aturdido (golpeado) tampoco maneja la cuerda.
+func _controls_locked() -> bool:
+	return _player != null and _player.is_stunned()
+
+func _just_pressed(action: String) -> bool:
+	return not _controls_locked() and Input.is_action_just_pressed(input_prefix + action)
+
+## Golpeado mientras apuntaba: pierde la mira (el extremo queda en la mano).
+func _on_player_hurt() -> void:
+	if _throw_state == ThrowState.AIMING:
+		_throw_state = ThrowState.HELD
+		_player.aiming = false
+		queue_redraw()
 
 func _can_grab() -> bool:
 	return not _hooked and not _end.is_attached() and rope_length <= min_length \
@@ -387,7 +414,7 @@ func _update_reel(delta: float) -> void:
 	if _hooked or _end.is_attached():
 		_throw_state = ThrowState.NONE
 		return
-	if Input.is_action_just_pressed(input_prefix + "_release"):
+	if _just_pressed("_release"):
 		_stop_reel(dist)
 		_release_used = true
 		return
