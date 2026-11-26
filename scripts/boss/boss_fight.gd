@@ -59,8 +59,9 @@ enum Phase { INTRO, FIGHT, ESCAPE, CLIMB, SUMMIT, WON }
 @export var climb_spawn_p2: Vector2 = Vector2(810, 400)
 @export var summit_spawn_p1: Vector2 = Vector2(520, -1280)
 @export var summit_spawn_p2: Vector2 = Vector2(760, -1280)
-## Punto del emboque final (el cuenco de la cima): el Tue Tue acosa alrededor.
-@export var summit_center: Vector2 = Vector2(640, -1055)
+## Punto del emboque final (bajo la cortina de la cima, donde cuelgan los extremos):
+## el Tue Tue acosa alrededor.
+@export var summit_center: Vector2 = Vector2(640, -1120)
 
 # Checkpoint alcanzado en esta escena (sobrevive a la recarga por muerte).
 static var _checkpoint: Phase = Phase.FIGHT

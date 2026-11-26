@@ -12,12 +12,11 @@ class_name TueTue
 ##   LANZADO (o muy rápido) que lo toca le quita una vida; sin vidas → defeated.
 ## - FOLLOW (fase 2): vuela arriba de la pantalla mientras la cámara sube.
 ## - HARASS (fase 3, la cima): no deja de atacar. Entre vueltas cortas hace
-##   PICADAS por las repisas (empujan a los jugadores y, con ellos, sacan los
-##   extremos del cuenco), RÁFAGAS (arrastran a los jugadores y soplan los extremos
-##   fuera del cuenco) y CAÍDAS en picada sobre el cuenco (golpean a quien esté en
-##   la ranura y desparraman los extremos). Apenas los dos extremos se acercan, cae
-##   sobre el cuenco. Si le pegan, queda mareado unos segundos: la ventana para
-##   embocar.
+##   PICADAS por las repisas (empujan a los jugadores y, con la cuerda, mueven sus
+##   extremos), RÁFAGAS (arrastran a los jugadores y soplan los extremos) y CAÍDAS en
+##   picada bajo la cortina, donde cuelgan los extremos (golpean a quien esté junto a
+##   la cortina y desparraman los extremos). Apenas los dos extremos se acercan, cae
+##   sobre ellos. Si le pegan, queda mareado unos segundos: la ventana para embocar.
 ## - BEATEN: tras el emboque final se va chillando.
 ##
 ## Diseño ("look"): la cabeza transformada (como en el video de la intro) o el
@@ -83,26 +82,27 @@ const LOOKS := [
 @export var orbit_radius: Vector2 = Vector2(260, 120)
 ## Vuelta entre ataque y ataque (s): corta, casi no da respiro.
 @export var orbit_time: float = 1.6
-## Picadas y ráfagas de la cima: altura respecto del cuenco (a la altura del pecho
-## de quien está en las repisas) y medio ancho del recorrido.
-@export var summit_line_dy: float = -173.0
+## Picadas y ráfagas de la cima: altura respecto del punto del emboque (a la altura
+## del pecho de quien está en las repisas) y medio ancho del recorrido.
+@export var summit_line_dy: float = -108.0
 @export var summit_half_width: float = 320.0
-## Empujón de la picada en la cima: aleja a los jugadores de la ranura (y, con la
-## cuerda, saca su extremo del cuenco) sin tirarlos siempre de las repisas.
+## Empujón de la picada en la cima: aleja a los jugadores de la cortina (y, con la
+## cuerda, a su extremo del otro) sin tirarlos siempre de las repisas.
 @export var summit_knockback: Vector2 = Vector2(420, -200)
 ## Ráfaga de la cima: más corta y suave que la de la arena (las repisas son angostas).
 @export var summit_gust_time: float = 1.8
 @export var summit_gust_push: float = 220.0
-## Caída sobre el cuenco: empujón a quien toque (x hacia afuera del cuenco).
+## Caída sobre el punto del emboque: empujón a quien toque (x hacia afuera).
 @export var dive_knockback: Vector2 = Vector2(420, -260)
 ## Radio en que la caída desparrama los extremos y con qué rapidez salen (px/s).
 @export var blow_radius: float = 260.0
 @export var blow_speed: float = 650.0
-@export var stun_time: float = 5.5
-## Si los dos extremos se acercan a menos de esto (px) cae sobre el cuenco sin
-## esperar a terminar la vuelta (no deja embocar), pero no antes de orbit_min_time.
-@export var react_radius: float = 220.0
-## Aviso antes de caer sobre el cuenco (más corto que el de los otros ataques).
+@export var stun_time: float = 8.0
+## Si los dos extremos se acercan a menos de esto (px) cae sobre ellos sin esperar
+## a terminar la vuelta (no deja embocar), pero no antes de orbit_min_time. Colgando
+## quietos en la cima quedan a ~108 px: reacciona cuando los balancean para juntarlos.
+@export var react_radius: float = 80.0
+## Aviso antes de caer sobre el punto del emboque (más corto que el de los otros ataques).
 @export var dive_telegraph_time: float = 0.55
 @export var orbit_min_time: float = 0.5
 
@@ -265,7 +265,7 @@ func _harass(delta: float) -> void:
 				-170.0 - absf(sin(_orbit_phase)) * orbit_radius.y)
 			_fly_to(want, fly_speed, delta)
 			if _t >= orbit_min_time and _ends_close():
-				# Están por embocar: cae sobre el cuenco ya (fuera del patrón).
+				# Están por embocar: cae sobre el punto del emboque ya (fuera del patrón).
 				_begin_attack({"do": "dive"})
 			elif _t >= orbit_time:
 				_next_harass()
@@ -276,7 +276,7 @@ func _harass(delta: float) -> void:
 				_set_state(State.ORBIT)
 				_screech()
 		State.MOVE:
-			# Yendo a atacar: si los extremos se juntan, cambia de idea y cae al cuenco.
+			# Yendo a atacar: si los extremos se juntan, cambia de idea y cae al punto del emboque.
 			if step.get("do", "") != "dive" and _ends_close():
 				_begin_attack({"do": "dive"})
 			else:
@@ -442,7 +442,7 @@ func _ends_close() -> bool:
 		ends.append(end)
 	return ends.size() == 2 and ends[0].global_position.distance_to(ends[1].global_position) < react_radius
 
-## La caída en la cima: los extremos cerca del cuenco salen volando.
+## La caída en la cima: los extremos cerca del punto del emboque salen volando.
 func _scatter_ends() -> void:
 	Sfx.play(&"gust", 1.3)
 	_feathers.restart()

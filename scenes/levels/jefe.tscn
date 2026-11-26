@@ -5,7 +5,6 @@
 [ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
 [ext_resource type="Script" path="res://scripts/level_rules.gd" id="4_rules"]
 [ext_resource type="PackedScene" path="res://scenes/player_death_zone.tscn" id="5_spikes"]
-[ext_resource type="PackedScene" path="res://scenes/bowl.tscn" id="6_bowl"]
 [ext_resource type="PackedScene" path="res://scenes/boss/tue_tue.tscn" id="7_tuetue"]
 [ext_resource type="Script" path="res://scripts/boss/boss_fight.gd" id="8_fight"]
 [ext_resource type="PackedScene" path="res://scenes/boss/boss_bar.tscn" id="9_bar"]
@@ -169,16 +168,16 @@ position = Vector2(960, -1048)
 size = Vector2(160, 24)
 
 [node name="SummitLeft" parent="." instance=ExtResource("2_block")]
-position = Vector2(526, -1168)
-size = Vector2(192, 24)
+position = Vector2(502, -1168)
+size = Vector2(144, 24)
 
 [node name="SummitRight" parent="." instance=ExtResource("2_block")]
-position = Vector2(754, -1168)
-size = Vector2(192, 24)
+position = Vector2(778, -1168)
+size = Vector2(144, 24)
 
-[node name="Bowl" parent="." instance=ExtResource("6_bowl")]
-position = Vector2(640, -1055)
-width = 150.0
+[node name="SummitCurtain" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, -1335)
+size = Vector2(68, 250)
 
 [node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
 position = Vector2(70, 640)
@@ -199,7 +198,7 @@ position = Vector2(320, -615)
 position = Vector2(960, -615)
 
 [node name="Collectible7" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(640, -1205)
+position = Vector2(640, -1130)
 
 [node name="TueTue" parent="." instance=ExtResource("7_tuetue")]
 position = Vector2(640, -150)
@@ -208,6 +207,6 @@ position = Vector2(640, -150)
 script = ExtResource("8_fight")
 summit_spawn_p1 = Vector2(520, -1280)
 summit_spawn_p2 = Vector2(760, -1280)
-summit_center = Vector2(640, -1055)
+summit_center = Vector2(640, -1120)
 
 [node name="BossBar" parent="UI" instance=ExtResource("9_bar")]

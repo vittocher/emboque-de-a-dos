@@ -8,12 +8,13 @@ const SCENE := "res://scenes/levels/jefe.tscn"
 ##    terminar en el foso de púas.
 ## 2. Subida: con el emboque en la mano (sin cuerda que lo amarre a los escalones)
 ##    sube el zigzag de su lado.
-## 3. Cima: cada uno espera en su lado de la repisa (lejos de la ranura, donde cae
-##    en picada) saltando las picadas y caminando contra las ráfagas, mientras J1 le
-##    lanza el emboque hasta marearlo; mareado, bajan los extremos por la ranura al
-##    cuenco (de a uno, como en "Escalones") y los balancean. Si se despierta antes
-##    de embocar, otro intento (hasta 4).
-## --var=r1=…/r2=… largo de la cuerda al bajar al cuenco (160).
+## 3. Cima: cada uno espera en su repisa (lejos de la cortina, bajo la que cae en
+##    picada) saltando las picadas y caminando contra las ráfagas, y le lanza el
+##    emboque cuando el Tue Tue pasa por su lado (la cortina tapa el otro) hasta
+##    marearlo; mareado, cada uno se pega a la cortina, deja colgar su extremo sobre
+##    el vacío y lo balancea hasta embocar. Si se despierta antes, otro intento.
+## --var=r1=…/r2=… largo de la cuerda al colgar el extremo (120); --var=swing=…
+## cuánto va y vuelve para balancearlo (40).
 ## --var=start=climb|summit empieza directo en esa fase (para probarlas aparte).
 ## Controles: --var=idle=1 (nadie hace nada: el Tue Tue los tira al foso),
 ## --var=nostun=1 (en la cima no lo marean: los desparrama antes de embocar) y
@@ -38,6 +39,9 @@ const T_FLYING := 3
 const T_REELING := 4
 
 const RISE := 120.0
+## Cortina de la cima (x de sus bordes): frena a cada uno junto al hueco.
+const CURTAIN_L := 606.0
+const CURTAIN_R := 674.0
 const FIRST := 500.0
 const STEPS := 14
 
@@ -198,10 +202,10 @@ static func climb(i: int, ctx) -> Array:
 	out += C.climb_box(i, s, x, 385, 480, summit - 40.0)
 	return out
 
-## Cima, un tick: en su lugar ([param home], lejos de la ranura, donde cae en
+## Cima, un tick: en su lugar ([param home], lejos de la cortina, bajo la que cae en
 ## picada), salta las picadas y camina contra las ráfagas; con [param throw] además
-## le lanza el emboque cuando está a tiro (dando vueltas o avisando la caída). True
-## cuando el Tue Tue queda mareado.
+## le lanza el emboque cuando está a tiro y de su lado de la cortina (dando vueltas o
+## avisando la caída). True cuando el Tue Tue queda mareado.
 static func summit_tick(c, i: int, st: Dictionary, home: float, throw: bool) -> bool:
 	var b := boss(c)
 	if b.state == B_STUNNED or c.won():
@@ -232,8 +236,9 @@ static func summit_tick(c, i: int, st: Dictionary, home: float, throw: bool) -> 
 		walk(c, i, 0)
 	if throw:
 		var target: Vector2 = b.position + Vector2(0, -6)
+		var own_side: bool = target.x < CURTAIN_L - 10.0 if i == 1 else target.x > CURTAIN_R + 10.0
 		var ok: bool = (b.state == B_ORBIT or (kind == "dive" and b.state in [B_MOVE, B_TELEGRAPH])) \
-			and pl.is_on_floor() and reach(c, i, target) < 300.0
+			and own_side and pl.is_on_floor() and reach(c, i, target) < 300.0
 		throw_cycle(c, i, st, target, ok)
 	return false
 
@@ -241,46 +246,52 @@ static func guard(i: int, home: float, throw: bool) -> Array:
 	var st := {}
 	return [["until", func(c): return summit_tick(c, i, st, home, throw), 40.0]]
 
-## Balancea el extremo (va y vuelve) mientras el Tue Tue sigue mareado; si se
-## despierta antes de embocar, deja de hacerlo (el siguiente intento lo esquiva).
+## Balancea el extremo mientras el Tue Tue sigue mareado: va y vuelve entre home y
+## home - back al RITMO del péndulo (un tramo por medio período, según el largo de
+## la cuerda; como el paso "swing" del bot del equipo). Con los dos sincronizados
+## (sync antes) los extremos se juntan bajo la cortina. Si el Tue Tue se despierta
+## antes de embocar, deja de hacerlo (el siguiente intento lo esquiva).
 static func jiggle_stunned(i: int, home: float, back: float) -> Array:
-	var st := {"leg": 0, "t": 0.0}
+	var st := {}
 	return [["until", func(c):
 		if c.won() or boss(c).state != B_STUNNED:
 			walk(c, i, 0)
 			return true
-		st.t += 1.0 / 120.0
-		var target := home - back if st.leg == 0 else home
-		if walk_toward(c, i, target, 3.0) or st.t > 0.8:
-			st.leg = 1 - st.leg
-			st.t = 0.0
-		return false, 8.0]]
+		if not st.has("leg"):
+			st.leg = 0
+			st.start = c.time
+		walk_toward(c, i, home - back if st.leg % 2 == 0 else home, 4.0)
+		var half: float = PI * sqrt(c.e(i).rope_length / 980.0)
+		if c.time - st.start >= half:
+			st.start += half
+			st.leg += 1
+		return false, 10.0]]
 
-## Recoge el extremo a la mano, se para junto a la ranura (mirando hacia ella, así
-## el extremo en la mano queda justo encima: va 8 px adelante), lo suelta (cae por
-## la ranura y cuelga al mínimo), lo baja al cuenco y se corre un poco. De a uno,
-## para que no se traben en la ranura.
+## Recoge el extremo a la mano, camina hasta la cortina (que lo frena con la mano
+## más allá del borde de su repisa), lo suelta (cuelga libre sobre el vacío) y le da
+## el largo para que quede a la altura del otro.
 static func drop(i: int, ctx) -> Array:
 	var d := 1 if i == 1 else -1
-	return hold_end(i) + [["walk_to", 640.0 - d * 8.0, 1], ["tap", "release"], ["wait", 0.4],
-		["rope", ctx.var_f("r%d" % i, 160)], ["wait", 0.5], ["walk_to", 640.0 - d * ctx.var_f("back", 30), 3]]
+	return hold_end(i) + [["press", "right" if d > 0 else "left"], ["wait", 0.35],
+		["until", func(c): return absf(c.p(i).get_real_velocity().x) < 5.0, 1.5],
+		["release", "right" if d > 0 else "left"], ["tap", "release"], ["wait", 0.3],
+		["rope", ctx.var_f("r%d" % i, 120)], ["wait", 0.3]]
 
-## Un intento en la cima: esperan cada uno en su lugar esquivando mientras J1 le
-## pega (queda mareado), bajan los extremos al cuenco de a uno y los balancean
-## mientras dura el mareo. Si se despierta antes, otro intento.
+## Un intento en la cima: esperan cada uno en su repisa esquivando y pegándole
+## cuando pasa por su lado (queda mareado), cuelgan los extremos junto a la cortina y
+## los balancean mientras dura el mareo. Si se despierta antes, otro intento.
 static func attempt(n: int, ctx) -> Dictionary:
 	var t := "_%d" % n
+	var sw: float = ctx.var_f("swing", 40)
 	if ctx.vars.has("nostun"):
-		# Control: sin marearlo, bajan los extremos apenas termina un ataque.
+		# Control: sin marearlo, cuelgan los extremos apenas termina un ataque.
 		var calm := func(c): return boss(c).state == B_ORBIT
-		return {"p1": guard(1, 560.0, false).slice(0, 0) + [["until", calm, 10.0]] + drop(1, ctx) \
-				+ [["sync", "uno" + t], ["jiggle", 610.0, -10, 6], ["sync", "fin" + t]],
-			"p2": [["sync", "uno" + t]] + drop(2, ctx) + [["jiggle", 670.0, 10, 6], ["sync", "fin" + t]]}
-	var p1_guard: Array = guard(1, 560.0, true)
-	return {"p1": p1_guard + [["sync", "mareado" + t]] + drop(1, ctx) \
-			+ [["sync", "uno" + t]] + jiggle_stunned(1, 610.0, -10) + [["sync", "fin" + t]],
-		"p2": guard(2, 720.0, false) + [["sync", "mareado" + t], ["sync", "uno" + t]] \
-			+ drop(2, ctx) + jiggle_stunned(2, 670.0, 10) + [["sync", "fin" + t]]}
+		return {"p1": [["until", calm, 10.0]] + drop(1, ctx) + [["sync", "uno" + t], ["jiggle", CURTAIN_L - 20.0, sw, 6], ["sync", "fin" + t]],
+			"p2": [["until", calm, 10.0]] + drop(2, ctx) + [["sync", "uno" + t], ["jiggle", CURTAIN_R + 20.0, -sw, 6], ["sync", "fin" + t]]}
+	return {"p1": guard(1, 540.0, true) + [["sync", "mareado" + t]] + drop(1, ctx) \
+			+ [["sync", "uno" + t]] + jiggle_stunned(1, CURTAIN_L - 20.0, sw) + [["sync", "fin" + t]],
+		"p2": guard(2, 740.0, true) + [["sync", "mareado" + t]] + drop(2, ctx) \
+			+ [["sync", "uno" + t]] + jiggle_stunned(2, CURTAIN_R + 20.0, -sw) + [["sync", "fin" + t]]}
 
 static func fight(i: int) -> Array:
 	var st := {}
