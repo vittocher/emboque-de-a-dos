@@ -11,7 +11,7 @@ const M := preload("res://tests/solutions/moves.gd")
 static func side(i: int, d: int, ctx) -> Array:
 	var x := func(v: float) -> float: return v if d == 1 else 1600.0 - v
 	var dir := "right" if d == 1 else "left"
-	return [["wait_floor"], ["walk_to", x.call(ctx.var_f("tx", 120)), 3], ["wait", 0.5]] 		+ M.throw_at(i, d, ctx.var_f("deg", 53)) 		+ [["until", func(c): return c.hooked(i), 1.5], ["rope", ctx.var_f("len", 100), 2], ["pump", ctx.var_f("pump", 1.5)],
+	return [["walk_to", x.call(ctx.var_f("tx", 120)), 3], ["wait", 0.5]] 		+ M.throw_at(i, d, ctx.var_f("deg", 53)) 		+ [["until", func(c): return c.hooked(i), 1.5], ["rope", ctx.var_f("len", 100), 2], ["pump", ctx.var_f("pump", 1.5)],
 		["until", func(c): return c.p(i)._swing_omega * d < -0.3, 4.0],
 		["until", func(c): return c.p(i)._swing_omega * d > 0.0 and (c.p(i).global_position.x - x.call(ctx.var_f("rx", 330))) * d > 0.0, 6.0],
 		["tap", "jump"], ["press", dir],
@@ -30,6 +30,6 @@ static func plan(ctx) -> Dictionary:
 			["until", func(c): return pingpong(c.e(2)._aim_time * c.e(2).aim_sweep_speed_deg, c.e(2).aim_max_angle_deg) >= ctx.var_f("aim", 4) - 0.5, 3.0],
 			["tap", "throw"], ["wait", 0.6], ["until", func(c): return c.won(), 0.9]]
 	return {
-		"p1": side(1, 1, ctx) + [["hang", 711.0], ["rope", ctx.var_f("r", 110)], ["wait", 1.0], ["sync", "blanco"]],
-		"p2": side(2, -1, ctx) + [["walk_to", 902.0, 3], ["sync", "blanco"], ["wait", 4.0]] + throws,
+		"p1": [["wait_floor"], ["rope", 60, 1], ["wait", 0.3], ["tap", "pull"], ["until", func(c): return c.e(1)._throw_state == 1, 1.0]] + M.path(1, [["go", 130], ["go", 35], ["go", 130], ["go", 35], ["go", 125]]) + [["tap", "release"], ["wait", 0.5]] + side(1, 1, ctx) + [["hang", 711.0], ["rope", ctx.var_f("r", 110)], ["wait", 1.0], ["sync", "blanco"]],
+		"p2": [["wait_floor"], ["rope", 60]] + M.path(2, [["go", 1320]]) + [["rope", ctx.var_f("long", 190)], ["wait", 0.3], ["walk_to", 1275.0, 3], ["wait", 0.3], ["press", "right"], ["until", func(c): return c.p(2).global_position.x > ctx.var_f("sx", 1318), 2.0], ["leap_to", 1480.0], ["wait_floor"]] + [["rope", 60]] + M.path(2, [["go", 1530], ["go", 1520]]) + side(2, -1, ctx) + [["walk_to", 902.0, 3], ["sync", "blanco"], ["wait", 4.0]] + throws,
 	}

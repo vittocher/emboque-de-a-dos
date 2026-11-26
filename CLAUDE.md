@@ -51,13 +51,10 @@ Las acciones siguen el patrón `<prefix>_<accion>`: `_left`, `_right`, `_jump`, 
 scenes/
   main.tscn            Nivel 1: cámara fija (640,360), suelo, 2 plataformas, muro central, 2 HookPoint,
                        WinManager, CloseupManager, 2×(Player+Emboque), UI/WinLabel, fondo y arte del terreno.
-  level_2.tscn         Nivel 2, hecho según un boceto del equipo (escala x·0.64, y·0.473): J1 arriba a la
-                       izquierda, J2 arriba a la derecha, muro central (hasta y=-400: no se salta por arriba) con
-                       una plataforma media a la izquierda (con púas encima: matan solo al jugador) y una "T"
-                       abajo que lo cruza; bloque de fuego flotante a la derecha y piso de fuego (matan a ambos);
-                       2 HookPoint (bajo la plataforma media y a la izquierda de la plataforma de J2),
-                       6 coleccionables + ScoreManager/ScoreLabel. Se emboca con los extremos colgando bajo el
-                       muro, parados cada uno en su mitad de la T.
+  level_2.tscn         "La T" (boceto del equipo; rehecho sobre level_base_large conservando la T): J1 sube en zigzag a la
+                       plataforma media, se engancha a un gancho bajo su borde y se balancea hasta la T; J2 sube en
+                       zigzag, cruza un puente de caca y pasa con su gancho bajo una cortina. Se emboca con los
+                       extremos colgando bajo el muro, parados cada uno en su mitad de la T.
   level_3.tscn         Nivel 3: cada jugador sube por 3 escalones de su lado hasta la cima, cae y se engancha a
                        un HookPoint (2, uno por lado) para aterrizar en la plataforma central, donde se emboca.
                        Piso de fuego; 8 coleccionables.
@@ -676,16 +673,29 @@ Leer antes de diseñar o cambiar un nivel.
     JUGADOR tocó al ganar (el fondo de un foso puede quedar en la lista). Piezas que funcionan:
     - **Erizo** (peligro_1): un gancho rodeado de púas. El extremo entra; el jugador se pincha si recoge la cuerda o pasa por
       encima.
-    - **Púas con caca colgando** (peligro_3, lanzar_2, lanzar_4, placa_1, placa_2, movil_2): el jugador salta A TRAVÉS de la caca
+    - **Púas con caca colgando** (peligro_3, lanzar_2, lanzar_4, placa_1, placa_2, movil_2, caja_1): el jugador salta A TRAVÉS de la caca
       y el extremo tiene que ir abajo, arrastrando por las púas: cuerda ≥ 150. Caca hasta 70 px sobre el piso (retraída, el
       extremo sube con el jugador y la toca); púas ALTAS (45 px, escala y 1,5) de ~60 px de ancho y despegue a ≥ 65 px. Con púas
       bajas (24), un saltito corto las pasaba con la cuerda retraída.
     - **Puente de caca** (peligro_3, placa_1, placa_2): tabla flotante tapada de caca, más larga que un salto; antes, una ranura
       de 36 px por donde baja el extremo, que cruza por DEBAJO (cuerda ~125; la cuerda atraviesa la madera).
-    - **Cortina baja** (level_4, placa_2): caca colgando hasta ~50 px del piso: se cruza caminando, con el extremo arrastrando;
+    - **Puente largo con dos ranuras** (placa_4): el extremo baja por una y sale por la otra (acortando parado sobre ella).
+    - **Botón de techo** (viento_4): una placa boca abajo (`rotation` 180°, `latch`) que solo aprieta el extremo volando en una
+      corriente: hay que soltar la cuerda justa. Cada botón abre la compuerta del otro.
+    - **Gancho bajo el borde** (level_2): se engancha bajando el extremo por el borde de la repisa, sin saltar.
+    - **Púas que el extremo arrastra** (movil_4, movil_3): un carro sobre un piso de púas; la sopaipilla está entre ellas.
+    - **Cortina baja** (level_4, placa_2, lanzar_3, movil_3, movil_4, viento_1): caca colgando hasta ~50 px del piso: se cruza caminando, con el extremo arrastrando;
       saltar o llegar con el extremo en el aire mata.
-    - **Extremo en la mano** (lanzar_1, lanzar_2, lanzar_4): caca en un pasillo de techo bajo o tapando islas enteras.
+    - **Extremo en la mano** (lanzar_1, lanzar_2, lanzar_4; bajando un pozo: lanzar_3, final): caca en un pasillo de techo bajo o
+      tapando islas enteras.
     - **Nicho de púas** (lanzar_4) y **botón entre púas** (placa_1): lo alcanza solo el extremo.
+    - **Botón al fondo** (placa_3 entre púas, movil_1 en un pedestal en el fuego): el extremo baja con la cuerda larga desde el
+      BORDE de una isla (apoyado en ella no cae) hasta una placa `latch` que abre una compuerta del mismo jugador. Placa normal
+      (~60 px) con púas bajas encima (escala y 0,5) para que el jugador no se pare en ella: en una ranura de 36 px el extremo,
+      que baja balanceándose, cae al lado. En movil_1, si no recoge la cuerda antes de subir a la plataforma, el extremo se quema.
+    - **Escalones sobre el pasillo** (placa_3, J1): con el extremo en el pasillo de abajo, subir un escalón de 140 pide soltar
+      cuerda (si no, el extremo queda contra el techo del pasillo y amarra al jugador); antes de bajar, que el extremo quede
+      pasado de la caca.
     - El **fuego** queda para lo que exige cuidar a los dos (cuerda corta, saltos justos, la meta).
 22. **Pensar con qué largo de cuerda llega el jugador.** Casi siempre llega con la cuerda retraída (es lo más cómodo): un tramo
     que se resuelve retraído es redundante (pasó en movil_2: plataformas sobre caca). Para que haya una decisión, el tramo
@@ -697,6 +707,11 @@ Leer antes de diseñar o cambiar un nivel.
     recorrido que una escalera sola.
 26. **Nada que el jugador tenga que saber de memoria:** el salto no depende de cómo esté el emboque (antes, apoyado, pesaba
     menos y se saltaba hasta 100 px más). Si una regla así reaparece, sacarla o enseñarla.
+27. **Cada relevo tiene que ser el único camino:** si al borrar el vehículo que mueve el compañero se llega igual (cayendo, por
+    ejemplo), la placa sobra. Pasó en movil_3 (J2 se dejaba caer) y con el gancho de level_2 (un salto que cae 300 px avanza
+    ~450: la cortina tiene que tapar toda esa caída). Se prueba con `monkey.gd --remove=...`.
+28. **Las metas aprobadas no se tocan al rehacer un recorrido:** se conservan las medidas exactas y se agrega el trayecto antes
+    (otra sala, un pozo, la parte alta), con una pared entre ambos.
 
 ### El salto (medidas para diseñar)
 
@@ -725,7 +740,7 @@ la física: personajes, saltos, cuerdas y magnetismo miden lo mismo en px del mu
 51 px en vez de 64). El closeup compensa (`max_zoom` 2,5), así el emboque se ve igual de grande.
 - **Solo en los niveles que lo necesitan**; los que introducen algo simple quedan en 1280×720. Son los dos únicos
   tamaños: con 0,7 el palito casi no se ve.
-- Hoy: todos los del mapa menos tronco_1..4, level_2, movil_3 y movil_4.
+- Hoy: todos los del mapa menos tronco_1..3.
 - Coordenadas: centro (800, 450); espejo = `1600 - x`; `FallZone` en (800, 1010) con escala (1.25, 1).
 - El código no debe asumir 1280×720: usar `LevelFlow.level_size(get_tree())` (mundo) o el viewport (UI).
 
@@ -745,13 +760,13 @@ Las metas se están rehaciendo para que los extremos **cuelguen libres** y haya 
 | Tipo | Nivel | Cómo |
 |---|---|---|
 | Balanceo | tronco_3 | dos islas, hueco 130, cortina al medio |
-| El alambre | peligro_2 | extremos por dentro de un pasillo: largo para el diente, corto para la caca que está pegada a él, largo para los escalones; techo bajo para no saltar los montones |
+| El alambre | peligro_2 | extremos por dentro de un pasillo: largo para el diente, corto para el fuego que está pegado a él, largo para los escalones; techo bajo para no saltar las llamas (antes caca: el jugador nunca baja al pasillo, así que es fuego) |
 | Voladizo | caja_2 | hueco 215: asomar la caja por el borde (10–44 px; si se pasa, cae y reaparece). Antes, "La mudanza": tres cajas (una chica y dos grandes), J1 le bota dos a J2 (tapa un foso + escalón) y se guarda una |
-| Trapecio | placa_4 | UN gancho alto al medio, sobre fuego, con un muro corto encima: los dos saltan a él y se embocan en el aire |
+| Trapecio | placa_4 | UN gancho alto al medio, sobre fuego, con un muro corto encima: los dos saltan a él y se embocan en el aire. Ganchos a escala 2 e islas a 190 px del gancho (antes 238): se engancha saltando desde la mitad de la isla, no solo del borde |
 | Cortina móvil | movil_3 | `MovingPlatform` vertical de 16 px que sube y baja entre los extremos; repisas flotantes (sin muro debajo) |
 | Contratiempo | movil_4 | una plataforma por jugador, al revés |
 | Tiro al blanco | lanzar_3 | repisas de 260 px (dos lanzamientos a ganchos por lado); islas a distinta altura: J1 cuelga la campana (cuerda 80–110), J2 le lanza el palito |
-| Volantín | viento_1 | (antes, dos saltos con chorros) columna de 84 px + viento ancho (360, 1600, `player_factor` 0): péndulos al revés |
+| Volantín | viento_1 | (antes, dos saltos con chorros) columna de 74 px (antes 84: costaba; con 60–66 emboca uno solo, sin balancearse) + viento ancho (360, 1600, `player_factor` 0): péndulos al revés |
 | Correo aéreo | viento_3 | (antes, chorros y vientos en contra en ráfagas) el viento sube la campana de J1; J2 baja el palito desde arriba (hay que hallar los largos) |
 | Desnivel | tronco_2, caja_3 | manos a alturas distintas: igualar los extremos con el largo de la cuerda |
 | Ventana | tronco_4 | muro de 60 con un agujero de 90 px; ranura de 36 entre repisa y muro (pasa el extremo, no el jugador) |
@@ -770,29 +785,39 @@ Las metas se están rehaciendo para que los extremos **cuelguen libres** y haya 
 
 ### Recorridos (qué hace cada lado)
 
-Metas aprobadas con gente. Recorridos: 13 rehechos tras las tandas 2 y 3; tras el siguiente feedback ("el tipo de peligro da lo
-mismo", "muy fácil") se rehicieron de nuevo los marcados con *, y todos se ajustaron al salto más bajo:
+Metas aprobadas con gente. Los recorridos sin * también (algunos tras rehacerse dos o tres veces por "el tipo de peligro da lo
+mismo", "muy fácil" o "trivial"). Los marcados con * son los últimos rehechos y **falta probarlos con gente**:
 
 | Nivel | J1 | J2 |
 |---|---|---|
-| peligro_1 * | baja por un pozo, cruza colgado de un ERIZO y sube | sube en zigzag y cruza con su erizo hasta la repisa |
-| peligro_3 * | islas sobre fuego (corta) y salto a través de una caca colgante (larga) | brasa (corta) → púas con caca colgando (larga) → puente de caca (extremo por debajo) |
-| caja_1 | salta su caja (parte del lado equivocado), la empuja y sube 5 islas | igual, pero su caja TAPA púas; 6 islas |
+| peligro_1 | baja por un pozo, cruza colgado de un ERIZO y sube | sube en zigzag y cruza con su erizo hasta la repisa |
+| peligro_3 | islas sobre fuego (corta) y salto a través de una caca colgante (larga) | brasa (corta) → púas con caca colgando (larga) → puente de caca (extremo por debajo) |
+| caja_1 * | púas con caca colgando (larga); ESCALERA DE CAJAS: la grande bajo la repisa contra el muro de 215 y después bota la chica encima (al revés no hay arreglo); 5 islas | pasillo de techo bajo con zanja de fuego: la caja grande la tapa y la chica pasa encima hasta el muro; 5 islas con brasa y púas |
 | caja_2 | bota dos cajas y se guarda una | tapa el foso, escalón y 6 pisos |
 | caja_3 | 6 islas hasta sus cajas, bota la chica, sube con la grande | piedra de paso y escalera de 8 pisos sobre púas |
-| level_4 * | piso de arriba: caja, islas con brasa | piso de abajo: caja, islas con púas, túnel con cortina de caca bajo la meta, zigzag |
-| lanzar_1 * | sube islas sobre púas y cruza un pasillo de caca con el extremo EN LA MANO | sube 5 islas (dos tapadas de caca) con el extremo en la mano |
-| lanzar_2 * | púas con caca colgando (larga) y brasa (corta), columpio | repisas, una tapada de caca y de techo bajo (en la mano), columpio |
-| lanzar_4 * | púas con caca colgando, pasillo de caca (en la mano), brasa; lanza por la ranura → puerta de J2 | repisas; lanza por un nicho de púas → puerta de J1 |
-| placa_1 * | sube 8 pisos hasta su botón (al final, caca colgante) y baja por otro pozo | sube 6 pisos, puente de caca, salta el foso; su botón, entre púas, lo aprieta el extremo |
-| placa_2 * | sube 7 pisos, púas con caca colgando; foso del peso muerto | puente de caca, púas, cortina baja; foso del peso muerto |
-| placa_3 | arriba, lleva la campana por el pasillo del medio (caca, placas, compuerta) | abajo, púas y compuertas que le abre la campana; su placa abre la del pasillo; sube 7 islas |
-| movil_1 | ascensor que termina en púas: bajarse a tiempo; segundo ascensor | plataforma en diagonal sobre caca alta; ascensor con púas a los lados |
-| movil_2 * | plataforma, ascensor, y otra plataforma desde la que hay que saltar púas con caca colgando (larga) | púas con caca colgando (larga) y plataforma que pasa por dos llamas: saltarlas a tiempo (corta) |
+| level_4 | piso de arriba: caja, islas con brasa | piso de abajo: caja, islas con púas, túnel con cortina de caca bajo la meta, zigzag |
+| lanzar_1 | sube islas sobre púas y cruza un pasillo de caca con el extremo EN LA MANO | sube 5 islas (dos tapadas de caca) con el extremo en la mano |
+| lanzar_2 | púas con caca colgando (larga) y brasa (corta), columpio | repisas, una tapada de caca y de techo bajo (en la mano), columpio |
+| lanzar_4 | púas con caca colgando, pasillo de caca (en la mano), brasa; lanza por la ranura → puerta de J2 | repisas; lanza por un nicho de púas → puerta de J1 |
+| placa_1 | sube 8 pisos hasta su botón (al final, caca colgante) y baja por otro pozo | sube 6 pisos, puente de caca, salta el foso; su botón, entre púas, lo aprieta el extremo |
+| placa_2 | sube 7 pisos, púas con caca colgando; foso del peso muerto | puente de caca, púas, cortina baja; foso del peso muerto |
+| placa_3 * | arriba, dos escalones (soltar cuerda para subir), lleva la campana por el pasillo del medio (caca, placas, compuerta) | abajo, púas y compuertas que le abre la campana; su placa abre la del pasillo; sube en zigzag y a media subida baja el extremo a un botón entre púas que abre su compuerta |
+| movil_1 * | ascensor que termina en púas: bajarse a tiempo; segundo ascensor hasta media altura, isla con púas y salto a la repisa | baja dos islas; desde el borde de la segunda baja el extremo a un botón en el fuego (larga) que abre su compuerta; recoge la cuerda y cruza en la plataforma sobre el fuego y la caca (corta); ascensor con púas a los lados |
+| movil_2 | plataforma, ascensor, y otra plataforma desde la que hay que saltar púas con caca colgando (larga) | púas con caca colgando (larga) y plataforma que pasa por dos llamas: saltarlas a tiempo (corta) |
+| tronco_2 * | sube 5 islas (las primeras sobre suelo: caer no mata) | baja 3 islas anchas a un piso seguro, pasa bajo la cortina y sube 2 |
+| tronco_4 | sube 5 islas en zigzag, gancho | cae por un pozo, pasa bajo el muro, sube 5, gancho |
+| level_2 | zigzag con púas y caca colgando (larga), gancho bajo el borde | zigzag de 7, puente de caca, gancho bajo la cortina |
+| lanzar_3 | baja un pozo con caca (en la mano), dos lanzamientos | cortina baja y púas con caca colgando (larga), dos lanzamientos |
+| placa_4 * | púas con caca colgando (larga), islas sobre brasas (corta), gancho (más grande) | puente largo de caca con dos ranuras, gancho (más grande) |
+| movil_3 | placa (J2 cruza); sube con la de J2; islas y cortina baja; placa | carro sobre púas (techo bajo), placa, púas con caca (larga), escalones |
+| movil_4 | carro sobre púas, cortina baja, púas con caca colgando (larga), ascensores | ascensor con púas en las paredes, púas con caca (larga), brasa (corta), ascensores |
+| viento_1 | chorro con púas en el techo, púas con caca (larga), chorro en ráfagas | brasa contra el viento, cortina baja, púas con caca (larga), chorro |
+| viento_4 | botón de techo (abre a J2), dos ganchos con viento | pozo con botón de techo (abre a J1), dos ganchos con viento |
+| final | púas con caca (larga), lanzar, columpio | pozo de caca (en la mano), brasa, chorro en ráfagas |
 
-Se **cruzan** (uno pasa por encima del otro) en level_4 y placa_3. **Falta probar con gente** los * y el salto nuevo en todos.
-Siguen simétricos: movil_3, movil_4, placa_4, viento_1, viento_4 y el final (aprobados tal cual). La meta de lanzar_1 es menos
-intuitiva que el resto.
+Se **cruzan** (uno pasa por encima del otro) en level_4 y placa_3. tronco_1 volvió a su versión original (caminar hacia el
+muro): un recorrido le quitaba lo de nivel introductorio. Sin tocar: tronco_3 y viento_2 ("excelente"), peligro_2 (solo la
+caca pasó a fuego), caja_2, caja_3 y viento_3. La meta de lanzar_1 es menos intuitiva que el resto.
 
 ### Pantalla de victoria y highscore (`victory.gd` + `score_board.gd`)
 
@@ -879,7 +904,7 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **Scripts de test con `-s` (extienden `SceneTree`): no nombrar clases del proyecto que dependan de autoloads** (`WinManager`, `Emboque`, `RopeEnd`, `PushBox`…, ni en tipos ni en `is`): el script se compila antes de que existan los autoloads y falla con "Identifier not found: Sfx/ScoreBoard". Tipar genérico (`Node`, `RigidBody2D`) y acceder a las propiedades por nombre; instanciar el nivel en `_initialize()` (no en `_init()`).
 - **En tests, aislar los extremos de la cuerda:** `emboque.set_physics_process(false)` + `extremo.constrained = false` (+ `gravity_scale = 0`) los deja como cuerpos libres para medir fuerzas; desactivar también el `CloseupManager` (toca `Engine.time_scale`).
 - **En tests, teletransportar a un jugador lejos de su extremo no sirve:** en el mismo tick `_limit_player` lo tira de vuelta hacia el extremo (antes de que la física vea el solapamiento). Mover también el extremo al lado.
-- **Diseño: un gancho con el jugador parado arriba lo arrastra** — enganchado en el suelo, al acortar la cuerda `_limit_player` lo lleva hacia el punto sobre el gancho. Si hay un peligro entre el jugador y ese punto (las púas del Nivel 2), el jugador muere al tirar. Dejar el gancho a un lado del peligro (por eso el gancho izquierdo del Nivel 2 está en x=320 y no en 342 como en el boceto).
+- **Diseño: un gancho con el jugador parado arriba lo arrastra** — enganchado en el suelo, al acortar la cuerda `_limit_player` lo lleva hacia el punto sobre el gancho. Si hay un peligro entre el jugador y ese punto (las púas del Nivel 2), el jugador muere al tirar. Dejar el gancho a un lado del peligro (pasaba en la primera versión de level_2).
 - **Una tecla que hace una acción puntual no debe seguir con su acción continua mientras se mantiene:** `soltar` deja el extremo *y* alarga la cuerda; sin `_release_used`, al dejarlo la cuerda se alargaba unos px y había que tirar dos veces para volver a tomarlo.
 - **Al cargar una escena, los controles dentro de contenedores están un cuadro en (0,0) antes del layout:** Godot calcula el hover con esos rects y un botón puede quedar "con el mouse encima" sin estarlo (pasó con el botón Ajustes del menú al venir de la intro, sobre todo en web, donde el mouse no se ha movido). `boton_madera.gd` llama `get_viewport().update_mouse_cursor_state()` tras el primer cuadro para re-sincronizar el hover.
 - **El extremo que nace (o queda) DEBAJO de la plataforma donde está el jugador lo amarra:** la cuerda atraviesa
@@ -931,6 +956,26 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **Un ascensor termina 1 px MÁS ARRIBA que la repisa y parte 2 px más abajo que la de salida:** con 2 px de escalón en
   contra, el jugador se queda pegado.
 - **Un extremo apoyado donde baja un ascensor queda debajo de él:** esperarlo ~80 px atrás.
+- **Al aparecer, la mano está 20 px hacia el centro de la pantalla:** con una pared a menos de ~35 px de ese lado, el extremo nace
+  dentro de ella y queda al otro lado (tronco_4).
+- **El extremo largo que cuelga por el borde de una isla se mete debajo y amarra al jugador:** antes de un salto "largo", que el
+  extremo quede arriba (o que debajo no quepa).
+- **Un extremo rueda hasta la placa aunque el jugador espere al lado:** un borde de 16 px entre los dos (movil_3).
+- **Una plataforma horizontal entre dos repisas:** 2 px bajo la de salida y 1 px sobre la de llegada; quien espera en la de
+  llegada no puede pisarla o se lo lleva (dejarle ≥ 45 px).
+- **El péndulo al revés (extremo en una corriente) oscila ±60 px:** la corriente tiene que ser más ancha que eso (si sale, cae) y
+  nada de caca al lado.
+- **Un gancho en el que se entra corriendo necesita ~170 px de repisa:** con menos, el extremo aún viene colgando del otro lado y
+  pasa por arriba; subir el gancho (tronco_4) o engancharlo bajando la cuerda (level_2).
+- **Saltar bajo una repisa a < 180 px del piso** da un cabezazo: el salto se corta y el extremo sale disparado hacia arriba.
+- **Una caja que entra a una zanja empujada por otra caja se traba** contra la pared de enfrente (la de atrás la aprieta y el
+  roce la sostiene): la que tapa la zanja se empuja SOLA. Y la zanja tiene que ser ~30 px más ancha que la caja (100 en 130), o
+  pasa derecho y queda montada en el borde.
+- **Al caer de la punta interior de la repisa de la meta, un jugador se desvía ~350 px** antes de tocar el piso: cualquier
+  superficie del otro lado a ese alcance le deja cruzar (pasaba en la caja_1 vieja). Muros guardia bajo los bordes de afuera
+  del hueco (caja_1: `GuardL` / `GuardR`, de 480 hacia abajo).
+- **Una isla sobre el camino de un salto corta el salto** aunque no esté justo encima del despegue: revisar el arco completo
+  (caja_1: la isla de arriba frenaba el salto entre las dos de abajo).
 - **Crear un nivel (en tests) dentro del paso de física deja el extremo en el origen** y arrastra al jugador: esperar un
   `process_frame`.
 - **Dos extremos en el mismo `HookPoint` se embocan** (es el trapecio de placa_4). No poner un gancho al alcance de los
@@ -1033,7 +1078,8 @@ Pendiente:
 - **Imágenes en inglés definitivas** (`assets/ui/en/portada.png`, `pause_menu.webp`): hoy son el arte original
   con el texto reescrito por código; diseño puede reemplazarlas con el mismo nombre.
 - **Niveles del equipo fuera del mapa** (`main`, `level_3`): corregir el inicio (ver Lecciones) si se quieren sumar.
-- **Recorridos:** probar con gente los marcados con * y el salto nuevo (ver "Recorridos"). Los niveles fuera del mapa (`main`,
+- **Recorridos:** probar con gente los marcados con * (ver "Recorridos"): caja_1, placa_3 y movil_1 rehechos, tronco_2 y
+  placa_4 más fáciles. Los niveles fuera del mapa (`main`,
   `level_3`, `test_*`) no se ajustaron al salto más bajo.
 - **Tráiler:** tronco_3, peligro_2, caja_2, lanzar_3, placa_4, movil_3, viento_1, viento_3 y casi todos los demás cambiaron (regrabar). Los `start` de los clips en `trailer/edit.py` son tiempos fijos del bot; al regrabar hay que revisarlos (p. ej. `level_4` ahora emboca a los ~20 s de juego; antes, ~14).
 - **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos.

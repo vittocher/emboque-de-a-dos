@@ -311,3 +311,36 @@ movil_2 se gana con 11 de 16 combinaciones de vaivén (40/55 px, cuerda 170/200,
   solo con un salto medio justo; con 220 se pasa.
 - **Bot** 29/29; **controles** OK; **mono** (500 s × 65, también con saltos cortos): sin atajos, salvo viento_4 sin ráfagas (embocan
   cayendo los dos, por azar; ya pasaba).
+
+## Recorridos de los 11 niveles que faltaban (tronco_1, 2 y 4, level_2, lanzar_3, placa_4, movil_3 y 4, viento_1 y 4, final)
+
+- **Bot** 29/29. **Controles** con 60 s (antes 90: en movil_4, uno solo llega a ganar tras 30–40 s de balancearse sin parar).
+  **Mono** 400 s por opción en los cambiados (lanzar_3 y tronco_4, 300): sin atajos, salvo viento_4 sin ráfagas
+  (azar, ya pasaba). Encontró que en movil_3 J2 podía caer sin su plataforma: corregido.
+- **Púas con caca colgando** (level_2, lanzar_3, placa_4, movil_3, movil_4, viento_1, final): con cuerda 60 nunca se pasa; con 110 solo
+  en level_2 (según el despegue); con 190–230 se pasa.
+- **Botones de techo de viento_4:** con cuerda 60 y 110 no se aprietan; con 170–235, sí.
+- **Auditoría de peligros** (`--hazards`) en los cambiados: solo quedan las púas con sopaipilla (level_2, movil_4), las de las paredes del
+  ascensor de movil_4 y el piso de púas bajo el carro de movil_3.
+- **Margen de salto** (460–480): el bot pierde en tronco_4 a 480 (gancho), placa_4 a 475, movil_3 a 460–465, level_2 a 465 y el
+  final a 460–465 (trapecio); en el resto gana.
+
+## Iteración tras el feedback (tronco_1 y 2, peligro_2, caja_1, placa_3, placa_4, movil_1, viento_1)
+
+- **tronco_1** vuelve a la versión original (gana; controles con un jugador quieto ganan: es a propósito, nivel introductorio).
+- **tronco_2** más fácil: islas de 100 px, suelo bajo las primeras de J1 y bajo la bajada de J2. Mono `--goal` (cruzar): no.
+- **placa_4:** ganchos a escala 2 e islas a 190 px del gancho del trapecio. Punto de salto que engancha el trapecio: de 40 px
+  (530–570, solo el borde) a 90 px (520–610); columpio lateral de 60 a 80 px. Mono: sin atajos.
+- **viento_1:** columna de la meta de 84 a 74 px. Barrido de 9 variantes de balanceo: 84 px → 6/9; 74 → 9/9. Con J2 quieto, J1
+  solo emboca tras ~6 s de balancearse (control "2" sacado); con 60–66 px emboca uno solo casi sin balancearse.
+- **peligro_2:** la caca del pasillo pasa a fuego (mismo comportamiento: los jugadores nunca bajan al pasillo). Gana; controles OK.
+- **caja_1** rehecho. Escalera de cajas de J1: sin la caja chica, el mono no sube el muro (400 s); sin la grande de J2, tampoco.
+  Cruce en la meta (`--start` en las repisas): no. Encontrado al rehacerlo: en la versión vieja un jugador que cae de la punta
+  interior de su repisa podía llegar al lado del otro (muros guardia).
+- **placa_3:** escalones de J1 (`--no=rope`: el mono no pasa de ellos) y botón entre púas de J2 (`--remove=PlateC`: no llega
+  arriba). Gana en 63 s.
+- **movil_1:** botón en el fuego de J2 (`--remove=PlateF`, `--no=rope`: no). El mono encontró que desde la nueva isla se saltaba
+  a la isla B sin la plataforma: techo sobre la isla B, y ya no. Sin recoger la cuerda tras el botón, el extremo se quema bajo la
+  plataforma (cuerda 140 y 215); con 100 pasa. El botón pide cuerda ≥ ~190.
+- **Bot** 29/29; **controles** todos OK; auditoría: quedan la púa de isla de caja_1, la caca de la plataforma de movil_1 (el
+  fuego de abajo castiga antes la cuerda larga) y las del pasillo de placa_3 (son para la campana).

@@ -12,7 +12,7 @@ for f in tests/solutions/*.gd; do
 	name=$(basename "$f" .gd)
 	[[ -n "$1" && "$name" != *"$1"* ]] && continue
 	for who in $(grep -E '^const CONTROLS' "$f" | grep -oE '"[12]+"' | tr -d '"'); do
-		out=$(timeout 240 "$GODOT" --headless --fixed-fps 120 --path . -s tests/play_level.gd -- "res://$f" --timeout=90 --still="$who" 2>&1)
+		out=$(timeout 240 "$GODOT" --headless --fixed-fps 120 --path . -s tests/play_level.gd -- "res://$f" --timeout=60 --still="$who" 2>&1)
 		result=$(echo "$out" | grep -E "^RESULT" | head -1)
 		ok="OK"
 		[[ -z "$result" || "$result" == "RESULT WIN"* || "$result" == "RESULT ERROR"* ]] && ok="FALLA" && fail=1

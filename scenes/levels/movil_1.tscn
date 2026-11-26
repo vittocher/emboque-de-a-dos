@@ -7,6 +7,8 @@
 [ext_resource type="PackedScene" path="res://scenes/player_death_zone.tscn" id="n_puas"]
 [ext_resource type="PackedScene" path="res://scenes/emboque_death_zone.tscn" id="n_caca"]
 [ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="n_col"]
+[ext_resource type="PackedScene" path="res://scenes/pressure_plate.tscn" id="n_plate"]
+[ext_resource type="PackedScene" path="res://scenes/gate.tscn" id="n_gate"]
 
 [node name="Movil1" instance=ExtResource("1_base")]
 
@@ -14,7 +16,7 @@
 position = Vector2(90, 680)
 
 [node name="Player2" parent="." index="5"]
-position = Vector2(1565, 680)
+position = Vector2(1560, 380)
 
 [node name="Emboque1" parent="." index="8"]
 rope_length = 80.0
@@ -61,9 +63,9 @@ scale = Vector2(0.3, 0.8)
 [node name="ElevatorLeft" parent="." instance=ExtResource("n_mp")]
 position = Vector2(550, 582)
 size = Vector2(100, 20)
-travel = Vector2(0, -273)
 speed = 100.0
 wait_time = 1.6
+travel = Vector2(0, -150)
 
 [node name="TowerLeft" parent="." instance=ExtResource("n_block")]
 position = Vector2(670, 312)
@@ -121,6 +123,57 @@ scale = Vector2(0.5, 1.5)
 position = Vector2(800, -65)
 size = Vector2(16, 670)
 
+[node name="IslandL1" parent="." instance=ExtResource("n_block")]
+position = Vector2(435, 372)
+size = Vector2(70, 24)
+
+[node name="SpikesL1" parent="." instance=ExtResource("n_puas")]
+position = Vector2(408, 348)
+scale = Vector2(0.16, 0.8)
+
+[node name="StartTopR" parent="." instance=ExtResource("n_block")]
+position = Vector2(1540, 462)
+size = Vector2(120, 24)
+
+[node name="IslandR1" parent="." instance=ExtResource("n_block")]
+position = Vector2(1400, 572)
+size = Vector2(80, 24)
+
+[node name="SpikesR1" parent="." instance=ExtResource("n_puas")]
+position = Vector2(1372.5, 548)
+scale = Vector2(0.25, 0.8)
+
+[node name="IslandR2" parent="." instance=ExtResource("n_block")]
+position = Vector2(1490, 682)
+size = Vector2(70, 24)
+
+[node name="Pedestal" parent="." instance=ExtResource("n_block")]
+position = Vector2(1440, 905)
+size = Vector2(36, 110)
+
+[node name="PlateF" parent="." instance=ExtResource("n_plate")]
+position = Vector2(1440, 850)
+channel = 0
+latch = true
+scale = Vector2(0.6, 1)
+
+[node name="SpikesPlateF" parent="." instance=ExtResource("n_puas")]
+position = Vector2(1440, 842.5)
+scale = Vector2(0.36, 0.5)
+
+[node name="GateF" parent="." instance=ExtResource("n_gate")]
+position = Vector2(1110, 631)
+size = Vector2(12, 142)
+channel = 0
+open_offset = Vector2(0, 150)
+
+[node name="RoofB" parent="." instance=ExtResource("n_block")]
+position = Vector2(1179.5, 598)
+size = Vector2(121, 16)
+
+[node name="Collectible6" parent="." instance=ExtResource("n_col")]
+position = Vector2(1400, 500)
+
 [node name="Collectible5" parent="." instance=ExtResource("n_col")]
 position = Vector2(800, 420)
 
@@ -128,7 +181,7 @@ position = Vector2(800, 420)
 position = Vector2(1070, 430)
 
 [node name="Collectible3" parent="." instance=ExtResource("n_col")]
-position = Vector2(1335, 600)
+position = Vector2(1430, 700)
 
 [node name="Collectible2" parent="." instance=ExtResource("n_col")]
 position = Vector2(390, 480)

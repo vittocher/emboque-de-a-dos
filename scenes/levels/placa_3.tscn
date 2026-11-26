@@ -42,7 +42,7 @@ position = Vector2(977.5, 600)
 size = Vector2(15, 80)
 
 [node name="Caca1" parent="." instance=ExtResource("n_caca")]
-position = Vector2(262, 515)
+position = Vector2(237, 515)
 scale = Vector2(0.35, 3)
 
 [node name="PlateA" parent="." instance=ExtResource("n_plate")]
@@ -141,8 +141,8 @@ position = Vector2(1125, 625)
 scale = Vector2(2.8, 1)
 
 [node name="SpikesC" parent="." instance=ExtResource("n_puas")]
-position = Vector2(1475, 895)
-scale = Vector2(2.5, 1)
+position = Vector2(1430, 895)
+scale = Vector2(1.6, 1)
 
 [node name="LedgeRight" parent="." instance=ExtResource("n_block")]
 position = Vector2(1195, 312)
@@ -180,11 +180,38 @@ size = Vector2(70, 24)
 position = Vector2(1435, 372)
 size = Vector2(70, 24)
 
+[node name="StepJ1a" parent="." instance=ExtResource("n_block")]
+position = Vector2(155, 265)
+size = Vector2(70, 70)
+
+[node name="StepJ1b" parent="." instance=ExtResource("n_block")]
+position = Vector2(240, 230)
+size = Vector2(100, 140)
+
+[node name="SpikesC2" parent="." instance=ExtResource("n_puas")]
+position = Vector2(1585, 895)
+scale = Vector2(0.3, 1)
+
+[node name="PlateC" parent="." instance=ExtResource("n_plate")]
+position = Vector2(1540, 910)
+channel = 3
+latch = true
+
+[node name="SpikesPlateC" parent="." instance=ExtResource("n_puas")]
+position = Vector2(1540, 902.5)
+scale = Vector2(0.56, 0.5)
+
+[node name="GateC" parent="." instance=ExtResource("n_gate")]
+position = Vector2(1500, 390)
+size = Vector2(24, 180)
+channel = 3
+open_offset = Vector2(0, -260)
+
 [node name="Collectible6" parent="." instance=ExtResource("n_col")]
-position = Vector2(1565, 440)
+position = Vector2(1565, 395)
 
 [node name="Collectible5" parent="." instance=ExtResource("n_col")]
-position = Vector2(1090, 790)
+position = Vector2(1540, 860)
 
 [node name="Collectible4" parent="." instance=ExtResource("n_col")]
 position = Vector2(220, 750)

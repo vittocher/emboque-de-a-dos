@@ -2,13 +2,13 @@ extends RefCounted
 const CONTROLS := ["12", "1", "2"]
 const SHORTCUTS := ["--no=rope"]
 const SCENE := "res://scenes/levels/peligro_2.tscn"
-## Peligro 2 "El alambre": la caca mata al emboque. Los jugadores caminan por el techo de
+## Peligro 2 "El alambre": el fuego del pasillo quema al emboque. Los jugadores caminan por el techo de
 ## un pasillo y los extremos van POR ADENTRO (la cuerda atraviesa la madera; el extremo, no).
-## Para pasar bajo un diente hay que alargar; para pasar sobre la caca que está pegada a
-## él, acortar (no hay espacio para esquivarla balanceándose, ni para saltar: arriba el
+## Para pasar bajo un diente hay que alargar; para pasar sobre el fuego que está pegado a
+## él, acortar (no hay espacio para esquivarlo balanceándose, ni para saltar: arriba el
 ## techo es bajo). Los escalones de arriba piden cuerda larga: con el extremo pegado a la
-## madera no se puede saltar. J1: diente, caca, escalón, diente, caca. J2: escalón, caca,
-## diente, caca. En el medio juntan los extremos bajo la columna que los separa.
+## madera no se puede saltar. J1: diente, fuego, escalón, diente, fuego. J2: escalón, fuego,
+## diente, fuego. En el medio juntan los extremos bajo la columna que los separa.
 static func plan(ctx) -> Dictionary:
 	var deep: float = ctx.var_f("deep", 285)
 	var short: float = ctx.var_f("short", 125)
