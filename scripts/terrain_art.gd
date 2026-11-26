@@ -148,7 +148,8 @@ func _add_shadow(tiles: Node2D, size: Vector2) -> void:
 ## true si la pieza queda entera fuera de la pantalla a lo ancho (los muros
 ## WallLeft/WallRight): su sombra solo oscurecería el borde de la imagen.
 func _off_screen(tiles: Node2D, size: Vector2) -> bool:
-	var width := float(ProjectSettings.get_setting("display/window/size/viewport_width", 1280))
+	# En el editor no se sabe el tamaño del nivel: se usa el de los niveles grandes.
+	var width := 1600.0 if Engine.is_editor_hint() else LevelFlow.level_size(get_tree()).x
 	var box := tiles.get_global_transform() * Rect2(-size * 0.5, size)
 	return box.end.x <= 0.0 or box.position.x >= width
 
@@ -159,7 +160,8 @@ func _tile(parent: Node2D, size: Vector2, center: Vector2, tex: Texture2D, is_fl
 	var tex_size := tex.get_size()
 	var fit := minf(size.x / tex_size.x, size.y / tex_size.y)
 	var cols := maxi(1, roundi(size.x / (tex_size.x * fit)))
-	var rows := maxi(1, roundi(size.y / (tex_size.y * fit)))
+	# Una plataforma delgada es siempre UNA tabla, aunque sea corta (no dos apiladas).
+	var rows := 1 if is_floor else maxi(1, roundi(size.y / (tex_size.y * fit)))
 	var tile := Vector2(size.x / cols, size.y / rows)
 	for r in rows:
 		for c in cols:

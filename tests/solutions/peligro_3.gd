@@ -1,37 +1,22 @@
 extends RefCounted
+const CONTROLS := ["12"]
+const SHORTCUTS := ["--no=rope --goal=680,438,920,438", "--start=690,370,910,370 --goal=910,438,690,438"]
 const SCENE := "res://scenes/levels/peligro_3.tscn"
-## Peligro 3: brasas en el suelo y un escalón alto. El extremo va arrastrado
-## detrás: si toca una brasa, se pierde. Hay que acortar para saltar cada brasa
-## (el extremo salta pegado), pero el escalón de 175 px solo se sube con la
-## cuerda larga: alargar quieto antes del escalón, subir, acortar otra vez antes
-## de la segunda brasa; desde el borde, bajar el extremo al cuenco.
+## Peligro 3 "Brasas": cada peligro se pasa distinto. J1 sube islas sobre el fuego (mata a los dos: cuerda corta).
+## J2: brasa (cuerda corta) → púas con caca colgando encima: él salta A TRAVÉS de la caca y el extremo
+## tiene que pasar por abajo, arrastrando por las púas (cuerda larga) → puente tapado de caca: el extremo va por
+## DEBAJO (se baja por la ranura y se alarga la cuerda). En la meta, los extremos cuelgan justo sobre
+## el fuego: muy largos se queman; hay que balancearse los dos a la vez (S = 100).
 const M := preload("res://tests/solutions/moves.gd")
 
-static func side(i: int, d: int, ctx) -> Array:
-	var x := func(v: float) -> float: return v if d == 1 else 1280.0 - v
-	var dir := "right" if d == 1 else "left"
-	return [["wait_floor"], ["rope", 60], ["walk_to", x.call(70)], ["press", dir],
-		["until", func(c): return (c.p(i).global_position.x - x.call(120)) * d > 0.0, 2.0], ["tap", "jump"],
-		["until", func(c): return c.p(i).is_on_floor() and (c.p(i).global_position.x - x.call(250)) * d > 0.0, 2.0],
-		["release", dir], ["walk_to", x.call(290)], ["wait", 0.4], ["rope", ctx.var_f("tall", 170)],
-		["tap", "jump"], ["until", func(c): return c.p(i).global_position.y < 350.0, 1.0], ["press", dir],
-		["until", func(c): return (c.p(i).global_position.x - x.call(350)) * d > 0.0, 1.5],
-		["release", dir], ["wait_floor"], ["walk_to", x.call(365)], ["rope", 60], ["wait", 0.4], ["press", dir],
-		["until", func(c): return (c.p(i).global_position.x - x.call(395)) * d > 0.0, 2.0], ["tap", "jump"],
-		["until", func(c): return c.p(i).is_on_floor() and (c.p(i).global_position.x - x.call(510)) * d > 0.0, 2.0],
-		["release", dir], ["walk_to", x.call(578)], ["wait", ctx.var_f("w", 0.4)], ["rope", ctx.var_f("r", 180)],
-		["sync", "listos"]] + M.nudge(i, x.call(578), ctx.var_f("back", -6) * d, int(ctx.var_f("times", 12))) \
-		+ (_redrop(ctx) if i == 1 else [])
-
-## (El empujón final va hacia el cuenco: hacia atrás el jugador choca con el escalón.
-## Con la cámara lenta en 0,4 se gana con la espera previa `w` de 0,2 a 0,5 s.)
-## Si la campana quedó parada con la boca hacia el fondo del cuenco (pasa según cómo
-## caen), J1 la levanta y la vuelve a dejar caer, como haría una persona.
-static func _redrop(ctx) -> Array:
-	var steps := []
-	for k in int(ctx.var_f("redrops", 3)):
-		steps += [["rope", ctx.var_f("lift", 110)], ["wait", 0.2], ["rope", ctx.var_f("r", 180)], ["wait", 1.0]]
-	return steps
-
 static func plan(ctx) -> Dictionary:
-	return {"p1": side(1, 1, ctx), "p2": side(2, -1, ctx)}
+	var m: float = ctx.var_f("m", 45)
+	var r: float = ctx.var_f("r", 140)
+	return {
+		"p1": [["wait_floor"], ["rope", 60]] + M.path(1, [[89, 264], [298, 385], [398, 285], [253, 145], [140, 274]]) + [["rope", ctx.var_f("long1", 190)], ["wait", 0.5]] + [["hold_jump", ctx.var_f("h", 0.5)]] + M.path(1, [[293, 530]]) + [["hold_jump", 0.5], ["rope", 60], ["wait", 0.4]] + M.path(1, [["go", 690]])
+			+ [["hang", 743], ["rope", r], ["wait", 0.6], ["sync", "listos"], ["swing", 743, m, 24]],
+		"p2": [["wait_floor"], ["rope", 60]] + M.path(2, [["over", 1492, 1462]]) + [["walk_to", 1375, 4], ["rope", ctx.var_f("long", 240)], ["wait", 0.4]] + [["hold_jump", ctx.var_f("h", 0.5)]] + M.path(2, [[1380, 1205], ["go", 1150]]) + [["hold_jump", 0.5]]
+			+ [["rope", 60], ["wait", 0.5], ["walk_to", 1150, 4], ["wait_floor"], ["rope", 60], ["wait", 0.5], ["walk_to", 1235, 3], ["wait", 0.6], ["rope", ctx.var_f("under", 125)], ["wait", 0.8], ["walk_to", 1545, 4], ["wait_floor"], ["rope", 60], ["wait", 0.5]]
+			+ M.path(2, [["go", 1260], ["over", 1180, 1140], ["over", 1025, 965]])
+			+ [["hang", 857], ["rope", r], ["wait", 0.6], ["sync", "listos"], ["swing", 857, -m, 24]],
+	}

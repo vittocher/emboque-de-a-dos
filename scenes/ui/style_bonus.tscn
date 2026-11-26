@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/style_bonus.gd" id="1_style"]
+
+[sub_resource type="LabelSettings" id="Settings_style"]
+font_size = 44
+font_color = Color(1, 0.84, 0.32, 1)
+outline_size = 12
+outline_color = Color(0.2, 0.08, 0.03, 1)
+
+[node name="StyleBonus" type="VBoxContainer"]
+anchor_right = 1.0
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = 70.0
+offset_bottom = 70.0
+mouse_filter = 2
+theme_override_constants/separation = 2
+script = ExtResource("1_style")
+label_settings = SubResource("Settings_style")

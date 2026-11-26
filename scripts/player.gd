@@ -16,6 +16,8 @@ class_name Player
 
 ## Se emite cuando el jugador salta para soltarse del gancho (el Emboque lo desengancha).
 signal swing_jumped
+## Se emite al cortar el salto (soltar la tecla subiendo): el Emboque frena también al extremo.
+signal jump_cut
 
 ## Prefijo de las acciones del Input Map: "p1" o "p2".
 @export var input_prefix: String = "p1"
@@ -29,8 +31,12 @@ signal swing_jumped
 @export_group("Movimiento")
 ## Velocidad horizontal máxima (px/s).
 @export var speed: float = 320.0
-## Impulso vertical del salto (negativo = hacia arriba).
-@export var jump_velocity: float = -680.0
+## Impulso vertical del salto (negativo = hacia arriba): 112 px de alto, con cualquier largo de
+## cuerda (ver limit_stretch en el Emboque).
+@export var jump_velocity: float = -470.0
+## Salto variable: al soltar la tecla mientras sube, la velocidad hacia arriba se multiplica
+## por esto (0 = se detiene en seco, 1 = sin corte).
+@export_range(0.0, 1.0) var jump_cut_factor: float = 0.25
 ## Qué tan rápido alcanza la velocidad objetivo en el suelo (px/s^2).
 @export var acceleration: float = 2200.0
 ## Qué tan rápido frena al soltar la dirección (px/s^2).
@@ -57,7 +63,7 @@ signal swing_jumped
 
 @export_group("Salto desde la cuerda")
 ## Impulso vertical que se suma al saltar desde la cuerda (negativo = arriba).
-@export var swing_jump_velocity: float = -450.0
+@export var swing_jump_velocity: float = -410.0
 ## Multiplica la velocidad del balanceo al saltar.
 @export var swing_launch_multiplier: float = 1.1
 ## Frenado horizontal suave mientras se conserva el impulso del lanzamiento (px/s^2).
@@ -69,6 +75,9 @@ const TAUT_TOLERANCE := 2.0
 const GROUND_PROBE := 2.0
 ## Distancia a la que el jugador detecta una caja delante para empujarla (px).
 const PUSH_PROBE := 2.0
+## Al empujar una caja fuera de un borde, el jugador se detiene cuando le quedan estos
+## píxeles de piso (ver _guard_push_edge).
+const PUSH_EDGE_MARGIN := 8.0
 ## Bajo esta velocidad tangencial (px/s) el empuje siempre cuenta como "a favor".
 const SWING_REST_SPEED := 40.0
 ## Qué tan rápido se disipa la energía sobre el tope del ángulo máximo (1/s).
@@ -111,7 +120,9 @@ var _swing_length: float = 0.0
 var _taut: bool = false         # colgando en el aire con la cuerda tensa → péndulo
 var _swing_radius: float = 0.0
 var _swing_omega: float = 0.0   # velocidad angular (rad/s); + = hacia la derecha abajo
+var _jumping: bool = false      # subiendo de un salto desde el piso con la tecla apretada
 var _launched: bool = false     # conserva el impulso tras soltarse de la cuerda
+var _push_dir := 0.0            # sentido en que viene empujando con esta pulsación
 var _wind := Vector2.ZERO       # aceleración del viento de este tick (WindZone.add_wind)
 var _wind_cap := 0.0
 var _push := Vector2.ZERO       # arrastre de este tick (add_push), como una cinta: no queda como impulso
@@ -130,7 +141,7 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	# Al empezar mira hacia el centro de la pantalla (hacia su compañero).
-	facing = 1 if global_position.x < get_viewport_rect().get_center().x else -1
+	facing = 1 if global_position.x < LevelFlow.level_size(get_tree()).x * 0.5 else -1
 	_art.scale.x = facing
 	# Cada jugador usa su propio arte según su prefijo.
 	var frames := frames_p2 if input_prefix == "p2" else frames_p1
@@ -158,11 +169,13 @@ func _process_platformer(delta: float) -> void:
 	# Gravedad.
 	if not is_on_floor():
 		velocity.y += _gravity * delta
+	_update_jump_cut()
 	_apply_wind(delta)
 
 	# Salto (solo desde el suelo).
 	if not aiming and is_on_floor() and Input.is_action_just_pressed(input_prefix + "_jump"):
 		velocity.y = jump_velocity
+		_jumping = true
 		Sfx.play(&"jump")
 		_squash(Vector2(0.88, 1.14), FEET)
 
@@ -177,6 +190,7 @@ func _process_platformer(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0.0, friction * control * delta)
 
 	_pushing = direction != 0.0 and is_on_floor() and _try_push_box(direction)
+	_guard_push_edge(direction)
 	var push_velocity := velocity.x
 	var fall_speed := velocity.y
 	# Arrastre (ráfagas del Tue Tue): se suma solo a este movimiento, como una cinta
@@ -197,6 +211,18 @@ func _process_platformer(delta: float) -> void:
 	if _launched and (is_on_floor() or is_on_wall()):
 		_launched = false
 	_update_footsteps(delta)
+
+## Salto variable: termina al soltar la tecla. Solo el salto desde el piso (no el
+## impulso de la cuerda) y no dentro de una corriente de aire (ahí sube por ella).
+func _update_jump_cut() -> void:
+	if not _jumping:
+		return
+	if velocity.y >= 0.0 or _hooked or _wind != Vector2.ZERO:
+		_jumping = false
+	elif not Input.is_action_pressed(input_prefix + "_jump"):
+		_jumping = false
+		velocity.y *= jump_cut_factor
+		jump_cut.emit()
 
 ## Al aterrizar de una caída fuerte: aplastón (mayor cuanto más rápido) y un
 ## golpe sordo (el sonido de paso, más grave).
@@ -231,6 +257,20 @@ func _try_push_box(direction: float) -> bool:
 	velocity.x = clampf(velocity.x, -box.push_speed, box.push_speed)
 	box.push(velocity.x)
 	return true
+
+## Quien empuja una caja no se cae tras ella: cuando la caja cae por un borde, el
+## jugador se detiene ahí mientras siga con la misma dirección apretada (soltarla y
+## volver a apretarla, o saltar, lo deja pasar).
+func _guard_push_edge(direction: float) -> void:
+	if _pushing:
+		_push_dir = signf(direction)
+	elif direction == 0.0 or signf(direction) != _push_dir or not is_on_floor() or velocity.y < 0.0:
+		_push_dir = 0.0
+	if _push_dir == 0.0 or not is_on_floor():
+		return
+	var ahead := global_transform.translated(Vector2(_push_dir * PUSH_EDGE_MARGIN, 0.0))
+	if not test_move(ahead, Vector2(0, 6)):
+		velocity.x = 0.0
 
 ## Tras soltarse de la cuerda, el impulso se conserva: sin input o empujando a
 ## favor solo frena suave. Empujar en contra (o ir lento) usa el control normal.

@@ -1,3 +1,4 @@
+@tool
 extends RigidBody2D
 class_name PushBox
 
@@ -7,8 +8,19 @@ class_name PushBox
 ## push() y la caja se mueve a la velocidad del jugador (predecible, sin inercia
 ## rara). La rotación va bloqueada en la escena para que no se vuelque.
 
+## Lado de la caja (px). 64 = la normal; 120 = la grande (para subir paredes de 250 con la
+## cuerda retraída: sin caja no se llega ni con la cuerda larga).
+@export_range(32.0, 160.0, 1.0) var size: float = 64.0:
+	set(value):
+		size = value
+		_apply_size()
+
 ## Velocidad máxima a la que la mueve un jugador que la empuja (px/s).
 @export var push_speed: float = 150.0
+
+## Si cae más abajo que esto (fuera de la pantalla), vuelve a donde partió: así una
+## caja perdida en un foso sin piso no obliga a reiniciar. 0 = el alto del nivel + 100.
+@export var respawn_y: float = 0.0
 
 ## Tope de la compensación de roce (px/s por paso). Evita que crezca sin fin
 ## cuando la caja está trabada contra un muro.
@@ -23,8 +35,32 @@ var _boost: float = 0.0          # compensación de roce del paso actual (px/s)
 var _pre_solve_velocity: float = 0.0
 var _scrape: AudioStreamPlayer   # sonido de arrastre en loop
 var _last_x: float = 0.0
+var _start: Transform2D
+
+func _enter_tree() -> void:
+	_apply_size()
+
+func _apply_size() -> void:
+	var cs := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if cs != null:
+		var rect := cs.shape as RectangleShape2D
+		# Cada caja con su propia forma (si no, todas compartirían el tamaño).
+		if rect == null or not rect.resource_local_to_scene:
+			rect = RectangleShape2D.new()
+			rect.resource_local_to_scene = true
+			cs.shape = rect
+		rect.size = Vector2(size, size)
+	var sprite := get_node_or_null("Sprite") as Sprite2D
+	if sprite != null and sprite.texture != null:
+		sprite.scale = Vector2.ONE * (size / sprite.texture.get_width())
 
 func _ready() -> void:
+	if Engine.is_editor_hint():
+		set_physics_process(false)
+		return
+	_start = global_transform
+	if respawn_y <= 0.0:
+		respawn_y = LevelFlow.level_size(get_tree()).y + 100.0
 	_last_x = global_position.x
 	var stream := Sfx.get_stream(&"box_push")
 	if stream != null:
@@ -66,6 +102,16 @@ func is_scraping() -> bool:
 	return _scrape != null and _scrape.playing
 
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
+	if Engine.is_editor_hint():
+		return
+	if state.transform.origin.y > respawn_y:
+		state.transform = _start
+		state.linear_velocity = Vector2.ZERO
+	# En el aire no se empuja: si no, empujarla contra la pared de enfrente de un pozo
+	# la dejaba pegada (el roce la sostenía) en vez de caer.
+	if _pushed and not test_move(global_transform, Vector2(0, 2)):
+		_pushed = false
+		state.linear_velocity.x = 0.0
 	if _pushed:
 		# Se fija la velocidad (no una fuerza) para que la rapidez no dependa de
 		# lo que tenga encima. Dos jugadores en contra se anulan.

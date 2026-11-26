@@ -1,20 +1,23 @@
 extends RefCounted
+const CONTROLS := ["12"]
+const SHORTCUTS := ["--goal=930,268,670,268", "--no=hook --goal=670,268,930,268"]
 const SCENE := "res://scenes/levels/peligro_1.tscn"
-## Peligro 1: las púas matan al jugador, no al emboque. Cada uno salta su zanja
-## de púas, se para en el borde y baja el extremo a la zanja (sin morir) por la
-## sopaipilla; lo sube, va al borde de su bloque y apoya el extremo en el
-## cuenco, donde se juntan.
+## Peligro 1 "Espinas": las púas matan al jugador, no al emboque. Los ganchos están adentro de un
+## erizo de púas: el extremo entra y se engancha, pero el jugador se pincha si recoge toda la cuerda o se
+## acerca balanceándose. J1 baja por un pozo, cruza con su gancho y sube; J2 sube primero y cruza con el suyo hasta su
+## repisa. En la meta los extremos cuelgan y basta con que uno se balancee.
 const M := preload("res://tests/solutions/moves.gd")
 
-static func side(i: int, d: int, r: float) -> Array:
-	var x := func(v: float) -> float: return v if d == 1 else 1280.0 - v
-	var dir := "right" if d == 1 else "left"
-	return [["wait_floor"], ["rope", 140], ["walk_to", x.call(190)], ["wait", 0.3], ["press", dir], ["tap", "jump"],
-		["until", func(c): return c.p(i).is_on_floor() and absf(c.p(i).global_position.x - x.call(250)) > 50.0, 2.0],
-		["release", dir], ["walk_to", x.call(263), 3], ["wait", 0.5], ["rope", 150], ["wait", 1.0],
-		["rope", 60], ["wait", 0.5],
-		["walk_to", x.call(576)], ["rope", r], ["sync", "listos"]] + M.nudge(i, x.call(576), 25 * d, 10)
-
 static func plan(ctx) -> Dictionary:
-	var r: float = ctx.var_f("r", 175)
-	return {"p1": side(1, 1, r), "p2": side(2, -1, r)}
+	var m: float = ctx.var_f("m", 50)
+	var r: float = ctx.var_f("r", 120)
+	var pump: float = ctx.var_f("pump", 1.3)
+	return {
+		"p1": [["wait_floor"], ["rope", 60]] + M.path(1, [[95, 285], [275, 100]]) + [["walk_to", 165, 3], ["press", "right"], ["until", func(c): return not c.on_floor(1), 2.0], ["release", "right"], ["walk_to", 60, 5], ["wait_floor"]]
+			+ [["rope", ctx.var_f("h1", 130)], ["wait", 0.6], ["walk_to", 50, 3], ["wait", 0.6]] + M.run_jump(1, 1, ctx.var_f("j1", 110)) + M.swing_launch(1, 1, pump, ctx.var_f("rx1", 420), ctx.var_f("stop1", 568))
+			+ [["rope", 60]] + M.path(1, [[543, 618], [615, 505], [495, 408], [411, 531], [538, 640]])
+			+ [["hang", 748], ["rope", r], ["wait", 0.8], ["sync", "listos"], ["swing", 748, m, 24]],
+		"p2": [["wait_floor"], ["rope", 60]] + M.path(2, [[1488, 1397], [1423, 1515], [1488, 1400], [1422, 1520], [1488, 1409], [1412, 1510]])
+			+ [["walk_to", 1570, 4], ["rope", ctx.var_f("h2", 130)], ["wait", 0.6], ["walk_to", 1575, 3], ["wait", 0.6]] + M.run_jump(2, -1, ctx.var_f("j2", 1505)) + M.swing_launch(2, -1, pump, ctx.var_f("rx2", 1185), ctx.var_f("stop2", 945))
+			+ [["hang", 852], ["rope", r], ["wait", 0.8], ["sync", "listos"], ["swing", 852, -m, 24]],
+	}

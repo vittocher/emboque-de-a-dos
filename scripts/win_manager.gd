@@ -63,6 +63,16 @@ class_name WinManager
 ## sale antes de ganar, la música vuelve.
 @export var silence_lead: float = 0.2
 
+@export_group("Bonos de estilo")
+## "¡Limpio!": ninguno de los dos extremos tocó nada (terreno, cajas, ganchos) en
+## estos últimos segundos. 0 = sin este bono.
+@export var clean_time: float = 2.5
+## "¡Al vuelo!": los dos extremos llegaron al encuentro (a magnet_radius, antes de que
+## actúe el magnetismo) al menos a esta velocidad (px/s). 0 = sin este bono.
+@export var fly_speed: float = 110.0
+## Si se quedan cerca más que esto antes de embocar, ya no cuenta como "al vuelo" (s).
+@export var fly_window: float = 1.5
+
 @export_group("Resultado")
 ## Id estable del nivel para el highscore (ej. "level_1"). Si queda vacío, se
 ## deriva del nombre de archivo de la escena.
@@ -80,6 +90,11 @@ var _label: CanvasItem
 var _hold: float = 0.0
 var _won: bool = false
 var _impact_silence: bool = false
+# Bonos de estilo: velocidad más baja de los dos al acercarse y tiempo desde entonces.
+var _near: bool = false
+var _near_time: float = 0.0
+var _entry_speed: float = 0.0
+var _clean: bool = false
 
 func _ready() -> void:
 	var a := get_node_or_null(emboque_a) as Emboque
@@ -119,6 +134,7 @@ func _physics_process(delta: float) -> void:
 	var camp_open := camp.global_transform.x.normalized()         # cavidad → boca (hacia afuera)
 
 	var dist := tip.distance_to(mouth)
+	_track_style(pal, camp, dist, delta)
 	var desired_pal := -camp_open
 	var desired_camp := (tip - cavity).normalized() if (tip - cavity).length() > 0.001 else camp_open
 
@@ -149,15 +165,46 @@ func _physics_process(delta: float) -> void:
 
 	# Victoria: palito dentro de la cavidad (real), o respaldo por proximidad+ángulo.
 	if _is_embocado(pal, camp, tip, cavity, pal_axis, camp_open):
+		if _hold == 0.0:
+			_clean = clean_time > 0.0 and minf(pal.untouched_time, camp.untouched_time) >= clean_time
 		_hold += delta
 		if _hold >= capture_time:
 			_win()
+			_show_style()
 			_celebrate(pal, camp, cavity)
 		elif (capture_time - _hold) / maxf(Engine.time_scale, 0.0001) <= silence_lead:
 			_set_impact_silence(true)
 	else:
 		_hold = 0.0
 		_set_impact_silence(false)
+
+## Bonos de estilo: anota con qué velocidad llegan los extremos al encuentro.
+func _track_style(pal: RopeEnd, camp: RopeEnd, dist: float, delta: float) -> void:
+	var near := dist < magnet_radius
+	if near and not _near:
+		_near_time = 0.0
+		_entry_speed = minf(pal.linear_velocity.length(), camp.linear_velocity.length())
+	_near_time += delta
+	_near = near
+
+## Claves de los bonos ganados (se llama al embocar).
+func style_bonuses() -> Array[String]:
+	var keys: Array[String] = []
+	if _clean:
+		keys.append("STYLE_CLEAN")
+	if fly_speed > 0.0 and _entry_speed >= fly_speed and _near_time <= fly_window:
+		keys.append("STYLE_FLY")
+	return keys
+
+## Los muestra en pantalla bajo el cartel de victoria (solo texto: no dan puntos ni se
+## guardan).
+func _show_style() -> void:
+	var keys := style_bonuses()
+	if keys.is_empty() or _label == null:
+		return
+	var label := preload("res://scenes/ui/style_bonus.tscn").instantiate() as StyleBonus
+	_label.add_sibling(label)
+	label.show_bonuses(keys)
 
 ## Ya embocado: la punta dentro de la cavidad o a menos de lock_radius de ella.
 func _is_locked(pal: RopeEnd, tip: Vector2, cavity: Vector2) -> bool:

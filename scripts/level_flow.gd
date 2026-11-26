@@ -22,6 +22,16 @@ static func mark_won(tree: SceneTree) -> void:
 	if tree.current_scene != null:
 		tree.current_scene.set_meta(WON, true)
 
+## Tamaño del mundo del nivel (px): 1280×720, o más en los niveles con la cámara
+## alejada (level_base_large). Sale del CloseupManager del nivel.
+static func level_size(tree: SceneTree) -> Vector2:
+	var closeup := tree.get_first_node_in_group(&"closeup_manager")
+	if closeup != null and "level_size" in closeup:
+		return closeup.level_size
+	return Vector2(
+		float(ProjectSettings.get_setting("display/window/size/viewport_width", 1280)),
+		float(ProjectSettings.get_setting("display/window/size/viewport_height", 720)))
+
 ## True si el nivel ya terminó (ganado o reiniciándose): no hay más muertes.
 static func is_over(tree: SceneTree) -> bool:
 	var scene := tree.current_scene

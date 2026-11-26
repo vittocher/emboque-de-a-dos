@@ -1,38 +1,32 @@
 extends RefCounted
+const CONTROLS := ["12", "1", "2"]
+const SHORTCUTS := ["--no=wind --goal=480,488,1120,488", "--remove=Wind2Left,Wind2Right --start=480,440,1120,440 --goal=655,208,945,208", "--remove=GustLeft,GustRight --start=655,160,945,160", "--start=655,160,945,160 --goal=945,208,655,208"]
 const SCENE := "res://scenes/levels/viento_4.tscn"
-## Viento 4 "Remonte": la torre del medio (290 px) no se alcanza saltando y el
-## gancho está demasiado alto para el extremo. Cada uno cruza la corriente de su
-## lado (al jugador no lo empuja), se para justo bajo el gancho y suelta cuerda:
-## el viento sube el extremo derecho hacia arriba, hasta el gancho. Enganchado, tira de la
-## cuerda (sube colgando), se balancea y salta al techo de la torre. Desde ahí,
-## de a uno, recoge el extremo, se para sobre la ranura y lo baja al cuenco.
-const M := preload("res://tests/solutions/moves.gd")
+## Viento 4 "Remonte": primero, cada uno abre la compuerta del OTRO con un botón del techo: se para
+## en la corriente y suelta cuerda para que el extremo suba justo hasta él. Después, el gancho está demasiado alto. Cada uno se para justo debajo, dentro de
+## la corriente (al jugador no lo empuja), y suelta cuerda: el viento sube el extremo hasta el
+## gancho. Trepa tirando de la cuerda, se columpia y salta a la repisa; ahí, otra vez. En la
+## meta el hueco es demasiado ancho para balancearse solos: dos vientos soplan en ráfagas hacia
+## adentro y hay que sumarles el balanceo, al ritmo.
+const V := preload("res://tests/solutions/viento_3.gd")
+
+static func lift(i: int, d: int, hook_x: float, land: float) -> Array:
+	var x := func(v: float) -> float: return v if d == 1 else 1600.0 - v
+	var dir := "right" if d == 1 else "left"
+	return [["walk_to", x.call(hook_x), 3], ["wait", 2.4], ["press", "release"], ["until", func(c): return c.hooked(i), 5.0], ["release", "release"],
+		["rope", 60, 2], ["wait", 0.8], ["tap", "jump"], ["press", dir],
+		["until", func(c): return (c.p(i).global_position.x - x.call(land)) * d > 0.0 or c.p(i).is_on_floor(), 3.0],
+		["release", dir], ["wait_floor"], ["wait", 0.4]]
 
 static func side(i: int, d: int, ctx) -> Array:
-	var x := func(v: float) -> float: return v if d == 1 else 1280.0 - v
-	var toward := "right" if d == 1 else "left"
-	return [["wait_floor"], ["walk_to", x.call(260), 3], ["tap", "jump"], ["wait_floor"],
-		["rope", 60, 1], ["walk_to", x.call(ctx.var_f("stand", 480)), 3], ["wait", 0.6], ["rope", 320],
-		["until", func(c): return c.hooked(i), 4.0], ["rope", 60, 1],
-		["until", func(c): return c.p(i).is_swing_taut(), 3.0], ["wait", 0.3],
-		["release", toward], ["pump", ctx.var_f("pump", 1.2)],
-		["until", func(c): return c.p(i)._swing_omega * d < -0.3, 4.0],
-		["until", func(c): return c.p(i)._swing_omega * d > 0.0 and (c.p(i).global_position.x - x.call(ctx.var_f("rel", 490))) * d > 0.0, 6.0],
-		["tap", "jump"], ["press", toward],
-		["until", func(c): return (c.p(i).global_position.x - x.call(ctx.var_f("stop", 570))) * d >= 0.0 or c.p(i).is_on_floor(), 3.0],
-		["release", toward], ["wait_floor"]]
-
-## En el techo el extremo queda apoyado al lado de la ranura: se acorta, se pasa
-## un poco más allá de la ranura (el extremo la cruza arrastrado y cae) y se
-## vuelve encima de ella.
-static func drop(i: int, back_dir: int, ctx) -> Array:
-	return [["rope", 60, 1], ["wait", 0.6], ["walk_to", 640.0 - back_dir * 34.0, 3], ["wait", 0.4],
-		["walk_to", 640.0, 2], ["wait", 0.6],
-		["rope", ctx.var_f("r%d" % i, 180)], ["wait", 0.5], ["walk_to", 640.0 + back_dir * 18.0, 3]]
+	var x := func(v: float) -> float: return v if d == 1 else 1600.0 - v
+	return [["walk_to", x.call(250), 4], ["rope", 60]] + lift(i, d, 320, 460) \
+		+ [["rope", 60]] + lift(i, d, 500, 630) \
+		+ [["rope", 60, 2], ["hang", x.call(708)], ["rope", ctx.var_f("r", 190)], ["wait", 0.5], ["sync", "listos"]] + V.gust_starts("GustLeft") + [["wait", ctx.var_f("ph", 1.6)], ["swing", x.call(708), ctx.var_f("m", 50) * d, 30]]
 
 static func plan(ctx) -> Dictionary:
 	return {
-		"p1": side(1, 1, ctx) + [["sync", "arriba"]] + drop(1, -1, ctx) + [["sync", "uno"], ["wait", 1.0],
-			["jiggle", 622.0, -8, 10]],
-		"p2": side(2, -1, ctx) + [["sync", "arriba"], ["sync", "uno"]] + drop(2, 1, ctx) + [["jiggle", 658.0, 8, 10]],
-	}
+		"p1": [["wait_floor"], ["rope", 60], ["walk_to", ctx.var_f("b1", 290), 3], ["wait", 0.5], ["rope", ctx.var_f("k1", 215)], ["until", func(c): return c.level.get_node("GateJ2").is_open, 3.0], ["rope", 60, 2], ["wait", 0.3],
+			["until", func(c): return c.level.get_node("GateJ1").is_open, 20.0], ["wait", 1.0], ["walk_to", 40, 4], ["wait_floor"]] + side(1, 1, ctx),
+		"p2": [["wait_floor"], ["rope", 60], ["walk_to", 1420, 4], ["wait_floor"], ["walk_to", ctx.var_f("b2", 1485), 3], ["wait", 0.5], ["rope", ctx.var_f("k2", 185)], ["until", func(c): return c.level.get_node("GateJ1").is_open, 3.0], ["rope", 60, 2], ["wait", 0.3],
+			["walk_to", 1575, 4], ["wait_floor"], ["walk_to", 1430, 4], ["until", func(c): return c.level.get_node("GateJ2").is_open, 20.0], ["wait", 1.0]] + side(2, -1, ctx)}
