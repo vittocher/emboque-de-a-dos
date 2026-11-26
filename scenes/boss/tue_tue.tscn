@@ -1,0 +1,104 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/boss/tue_tue.gd" id="1_script"]
+[ext_resource type="SpriteFrames" path="res://assets/enemigos/tue_tue/tue_tue_frames.tres" id="2_frames"]
+[ext_resource type="Texture2D" path="res://assets/enemigos/tue_tue/trozo.png" id="6_pluma"]
+[ext_resource type="Texture2D" path="res://assets/enemigos/tue_tue/estrella.png" id="7_estrella"]
+[ext_resource type="Texture2D" path="res://assets/props/viento/rafaga.png" id="8_rafaga"]
+
+[sub_resource type="CircleShape2D" id="Shape_hurt"]
+radius = 44.0
+
+[sub_resource type="CircleShape2D" id="Shape_hit"]
+radius = 46.0
+
+[sub_resource type="Curve" id="Curve_fade"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.7, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="Gradient" id="Gradient_gust"]
+colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 0.7, 1, 1, 1, 0)
+offsets = PackedFloat32Array(0, 0.25, 1)
+
+[node name="TueTue" type="Node2D"]
+z_index = 4
+script = ExtResource("1_script")
+
+[node name="Art" type="Node2D" parent="."]
+
+[node name="Sprite" type="AnimatedSprite2D" parent="Art"]
+texture_filter = 4
+scale = Vector2(0.42, 0.42)
+sprite_frames = ExtResource("2_frames")
+animation = &"fly"
+autoplay = "fly"
+
+[node name="Stars" type="Node2D" parent="Art"]
+position = Vector2(0, -78)
+
+[node name="Star1" type="Sprite2D" parent="Art/Stars"]
+position = Vector2(34, 0)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("7_estrella")
+
+[node name="Star2" type="Sprite2D" parent="Art/Stars"]
+position = Vector2(-17, 29)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("7_estrella")
+
+[node name="Star3" type="Sprite2D" parent="Art/Stars"]
+position = Vector2(-17, -29)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("7_estrella")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 12
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -6)
+shape = SubResource("Shape_hurt")
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+shape = SubResource("Shape_hit")
+
+[node name="Feathers" type="CPUParticles2D" parent="."]
+emitting = false
+amount = 14
+lifetime = 1.1
+one_shot = true
+explosiveness = 1.0
+texture = ExtResource("6_pluma")
+spread = 180.0
+gravity = Vector2(0, 320)
+initial_velocity_min = 140.0
+initial_velocity_max = 280.0
+angular_velocity_min = -360.0
+angular_velocity_max = 360.0
+scale_amount_min = 0.6
+scale_amount_max = 1.0
+scale_amount_curve = SubResource("Curve_fade")
+
+[node name="GustFx" type="CPUParticles2D" parent="."]
+emitting = false
+amount = 42
+lifetime = 1.2
+local_coords = false
+texture = ExtResource("8_rafaga")
+emission_shape = 3
+emission_rect_extents = Vector2(10, 150)
+particle_flag_align_y = true
+direction = Vector2(1, 0)
+spread = 5.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 850.0
+initial_velocity_max = 1100.0
+scale_amount_min = 0.6
+scale_amount_max = 1.1
+color_ramp = SubResource("Gradient_gust")

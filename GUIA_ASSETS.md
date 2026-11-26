@@ -76,6 +76,35 @@ Se calculan solas a partir del dibujo: al cambiar un PNG, su sombra cambia con �
 | Placa de presión | `assets/props/placa/placa_base.png` (base) y `placa_tapa.png` (tapa) | `scenes/pressure_plate.tscn` | La **tapa se tiñe** con el color del canal: dibujarla en gris claro/blanco. |
 | Rayitas de viento | `assets/props/viento/rafaga.png` | `scenes/wind_zone.tscn` | Blanca con transparencia; se tiñe y se mueve sola. |
 
+## El Tue Tue (jefe del último nivel)
+
+Hay **dos diseños** y se elige con **`look`** en el Inspector del nodo `TueTue` (en `scenes/boss/tue_tue.tscn` o en
+el nivel `scenes/levels/jefe.tscn`): **"Cabeza (transformado)"** (el que se usa) o **"Pájaro"** (el primer boceto,
+guardado por si se vuelve a él). El cambio también pone las partículas al pegarle y el ícono de la barra de vida.
+Los dos son **provisorios**, dibujados por código (`tools/generate_tuetue_art.py`). Para el definitivo,
+reemplazar los PNG con el mismo nombre (dibujado **de frente**, centrado en la cabeza; si cambia el tamaño del
+cuadro, ajustar la escala en `LOOKS` de `scripts/boss/tue_tue.gd`).
+
+**Cabeza transformada** (como en el video de la intro: cabeza verde que vuela con orejas de murciélago, estilo papel
+recortado), en `assets/enemigos/tue_tue/` (cuadros de 640×380 px, en el juego a escala 0,42):
+
+| Qué | Archivo(s) | Notas |
+|---|---|---|
+| Vuelo (aleteo de las orejas, 8 FPS) | `vuelo_1.png`, `vuelo_2.png`, `vuelo_3.png` (orejas arriba, al medio, abajo) | Animación `fly` de `tue_tue_frames.tres` (orden 1-2-3-2). Al atacar aletea al doble. |
+| Grito (aviso de ataque, 0,6 s) | `grito.png` | Boca abierta con lengua, cejas enojadas, ojos rojos: viene una picada, una ráfaga o la caída. |
+| Trocitos de papel al pegarle | `trozo.png` | Partículas `Feathers`. |
+| Vida en la barra del HUD | `vida.png` | Cabecita; las vidas perdidas se apagan. |
+
+**Pájaro** (alternativo), en `assets/enemigos/tue_tue/alternativos/pajaro/`: `vuelo_1..3.png` + `grito.png`
+(`pajaro_frames.tres`, 360×280 a escala 0,5), `pluma.png` (partículas) y `vida.png` (pluma dorada).
+
+Los dos usan `assets/enemigos/tue_tue/estrella.png` (estrellitas de mareado, `Art/Stars`) y las rayitas de la ráfaga
+`assets/props/viento/rafaga.png` (`GustFx`). La barra de vida es `scenes/boss/boss_bar.tscn` (madera morada, mismo
+shader que el puntaje).
+
+Sonidos: `tuetue.wav` (su grito: dos silbidos que caen), `boss_hit.wav` (golpe + graznido + aleteo), `gust.wav`
+(ráfaga) y `swoop.wav` (picada). Ver la tabla de sonidos.
+
 ## Celebración del emboque
 
 Al embocar salen dos efectos de partículas, sin imágenes (formas dibujadas por shader): se ajustan abriendo la
@@ -133,6 +162,10 @@ nombre → archivo + volumen). Reemplazar el archivo con el mismo nombre (WAV u 
 | `emboque_click.wav` | Al embocar: el "click" del palito entrando en la campana |
 | `sparkle.wav` | Al embocar: brillo sutil de las partículas doradas |
 | `confetti_pop.wav` | Al embocar: pop del confetti desde las esquinas |
+| `tuetue.wav` | Grito del Tue Tue (al aparecer, al avisar un ataque, al escapar) |
+| `boss_hit.wav` | Al pegarle al Tue Tue (y, más agudo y bajo, cuando su picada empuja a alguien) |
+| `gust.wav` | Ráfaga del Tue Tue (y cuando en la cima desparrama los extremos) |
+| `swoop.wav` | Picada del Tue Tue |
 | `ui_hover.wav` | Interfaz: mouse encima de un botón / mover el foco con flechas (muy corto y suave) |
 | `ui_click.wav` | Interfaz: apretar un botón (más agudo al prender una casilla) |
 | `ui_confirm.wav` | Interfaz: Jugar, entrar a un nivel, Continuar (el sonido "especial") |

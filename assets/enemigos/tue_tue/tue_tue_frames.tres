@@ -1,0 +1,34 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/enemigos/tue_tue/vuelo_1.png" id="1_v1"]
+[ext_resource type="Texture2D" path="res://assets/enemigos/tue_tue/vuelo_2.png" id="2_v2"]
+[ext_resource type="Texture2D" path="res://assets/enemigos/tue_tue/vuelo_3.png" id="3_v3"]
+[ext_resource type="Texture2D" path="res://assets/enemigos/tue_tue/grito.png" id="4_grito"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_v1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_v2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_v3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_v2")
+}],
+"loop": true,
+"name": &"fly",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_grito")
+}],
+"loop": true,
+"name": &"screech",
+"speed": 5.0
+}]

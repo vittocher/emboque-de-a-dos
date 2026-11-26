@@ -32,6 +32,12 @@ func add_points(points: int) -> void:
 	if _label != null and _label.has_method(&"bump"):
 		_label.bump()
 
+## Vuelve a un puntaje guardado (el checkpoint del nivel del jefe).
+func restore(saved_score: int, saved_collected: int) -> void:
+	score = saved_score
+	collected = saved_collected
+	_update_label()
+
 func _update_label() -> void:
 	if _label != null:
 		_label.set(&"text", tr("HUD_POINTS") % score)

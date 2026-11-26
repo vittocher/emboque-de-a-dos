@@ -73,10 +73,16 @@ scenes/
   levels/level_base.tscn  Escena BASE de todo nivel nuevo (se hereda: New Inherited Scene). Trae Background,
                        Camera2D, WallLeft/WallRight, Player1/2 (z 1), WinManager, CloseupManager, Emboque1/2 (z 1),
                        ScoreManager, UI (ScoreLabel/WinLabel), TerrainArt y PauseMenu, en el orden correcto.
-  levels/level_base_large.tscn  La misma base con la cámara alejada (zoom 0,8, mundo 1600×900). Ver "Escala del nivel".
-  levels/*.tscn        Los 27 niveles nuevos del mapa (heredan la base): tronco_1..4, peligro_1..3, caja_1..3,
-                       placa_1..4, movil_1..4, lanzar_1..4, viento_1..4, final. Cada uno descrito en su solución
-                       tests/solutions/<nivel>.gd. El árbol está en scripts/level_catalog.gd.
+  levels/*.tscn        Los 28 niveles nuevos del mapa (heredan la base): tronco_1..4, peligro_1..3, caja_1..3,
+                       placa_1..4, movil_1..4, lanzar_1..4, viento_1..4, final y jefe (el Tue Tue, ver "Nivel del
+                       jefe"). Cada uno descrito en su solución tests/solutions/<nivel>.gd. El árbol está en
+                       scripts/level_catalog.gd.
+  boss/tue_tue.tscn    El Tue Tue (TueTue): Art/Sprite (vuelo + grito) y estrellas de mareado, Hurtbox (lo golpean
+                       los extremos, mask 12), Hitbox (toca jugadores en picadas y caídas, mask 2), partículas al
+                       pegarle (Feathers) y de ráfaga. Dos diseños, `look` en el Inspector: la cabeza transformada
+                       del video (assets/enemigos/tue_tue) o el pájaro (alternativos/pajaro). Arte provisorio
+                       (tools/generate_tuetue_art.py).
+  boss/boss_bar.tscn   Barra de vida del jefe en el HUD (BossBar, arriba al centro): nombre + un ícono por vida.
   block.tscn           Bloque de terreno (StaticBody2D, block.gd) con `size` editable: piso, plataforma o muro.
                        TerrainArt lo viste solo. Con él se traza todo nivel nuevo.
   bowl.tscn            Cuenco en V (bowl.gd: `width`, `slope`), tablas resbalosas (friction 0): la META de muchos
@@ -200,6 +206,9 @@ scripts/
                    de qué niveles depende). Desbloqueo, número de nivel, coleccionables por escena.
   block.gd / bowl.gd  Bloque de terreno con `size`; cuenco con `width`/`slope` (ambos @tool).
   mechanisms/      channel.gd (canales con color), pressure_plate.gd, gate.gd, moving_platform.gd, wind_zone.gd.
+  boss/            tue_tue.gd (class TueTue: movimientos y ataques del jefe por modo), boss_fight.gd (class
+                   BossFight: las fases del nivel del jefe, cámara que sube, techo, abismo, checkpoints, carteles)
+                   y boss_bar.gd (BossBar). Ver "Nivel del jefe".
   push_box.gd      Caja empujable (class_name PushBox): el Player la empuja con push(); los extremos la golpean por física.
                    Si cae fuera de la pantalla (`respawn_y`) reaparece donde partió.
                    Suena un loop de arrastre mientras se desliza por el piso.
@@ -250,13 +259,17 @@ shaders/           madera_boton.gdshader (madera procedural de los botones: veta
                    vineta.gdshader: viñeta de pantalla completa (subida de tensión).
 video/             intro.ogv (Ogg Theora: el único formato de video de Godot) + README.md con cómo convertirlo.
 audio/             cueca.ogg (música, la pone SettingsManager) y sfx/: efectos placeholder (WAV 22 kHz mono):
-                   step, jump, die, hook, swing, box_push (loop), grab, throw, plate, gate, wind (loop) y los
-                   de la animación del emboque: emboque_click, sparkle, confetti_pop.
+                   step, jump, die, hook, swing, box_push (loop), grab, throw, plate, gate, wind (loop), los
+                   de la animación del emboque: emboque_click, sparkle, confetti_pop, y los del Tue Tue:
+                   tuetue (grito), boss_hit, gust (ráfaga), swoop (picada).
 i18n/              textos.csv: TODOS los textos del juego, una columna por idioma (ver "Idiomas").
 default_bus_layout.tres  Buses de audio Master / Music / SFX (ver "Volumen y buses de audio"). Obligatorio para web.
 tools/convertir_video.bat|.sh  Convierte el video de la intro a video/intro.ogv (ver "Intro (video)").
 tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python tools/generate_sfx.py [nombres]`
                    (sin nombres, todos; con nombres, solo esos, p. ej. `plate gate wind`).
+tools/generate_tuetue_art.py  Dibuja el arte provisorio del Tue Tue (Pillow + numpy): la cabeza (papel recortado) en
+                   assets/enemigos/tue_tue/ y el pájaro en assets/enemigos/tue_tue/alternativos/pajaro/.
+tests/             Bot de pruebas (ver "Bot de pruebas"): play_level.gd, run_all.sh, solutions/<nivel>.gd,
 tests/             Bot de pruebas (ver "Bot de pruebas"): play_level.gd, run_all.sh, run_controls.sh, monkey.gd + run_shortcuts.sh
                    (atajos), reach.py (alcance de saltos), solutions/<nivel>.gd,
                    rec_map.gd (graba el mapa para el tráiler). Excluido del export (exclude_filter "tests/*").
@@ -469,10 +482,10 @@ Como la progresión del concepto: un árbol de niveles que se desbloquean al com
 (nodo dorado y más grande), `rope: false` (sin cuerdas en el mapa) y `hint` (texto mientras está bloqueado).
 El número del nivel es su orden en la lista. `WinManager` toma el id y el nombre del catálogo.
 
-Árbol actual (29 niveles): **tronco** 1–4 (lo básico, sin objetos: caminar, largo de cuerda, ganchos, cuenco)
+Árbol actual (30 niveles): **tronco** 1–4 (lo básico, sin objetos: caminar, largo de cuerda, ganchos, cuenco)
 → desde el 4 se abren **peligros** (púas, caca, brasas, y "La T" = `level_2` del equipo), **cajas** (3 + "Escalones" = `level_4` del equipo) y
 **lanzar** (3 + "Buzón": lanzar el extremo por una ranura a una placa). Sub-ramas de mecánicas nuevas: **placas/compuertas** (desde caja 2; la 4.ª, "Relevo", con ganchos: cada uno abre la puerta del columpio del otro), **plataformas móviles**
-(desde peligro 2; la 4.ª, "Contratiempo": ascensores a contratiempo sobre el fuego) y **viento** (desde lanzar 2; la 4.ª, "Remonte": la corriente sube el extremo hasta un gancho inalcanzable y se trepa la cuerda). El **final** se abre con 4 de los 6 finales de rama. Cada
+(desde peligro 2; la 4.ª, "Contratiempo": ascensores a contratiempo sobre el fuego) y **viento** (desde lanzar 2; la 4.ª, "Remonte": la corriente sube el extremo hasta un gancho inalcanzable y se trepa la cuerda). El **final** se abre con 4 de los 6 finales de rama y, tras él, el **jefe** (el Tue Tue). Cada
 rama empieza introduciendo su mecánica en un caso simple y sube la dificultad. El mapa no nombra las
 mecánicas (minimalista): se descubren jugando. Los niveles que introducen un control traen un cartel
 (`LevelHint`) por jugador con sus teclas: tronco_2 (soltar / tirar cuerda) y lanzar_1 (lanzar).
@@ -509,6 +522,34 @@ de inicio y amarra al jugador, ver Lecciones) y los `test_*`. `level_2` ("La T")
   soplan (`gust_on` × `player_max_speed` ≈ cuánto sube una ráfaga: que alcance para un piso, no para dos) y los vientos
   en contra se cruzan en la calma. Se usa en viento_3. Con viento hacia arriba los extremos suben como un **volantín**: hay que soltar cuerda.
   `player_factor = 0` → solo afecta a los extremos. Sonido `wind` en loop (AudioStreamPlayer2D).
+
+### Nivel del jefe: el Tue Tue (`levels/jefe.tscn` + `scripts/boss/`)
+
+El último nivel del mapa (después del final): una pelea con el **Tue Tue**, un pájaro de mal agüero que no deja
+embocar. Tiene la mecánica de lanzar (`LevelRules.throw_enabled`) y es **más alto que la pantalla**: arena abajo
+(y 0..720) y una subida de escalones hasta la cima (y −1440..−720). Lo orquesta el nodo `BossFight`; al Tue Tue
+lo mueve `TueTue` según el modo. Todo es determinista (patrón fijo, sin azar): se aprende y el bot le gana.
+
+| Fase | Qué pasa |
+|---|---|
+| 1. Pelea (`FIGHT`) | Arena con fosos de púas a los costados. El Tue Tue repite `FIGHT_PATTERN`: **planea** en el centro (a tiro de un lanzamiento desde el piso: el alcance es `max_length` 320) y entre planeos **ataca**: PICADA a ras del piso (aviso: tiembla y chilla 0,9 s; empuja a quien toca hacia el foso del lado al que va, `swoop_knockback` bajo para pasar bajo los escalones) o RÁFAGA desde un costado (2,6 s: arrastra a los jugadores, `Player.add_push`, y a los extremos que cuelgan). Se esquiva saltando la picada y caminando contra la ráfaga. Un extremo **lanzado** (o a más de 550 px/s) que lo toca le quita una vida (5); tras un golpe ataca sin planear. Barra de vida (`BossBar`) arriba al centro. |
+| 2. Subida (`ESCAPE` → `CLIMB`) | Sin vidas escapa hacia arriba; a los 3 s la cámara sube sola (40 px/s; 75 si los dos van en la mitad de arriba) hasta la cima. Escalones en zigzag de 120 px por lado (afuera x 40..200 / adentro 240..400 y su espejo). Quien queda bajo el borde de abajo muere (`abyss_margin`). Un techo invisible (`WorldBoundaryShape2D`) sigue el borde de arriba y el fondo acompaña a la cámara. El Tue Tue vuela arriba de la pantalla. Con el emboque **en la mano** se salta sin que la cuerda reste altura ni amarre a los escalones. |
+| 3. Cima (`SUMMIT`) | **Sin cuenco** (decisión del equipo: los extremos no se juntan solos). Dos repisas delgadas con un hueco de 132 px y una **cortina** (muro de 68 px que cuelga del techo hasta 30 px sobre ellas): nadie cruza al lado del otro, la cortina frena a cada uno con la mano ~12 px más allá del borde de su repisa y los extremos cuelgan libres sobre el vacío a ~108 px (S ≈ 100: hay que balancearse **los dos a la vez**). Recién aquí se encienden `WinManager.active` y `CloseupManager.enabled` (+ `set_home` con el rectángulo de la cima). El Tue Tue no deja de atacar (`HARASS_PATTERN`, entre ataques una vuelta de `orbit_time` 1,6 s): **picadas** por las repisas a la altura del pecho (empujan, `summit_knockback`, alejando al jugador de la ranura y sacando su extremo del cuenco), **ráfagas** (arrastran a los jugadores, `summit_gust_push`, y soplan los extremos fuera del cuenco) y **caídas** bajo la cortina, donde cuelgan los extremos (golpean a quien esté pegado a ella y desparraman los extremos). Apenas los dos extremos se acercan (`react_radius` 80, dando vueltas o yendo a atacar) cae sobre ellos con un aviso corto (`dive_telegraph_time`). Se esquiva igual que en la arena (saltar la picada, caminar contra la ráfaga, alejarse de la cortina). Pegarle de un lanzamiento (la cortina tapa el lado del otro: cada uno le pega cuando pasa por su lado) lo deja **mareado** `stun_time` (8 s) en un rincón: la ventana para embocar (sin marearlo es casi imposible). Un empujón puede tirar a alguien de la repisa (si no cae en un escalón, muere y retoma en la cima). |
+| `WON` | Al embocar se va chillando (`beaten`); el WinManager sigue como en cualquier nivel. |
+
+**Checkpoints:** morir después de derrotarlo (la huida o la subida) o en la cima recarga y retoma al comienzo de esa fase (`BossFight._checkpoint`,
+estático; `LevelFlow.restart` anota que la recarga fue por una muerte y `LevelFlow.consume_death_reload` lo
+consume). Entrar desde el mapa o "Reiniciar" en la pausa empiezan de cero. El puntaje y las sopaipillas juntadas
+antes del checkpoint se conservan (`ScoreManager.restore`). `BossFight` tiene `reload_on_death` y la señal
+`triggered` como una zona de muerte (el bot la usa) y `debug_start(fase)` para probar una fase suelta.
+
+**Ganchos que agregó al motor** (sin cambiar los otros niveles): `Player.add_push` (arrastre por tick, como una
+cinta) y `Player.knockback`; grupos `"players"` y `"emboques"`; `Emboque.is_flying` / `stop_flight`;
+`WinManager.active`; `CloseupManager.enabled`, `level_origin` y `set_home`.
+
+**Ajustes:** en el Inspector del `TueTue` de la escena (diseño `look`, puntos de planeo, tiempos, fuerza de picada
+y ráfaga, vida, acoso de la cima y mareo) y del `BossFight` (velocidad de la cámara, demora, margen del abismo, dónde reaparecen). El trazado
+se generó por código (escalones calculados) pero es una escena normal: se puede editar a mano.
 
 ### Bot de pruebas (`tests/`)
 
@@ -1076,6 +1117,16 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
   hasta 180° y con los jugadores tirando se separaban 57 px. Para unir dos cuerpos de forma exacta, uno va
   montado en el otro (congelado, sin colisiones, copiando la transformación) y el que lleva aplica las fuerzas
   del otro (ver `RopeEnd.attach_to`).
+- **Mover (teletransportar) un cuerpo estático y en el mismo cuadro a un jugador "a través" de él falla:** el
+  motor actualiza dónde está un StaticBody recién al dar el paso de física; si el jugador llega antes, queda
+  "dentro" de la posición vieja y `move_and_slide` lo expulsa (pasó con el techo del nivel del jefe al saltar a la
+  cima: el jugador aparecía abajo). Mover primero el cuerpo y al jugador en el cuadro siguiente (`debug_start`).
+- **Al teletransportar un extremo, actualizarle también `anchor_position`:** si el paso de física corre antes de que
+  el Emboque se la pase, la restricción de la cuerda ve el extremo lejísimos del ancla vieja y lo dispara a miles de
+  px/s (`BossFight._place`).
+- **La cuerda frena los empujones:** un jugador empujado (picada del Tue Tue) arrastra su extremo, que queda atrás,
+  y `_limit_player` lo retiene: el empujón recorre ~250 px aunque sea de 800 px/s. Y si sube, choca con los
+  escalones: por eso el empujón es bajo (−220) y largo.
 - **Un `Container` le reinicia posición y ESCALA a sus hijos cada vez que se reordena** (al cambiar el texto o
   el tamaño mínimo de cualquier hijo): animar `scale`/`position` de un hijo directo de un VBox/HBox/CenterContainer
   se pierde a mitad de camino. Animar un hijo propio que no maneje el contenedor (la `Cara` de BotonMadera, el
@@ -1098,6 +1149,7 @@ Hecho (el detalle de lo verificado con tests headless está en `docs/REGISTRO_TE
 - **Extremos como emboque real:** palito y campana `RigidBody2D` que rotan y chocan entre sí; victoria = palito dentro de la campana. Partes a ~1/3 del jugador y física a 120 Hz contra el tunneling. Proyecto en Godot 4.7.2 (antes 4.6).
 - **Balanceo estilo DKC:** enganche instantáneo, péndulo propio del jugador, bombeo, salto desde la cuerda, soltarse con abajo, rapel, inclinación + squash/stretch.
 - **Animaciones** jump/fall/swing/push provisorias (cuadros existentes) + estirón al saltar, aplastón y golpe al aterrizar, inclinación al empujar.
+- **Tomar y lanzar el emboque** (por nivel, `LevelRules`), con mira en ping-pong y vuelo recto; la misma tecla lo recoge rápido a la mano. Se usa en lanzar_1..4, en el final y en el jefe.
 - **Salto parejo, más bajo y variable** (115 px con cualquier cuerda; termina al soltar la tecla) y el emboque que sigue como una cola (ver "El salto").
 - **Tomar y lanzar el emboque** (por nivel, `LevelRules`), con mira en ping-pong y vuelo recto; la misma tecla lo recoge rápido a la mano. Se usa en lanzar_1..4 y en el final.
 - **Magnetismo con curva + trabado:** suave a distancia, resorte fuerte una vez embocado.
@@ -1111,7 +1163,11 @@ Hecho (el detalle de lo verificado con tests headless está en `docs/REGISTRO_TE
 **Objetos y niveles**
 - **Zonas de muerte** (jugador / emboque / ambos), **caja empujable**, **coleccionables + puntaje** (también los recoge el emboque).
 - **Mecánicas nuevas:** placas de presión, compuertas, plataformas móviles/ascensores, corrientes de aire (volantín), cuenco/embudo como meta.
-- **29 niveles en un mapa ramificado** (tronco + 6 ramas + final), todos ganados por el bot de pruebas. Escena base heredable y bloques con `size`. Todas las ramas tienen 4 niveles.
+- **30 niveles en un mapa ramificado** (tronco + 6 ramas + final + jefe), todos ganados por el bot de pruebas (salvo `placa_3`, falla previa del bot). Escena base heredable y bloques con `size`. Todas las ramas tienen 4 niveles.
+- **Jefe final, el Tue Tue** (`levels/jefe.tscn`): pelea pegándole con el emboque lanzado mientras empuja a los
+  fosos con picadas y ráfagas → subida con la cámara que sube sola (parkour, el que queda abajo muere) → último
+  emboque en la cima mientras el pájaro desparrama los extremos (pegarle lo marea). Checkpoints en la subida y la
+  cima, barra de vida, carteles, arte y sonidos provisorios.
 - Del equipo: `level_2` ("La T") y `level_4` ("Escalones", rehecho sobre level_base) están en el mapa (fin de las ramas de peligros y de cajas); `main`, `level_3` y las pruebas siguen en el repo pero fuera del mapa.
 
 **Presentación visual**
@@ -1144,11 +1200,8 @@ Pendiente:
 - **Imágenes en inglés definitivas** (`assets/ui/en/portada.png`, `pause_menu.webp`): hoy son el arte original
   con el texto reescrito por código; diseño puede reemplazarlas con el mismo nombre.
 - **Niveles del equipo fuera del mapa** (`main`, `level_3`): corregir el inicio (ver Lecciones) si se quieren sumar.
-- **Recorridos:** probar con gente los marcados con * (ver "Recorridos"): caja_1, placa_3 y movil_1 rehechos, tronco_2 y
-  placa_4 más fáciles. Los niveles fuera del mapa (`main`,
-  `level_3`, `test_*`) no se ajustaron al salto más bajo.
-- **Tráiler:** tronco_3, peligro_2, caja_2, lanzar_3, placa_4, movil_3, viento_1, viento_3 y casi todos los demás cambiaron (regrabar). Los `start` de los clips en `trailer/edit.py` son tiempos fijos del bot; al regrabar hay que revisarlos (p. ej. `level_4` ahora emboca a los ~20 s de juego; antes, ~14).
 - **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos.
+- **Arte del Tue Tue:** el actual es provisorio, dibujado por código (ver GUIA_ASSETS.md).
 - **Tráiler:** los `start` de los clips en `trailer/edit.py` son tiempos fijos del bot; al regrabar hay que revisarlos (p. ej. `level_4` ahora emboca a los ~20 s de juego; antes, ~14).
 - **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos (también los `ui_*` de la interfaz).
 
@@ -1161,3 +1214,196 @@ Post-prototipo (del concepto): más objetos dinámicos, más niveles.
 - Placeholders geométricos (`Polygon2D`/formas) hasta que llegue el arte; al llegar se ocultan (`visible = false`), no se borran.
 - **Todo el arte va en `assets/`** (ver Arquitectura). Al mover un archivo, moverlo **junto con su `.import`** (conserva el uid) y actualizar las rutas `res://` que lo usan.
 - Cámara **fija** en los primeros niveles (del tamaño de la cámara, sin scroll).
+
+## Registro de tests
+
+Qué se verificó de cada feature con tests headless y con qué resultado. Los scripts de test eran temporales, así que esta sección es el registro de lo comprobado: al terminar una feature, agregar aquí qué se probó y el resultado (y una línea en "Estado de desarrollo").
+
+### Mecánica base
+
+- **Cuerda limita al jugador (Fase 4):** sobre-extensión 459 px → 0,04 px.
+- **Enganche básico (Fase 4.5):** engancha al tocar, rapel con soltar/tirar, salto desengancha. PASS.
+- **Extremos como emboque real:** colisión entre extremos sin atravesarse (incl. a velocidad alta), emboque por magnetismo, enganche. PASS.
+- **Balanceo estilo DKC:** radio exacto, período, bombeo ≤ ángulo máx, enganche instantáneo, lanzamiento sin tirón, rapel, enganche sobre el gancho, suelo atado, sin doble salto. PASS.
+- **Muros laterales:** en todos los niveles hay muro exactamente en `x=0` y `x=1280` (consulta de punto / raycast). PASS. Los niveles 3 y 4 no los tenían tras el merge de develop; agregados y verificados (muro en y −300…700 a ambos lados).
+
+### Victoria, magnetismo y closeup
+
+- **Closeup + slowdown:** lejos → normal; cerca → zoom ~2, time_scale 0,35 y cámara al punto medio; revierte; time_scale se reinicia al salir. PASS.
+- **Magnetismo con curva + trabado** (extremos sueltos, sin cuerda ni gravedad):
+
+  | Caso | Lineal (antes) | Curva exp 3 (ahora) |
+  |---|---|---|
+  | Acercamiento en 0,2 s desde 45 px de la boca | 10,5 px | 1,4 px |
+  | Desde 30 px | 18,3 px | 6,0 px |
+  | Desde 20 px | 21,1 px | 13,0 px |
+  | Pasada rasante a 35 px, 300 px/s: desvío hacia la campana | 36,6 px | 6,3 px |
+
+  Trabado, tirando del palito hacia afuera durante 1 s: 1500 px/s² → separación máx 2,3 px; 3000 px/s² → 4,7 px; temblor en el último 0,5 s = 0 px y sigue trabado. Victoria desde 30 px acercándose a 60 px/s: gana en 0,37 s con 0° y con 20° de error.
+- **Pantalla de victoria + highscore:** récord, no-récord, independencia entre niveles, persistencia en `user://scores.cfg`. PASS.
+
+### Objetos y zonas
+
+- **Export web con idiomas** (Chromium headless, Playwright): el navegador en inglés arranca el juego en inglés
+  (idioma del sistema); el botón de idioma cambia todo a español (portada, botones); mapa, nivel y pausa (imagen en
+  español) siguen el idioma; sin errores en consola. PASS.
+- **Ajustes con el tema de madera** (Xvfb, es/en): se ve como el panel de la pausa; borrar progreso: 1 clic pide
+  confirmar ("¿Seguro? Presiona otra vez"), el 2.º borra (completados 25 → 0), sin 2.º clic se desarma a los 3 s. PASS.
+- **Revisión de bugs (fixes verificados):** ganado + tocar una zona de muerte → no recarga ni suena y llega a la
+  victoria; dos zonas en el mismo instante → una sola recarga; música sigue en la pausa (avanza 0,65 s en 0,6 s
+  reales); abrir Ajustes de la pausa no suena ni guarda; mover Efectos da una muestra; plataforma bajando sobre un
+  jugador se detiene 1 px sobre su cabeza sin moverlo. PASS 9/9. `run_all.sh` 25/25 después de los cambios.
+- **Zonas de muerte:** detección, aislamiento por máscara (la de jugador no mata al emboque y viceversa), zona "ambos". PASS. Tras ponerles arte (HazardArt) se volvió a verificar que siguen disparando.
+- **Caja empujable:** asentarse, empuje parejo, frenar al soltar, muro, pararse encima, pasajero, golpe de campana, empujes opuestos, caída de borde, pila. PASS.
+
+### Presentación y sonido
+
+- **Video convertido con `tools/convertir_video.sh`** (fuente 1920×1080 a 60 fps con audio, 12 s): sale Theora 1280×720 30 fps + Vorbis 44,1 kHz estéreo; en la intro avanza a velocidad real (6,08 s a los 6 s) y al terminar (12,5 s) pasa solo al menú; resto del test de la intro igual. PASS 21/21.
+- **Tráiler** (`trailer/`): grabado con `--write-movie` + el bot (13 niveles + el mapa, en es y en), 72 s
+  con cortes en los tiempos de la cueca (~112 BPM; la entrada de la banda en el logo), textos que entran
+  deslizándose y los efectos del juego mezclados encima. Revisado cuadro a cuadro. El bot del final se pasa
+  del aterrizaje grabando a 30 fps (se usan solo sus primeros segundos).
+- **Intro (video)** (escritorio con Xvfb + export web en Chromium headless, con un .ogv de prueba): arranca como escena principal, video sonando y cueca callada; una tecla en los primeros 0,35 s no salta; mensaje visible con el texto pedido; el video llena 1280×720 (16:9) y uno 4:3 queda centrado con franjas (960×720 en x=160); tecla → fundido → menú; la cueca vuelve con fundido (−36 dB → 0 dB); volver al menú desde otra escena no repite fundido ni reinicia la música; al terminar el video pasa solo al menú; clic también salta; sin video va directo al menú con música. PASS 20/20. En web: aviso "para comenzar" → video → menú, con salida de audio medida (AnalyserNode): aviso 0,0000, video 0,074, menú (cueca) 0,158; el .ogv entra al .pck. Botón Ajustes con brillo fantasma al llegar al menú (bug previo del layout, ver Lecciones) corregido: sin mouse encima no brilla, con el mouse encima sí, y sigue al mouse.
+
+- **Sombras y brillos** (capturas en Forward+ y en Compatibility, el renderer de la web; 12 niveles): terreno
+  con sombra y oclusión, sin franja oscura en los bordes de la pantalla; jugadores con sombra (con `grow`) y
+  mancha de contacto que sigue el piso; sombra probada aislada sobre fondo claro con caja y jugador a escala 0,2
+  y 0,6; fuego con brillo rojo sin rayas (tras pasar el UV por un varying), caca verde, púas con sombra. Sin
+  errores de shader. Cajas con `resaltar.gdshader` en caja_2 y level_4 (también en Compatibility): se
+  distinguen del terreno a simple vista. Bot: 28/29 ganados; `placa_3` da TIMEOUT **también sin estos cambios** (falla previa del bot).
+- **Animaciones provisorias + toques** (capturas con Xvfb en caja_1/tronco_3): estados push/jump/fall/idle con su cuadro; inclinación al empujar; aplastón al aterrizar con los pies en el piso. El bot sigue ganando igual (son solo visuales). PASS.
+- **Mirada + espejo + sonidos:** mirada/espejo, estados de animación, ~8 pasos/s, pasajero sin pasos, salto, enganche, whoosh por pasada, loop de la caja on/off, muerte sin sonido duplicado. PASS.
+- **Volumen por categoría:** buses creados y enviando a Master, los tres volúmenes no se pisan, persisten en `user://settings.cfg`, Sfx y la caja usan el bus SFX. PASS.
+- **Audio en el export web** (build exportado, navegador Edge headless controlado por DevTools, midiendo la señal que llega a la salida con un AnalyserNode; control: un tono de prueba da RMS 0,71): con los buses creados en runtime la salida era **0,0000** aun con el AudioContext activo tras el clic (mudo, igual que en Newgrounds); con `default_bus_layout.tres` la música da RMS ~0,1–0,2 tras el primer clic y 3 saltos en el Nivel 1 disparan 3 efectos. PASS. En el mismo build web, el menú principal sin Salir deja Jugar/Ajustes centrados.
+- **Menú de pausa (diseño del equipo):** cada uno de los 7 niveles tiene exactamente un PauseMenu; Esc pausa/reanuda; foco en Continuar; los 4 botones calzan con los pintados; hover mueve el foco; Ajustes muestra sliders y oculta botones; el slider cambia SettingsManager; Volver devuelve el foco a Ajustes; Continuar reanuda. PASS 43/43. Luego se agregó P como segunda tecla (acción `pause`): P pausa y reanuda, Esc también (en `level_3`). PASS.
+- **Arte (jugadores, cajas, zonas, sopaipillas, terreno, fondo, ganchos):** cada nivel cargado y capturado sin errores de script; animación de caminata a la frecuencia pedida (cambio de frame cada 12 ticks a 10 FPS con física a 120 Hz).
+
+### Banderas de idioma
+
+Con Xvfb (es/en): bandera de Chile junto a "Español" y del Reino Unido junto a "English" en el botón del menú
+principal (con margen, sin pisar el borde dorado), en la lista de Ajustes (botón y desplegable) y en el botón de
+idioma de la pausa; al cambiar de idioma con el botón del menú la bandera cambia al tiro. Los SVG (con clipPath, la
+Union Jack) se dibujan bien. Sin errores de script. PASS.
+
+### Cámara lenta más sutil (0,15 → 0,4)
+
+`min_time_scale` 0,15 → 0,4 y `music_min_pitch` 0,7 → 0,85 (con los extremos juntos se mide time_scale 0,400 y
+tono 0,850). Los planes del bot usan esperas en tiempo real, así que tres se ajustaron: `peligro_1` (largo final
+180 → 175; gana con 170–190 salvo 180), `peligro_3` (la campana caía parada con la boca hacia el fondo del cuenco:
+espera previa 0,6 → 0,4 s, gana con 0,2–0,5; empujón final hacia el cuenco, porque hacia atrás el jugador choca con
+el escalón y el paso nunca terminaba; y J1 levanta y vuelve a dejar caer la campana si no emboca) y `final` (frenado
+470 → 480; gana con 465 y 473–490: ahora es más tolerante). `run_all.sh`: 28/29 (`placa_3`, falla previa).
+
+### Controles en la portada y en la pausa
+
+Controles de la cuerda invertidos (soltar = T / `.`, tirar = R / `,`). En la portada (`assets/ui/portada.png` y
+`assets/ui/en/portada.png`) las tapitas de esas teclas se intercambiaron píxel a píxel (el resto del dibujo intacto;
+ojo: si se vuelven a cambiar, la portada hay que editarla, la pausa no). Pausa (Xvfb, tronco_1 y lanzar_1, es/en,
+también con Ajustes abierto): un panel por jugador en las franjas de los costados (18..266 y 1014..1262, alto 292 con
+lanzar), teclas leídas del Input Map (T/R y ./, ya invertidas), fila "Lanzar / recoger" solo en lanzar_1. PASS.
+
+Carteles de nivel (Xvfb, es/en): tronco_2 con un cartel por jugador ("T Soltar: estira la cuerda / R Tirar:
+retrae la cuerda" y lo mismo con . y , para J2) arriba de cada mitad, sin tapar el muro central ni el HUD; lanzar_1
+con "G/L Recoge el emboque a la mano · Otra vez: apunta · Y otra más: ¡lánzalo!" (reemplaza el texto plano
+anterior). Bot: tronco_2 y lanzar_1 ganados.
+
+### HUD (pausa y puntaje)
+
+Con Xvfb y capturas (peligro_1, tronco_1, lanzar_1, level_2, level_3, main): indicador de pausa en (16,14) en todos
+los niveles (main incluido, sin puntaje); P lo oculta al pausar y vuelve al reanudar; clic en él pausa; Esc reanuda.
+Puntaje con borde derecho en x=1264 con "Puntos: 0", "100" y "2500" (crece hacia la izquierda); en inglés "PAUSE" /
+"Points: 2500"; la placa salta 1,13 → 1 en 0,3 s al sumar (escalar el ícono dentro del HBox no funcionaba: el
+contenedor reinicia la escala de sus hijos). PASS 24/24. Bot: tronco_1, peligro_1, level_2, lanzar_1 ganados.
+
+### Animación del emboque
+
+Con el bot (tronco_1 + script que sigue tras ganar, en Forward+ y Compatibility): las piezas quedan pegadas
+con el ángulo relativo fijo (medido en cada cuadro dibujado durante 3 s, con los jugadores caminando en
+direcciones opuestas, en tronco_1, tronco_4 y peligro_2: variación del ángulo relativo 0,00° y separación
+punta–cavidad constante; con el PinJoint2D anterior el ángulo giraba hasta 180°); el click de cámara se ve (zoom extra y vuelta); destello y estrellitas doradas alrededor del
+emboque; confetti girando (el alto del papelito varía, `INSTANCE_CUSTOM` funciona en Compatibility) y chispas
+que llegan hacia el centro y arriba; todo a velocidad real con la cámara lenta. Magnetismo más suave
+(65/750/2,1): con 60/650/1,8 cinco planes del bot dejaban de embocar. Se ajustaron dos soluciones del bot que
+quedaban justo en el borde: `viento_2` (cuerda de J1 200 → 215; gana con 210–220) y `placa_1` (120 → 130;
+gana con 100–110 y 125–140). `run_all.sh`: 28/29 (`placa_3` sigue con su TIMEOUT previo).
+Cámara lenta más fuerte (0,35 → 0,25) + música: en tronco_1 el time_scale baja suave hasta 0,25 y el tono de la
+música lo sigue hasta 0,70; en la pausa vuelve a 1,00 y al reanudar a 0,70; al salir del nivel, time_scale y tono
+en 1,00. Sonidos (bot en tronco_1, registrando `Sfx.played`): al embocar suenan `emboque_click` y `sparkle` y, 0,06 s
+después, `confetti_pop`. Los WAV sin saturar ni NaN (pico −3 dB); el click lleva saturación suave (+6 dB de
+volumen percibido con el mismo pico). Se probó y se sacó una subida de tensión con tambores (bombo y tom con
+reverb, ritmo según la distancia): se va a volver a iterar. Subida de tensión (TensionFx, tronco_1 y tronco_4): la música
+sigue en su volumen de Ajustes mientras se acercan y se corta justo antes del click: en tronco_1, tronco_4 y
+peligro_2 empieza a caer 0,192 s (reales) antes del click, está muda (−60 dB) 0,05 s después y el click suena
+tras ~0,14 s de silencio; tras el click la música sigue muda 0,4 s y vuelve en 0,3 s; los efectos bajan a −14 dB a la par; viñeta 0 → 0,70; halo de 24 a 40 px latiendo.
+Cámara lenta más fuerte (0,25 → 0,15): `run_all.sh` 27/29 → `final` volvió a caer al fuego con `brake` 465 (gana
+con 458–462 y 468–472: se dejó 470) → 28/29 (`placa_3`, falla previa). Al embocar: efectos en 0 dB en el mismo tick del click; viñeta y halo en 0 a los 0,3 s; la música sigue
+muda 0,4 s y vuelve a su volumen a los ~1,6 s. En la pausa, música y efectos sin bajada. Capturas (tronco_1,
+tronco_4): bordes oscuros y halo ceñido a los extremos. Al embocar (end_slowdown): time_scale 0,25 → 0,41 → 0,61 → 0,82 → 1,00 y tono 0,70 → 1,00 en 16 ticks
+(~0,13 s), con el click de zoom a la vez (2,0 → 2,6 → 2,0) y el encuadre del closeup intacto. Ajustes del bot: `movil_4` (esperas de `drop` 0,6/0,4/0,6/0,5 → 1,0/0,6/1,2/0,8; gana con largos 160–180)
+y `final` (`brake` 470 → 465). `run_all.sh`: 28/29 (`placa_3`).
+
+### Lanzar el emboque (`test_throw.tscn`) — PASS 49/49
+
+No toma al acortar hasta el mínimo; toma con pulsación nueva; en la mano va sin colisiones y pegado a la mano al caminar; apuntando no camina ni salta pero gira; la mira va de 0 a 60° y vuelve; soltar restaura todo sin alargar la cuerda; vuelo recto con desvío 0 px hasta 320 px; choca con la torre sin atravesarla; el mejor salto queda 40 px bajo el techo de la torre; cada jugador lanza a su gancho → sube → queda arriba de la torre; un extremo en la mano no emboca ni activa el closeup (con control); sin `LevelRules` no hay mecánica. Desde el mejor lugar (~150–200 px del gancho) sirve una ventana de ~10° del barrido.
+
+**Recoger con `lanzar`** (test_throw, headless): colgando → en la mano en 0,06 s; ciclo con la misma tecla
+(recoger → apuntar → lanzar → recoger en vuelo → en la mano); tras aterrizar a 197 px → en la mano en 0,10 s; el
+jugador no se mueve (0,0 px) al recoger; `soltar` corta la recogida y la cuerda queda del largo actual; extremo
+trabado (congelado) → deja de recoger a los 0,23 s sin arrastrar al jugador; enganchado, `lanzar` no hace nada; sin
+`LevelRules` no hace nada. PASS 20/20. Bot: lanzar_1..4 y viento_2 ganados; `final` cae al fuego (Palito@PitFire,
+t=10,96) igual con el código anterior: falla previa del bot, no de esta mecánica.
+
+### Nivel 2 (`level_2.tscn`) — PASS 27/27
+
+Rojo mata al jugador y no al emboque; naranja mata a ambos; el muro no se salta por arriba; extremos y jugadores recogen. Rutas: J1 baja con cuidado a la izquierda del rojo, engancha el gancho de abajo (tirar al mínimo, soltar un poco y volver a tirar) y se balancea hasta la T en 10/12 combinaciones largo/ángulo; J2 acorta la cuerda, corre a la izquierda, el palito engancha el gancho derecho y salta a la T en 4/4 ángulos; con la cuerda a 170 el palito roza el bloque naranja; desde la T los extremos cuelgan bajo el muro, se juntan a 5 px y recogen los 2 coleccionables de abajo.
+
+### Nivel del jefe (`levels/jefe.tscn`)
+
+**Sin cuenco en la cima** (cortina + extremos colgando libres, S ≈ 108): el bot cuelga los extremos junto a la
+cortina y los balancea los dos a la vez al ritmo del péndulo (como el paso `swing` del bot del equipo), durante el
+mareo (8 s; con 5,5 s no alcanzaba a juntar amplitud). Cima: gana al 1.er intento con cuerda 100–120 y vaivén 40, al
+2.º con vaivén 50; con 140 tarda varios intentos y con vaivén 30 no emboca. Sin marearlo: no emboca y termina
+empujado. Nivel completo ~69 s, desde la subida ~38 s. Checkpoints PASS 21/21, `run_all.sh` 29/30 (`placa_3`).
+
+Bot (`tests/solutions/jefe.gd`, controlador que reacciona al estado del Tue Tue): gana el nivel completo en ~60 s
+(pelea ~31 s con 5 golpes, subida ~24 s, cima ~5 s); también empezando en la subida (`--var=start=climb`, 29 s) y en
+la cima (`--var=start=summit`, 5 s); con cuerda final de J1 140/160/180 y de J2 140/160/180. Controles que fallan:
+nadie hace nada → la ráfaga lo tira al foso de púas (18 s); sin esquivar picadas ni ráfagas → al foso (8 s).
+**Cima más difícil** (pedido del equipo: el Tue Tue no empujaba): el bot ahora espera en su lado de la repisa
+saltando picadas y caminando contra ráfagas mientras J1 lo marea, y emboca durante el mareo (gana en ~65 s el nivel
+completo, 11 s la cima; cuerdas 140/180 y retroceso 20/40 también). Sin marearlo, 3 intentos desparramados por las
+caídas y termina empujado fuera de la repisa (antes de este cambio ganaba al 1.er intento). Los dos diseños
+(`look`) cargan y se ven en la pelea, con su ícono en la barra. Checkpoints con recargas reales (PASS 21/21): entrar = intro → pelea con
+barra; derrotarlo → escapa (ahí se guarda el checkpoint); quedarse abajo en la subida mata y recarga en la subida (J1 sobre la arena, sin barra, el Tue Tue no vuelve a
+pelear, puntaje y sopaipilla juntada conservados) y la cámara vuelve a subir; caer bajo la pantalla en la cima
+recarga en la cima (cámara arriba, WinManager y closeup encendidos); "Reiniciar" de la pausa vuelve a cero (fase
+intro, puntaje 0). `run_all.sh`: 29/30 (`placa_3`, falla previa). Capturas revisadas de cada fase.
+
+### Niveles del mapa (bot, `tests/run_all.sh`) — 29/29 ganados
+
+Cada nivel se gana con el plan de `tests/solutions/<nivel>.gd` (además se barrieron parámetros: largo de cuerda,
+ángulo de lanzamiento, bombeo, punto de salto; y se probaron "controles" que deben fallar). Resumen:
+
+| Nivel | Tiempo | Controles que fallan (como debe ser) |
+|---|---|---|
+| tronco_1..4 | 5–15 s | T2: sin ajustar largos no se juntan; T3: el salto directo no cruza (el extremo engancha solo) |
+| peligro_1 Púas | 19 s | — (sopaipillas en zanjas de púas que solo el emboque alcanza) |
+| peligro_2 Cuidado abajo | 8 s | quedarse en el borde con cuerda 170, o bajar el extremo de más → caca |
+| peligro_3 Brasas | 9 s | cuerda 90–170 sobre las brasas → el extremo se quema; cuerda 60–100 no sube el escalón |
+| level_2 La T (equipo) | 24 s | cuerda 120 de J2 → el palito toca el bloque de fuego |
+| caja_1..3 | 8–14 s | caja_3: si J2 sigue la caja al piso de J1, su extremo cae a la caca |
+| level_4 Escalones (equipo) | 15 s | caja empujada a <30 px de la plataforma → el salto choca con ella (gana con largos 130–190 al bajar al cuenco) |
+| placa_1..3 | 6–12 s | — |
+| placa_4 Relevo | 18 s | J2 fuera de su placa → la puerta de J1 no abre y no pasa; gana con bombeo 1,3 y 1,6 |
+| movil_1..3 | 8–17 s | movil_2: cuerda 170 en la plataforma → caca |
+| movil_4 Contratiempo | 25–30 s | cuerda 110 o 170 → el extremo cuelga al fuego con el ascensor abajo; cruzar al final de la pausa → al fuego |
+| lanzar_1..3 | 6–10 s | lanzar_3: sin acortar al soltarse, el extremo cuelga al fuego |
+| lanzar_4 Buzón | 14 s | lanzar a 12° o más (desde 250 px) pega sobre la ranura: la compuerta de J2 no abre; gana lanzando de 130 a 310 px y con 0–8° |
+| viento_1..3 | 5–10 s | — |
+| viento_4 Remonte | 12 s | pararse 50 px al lado del gancho → el extremo sube derecho y no engancha; gana en 8 de 9 variantes (bombeo 0,9–1,6, posición ±12 px, punto de salto) |
+| final | 10–15 s | el punto de frenado del bot depende de la cámara lenta (0,35: 465–470; 0,25: 464–466; 0,15: 458–462 y 468–472; 0,4: 465 y 473–490, se usa 480) → si no, fuego (el humano corrige en el aire) |
+| jefe El Tue Tue | 69 s | nadie hace nada o sin esquivar → al foso; en la cima sin marearlo desparrama los extremos; vaivén 30 no emboca (ver "Nivel del jefe") |
+
+También: mapa (desbloqueo, foco inicial en lo recién desbloqueado, F9), flujo completo menú → mapa → nivel →
+victoria → Continuar → mapa con el siguiente desbloqueado (PASS); compuerta no aplasta; capturas de cada nivel
+revisadas.

@@ -91,6 +91,9 @@ var _release_used: bool = false  # soltar se usó para dejar el extremo: no alar
 var _reel_best_dist: float = 0.0
 var _reel_stall: float = 0.0
 
+func _enter_tree() -> void:
+	add_to_group(&"emboques")
+
 func _ready() -> void:
 	_anchor = get_node_or_null(anchor_node) as Node2D
 	_instance_end()
@@ -240,6 +243,16 @@ func _on_jump_cut() -> void:
 ## True si el jugador tiene el extremo en la mano (tomado o apuntando).
 func is_held() -> bool:
 	return _throw_state == ThrowState.HELD or _throw_state == ThrowState.AIMING
+
+## True mientras el extremo va lanzado (en vuelo recto, recién soltado de la mira).
+func is_flying() -> bool:
+	return _throw_state == ThrowState.FLYING
+
+## Corta el vuelo de un lanzamiento (p. ej. al pegarle al Tue Tue): el extremo
+## vuelve a caer con gravedad desde donde está.
+func stop_flight() -> void:
+	if _throw_state == ThrowState.FLYING:
+		_end_flight()
 
 ## Tomar: cuerda ya al mínimo + tirar otra vez, o lanzar (lo recoge rápido desde
 ## donde esté). Tomado: soltar lo deja caer, lanzar empieza a apuntar. Apuntando:

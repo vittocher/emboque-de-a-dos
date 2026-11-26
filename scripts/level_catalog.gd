@@ -87,6 +87,10 @@ const LEVELS: Array[Dictionary] = [
 		"pos": Vector2(700, 112), "need": 4, "special": true, "rope": false,
 		"hint": "MAP_HINT_FINAL",
 		"from": ["level_2", "level_4", "lanzar_4", "placa_4", "movil_4", "viento_4"]},
+	# --- Jefe: la pelea con el Tue Tue (después del final) ---
+	{"id": "jefe", "scene": "res://scenes/levels/jefe.tscn",
+		"pos": Vector2(840, 70), "special": true, "hint": "MAP_HINT_JEFE",
+		"from": ["final"]},
 ]
 
 ## Clave de traducción del nombre del nivel (i18n/textos.csv): "LEVEL_TRONCO_1".

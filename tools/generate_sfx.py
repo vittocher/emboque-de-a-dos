@@ -273,6 +273,64 @@ def confetti_pop():
     return (x + rustle) * attack(len(t), 0.0005)
 
 
+def tuetue():
+    # El grito del Tue Tue: dos silbidos que caen ("tue... tue"), el segundo más
+    # grave, con un vibrato leve, aire y un eco corto (pájaro de mal agüero).
+    def note(dur, f0, f1):
+        t = time(dur)
+        f = np.linspace(f0, f1, len(t)) * (1.0 + 0.012 * np.sin(2 * np.pi * 7 * t))
+        ph = sweep_phase(f)
+        tone = np.sin(ph) + 0.18 * np.sin(2 * ph) + 0.06 * np.sin(3 * ph)
+        env = attack(len(t), 0.02) * np.clip((dur - t) / 0.09, 0, 1)
+        breath = bandpass(rng.uniform(-1, 1, len(t)), f0 * 1.1, q=3.0) * 0.18
+        return (tone + breath) * env
+
+    gap = int(SR * 0.13)
+    a = note(0.24, 1950, 1480)
+    b = note(0.30, 1750, 1250) * 0.9
+    x = np.concatenate([a, np.zeros(gap), b, np.zeros(int(SR * 0.35))])
+    echo = np.zeros_like(x)
+    d = int(SR * 0.11)
+    echo[d:] = x[:-d] * 0.32
+    echo2 = np.zeros_like(x)
+    echo2[2 * d:] = x[:-2 * d] * 0.12
+    return x + lowpass(echo + echo2, 2600)
+
+
+def boss_hit():
+    # Le pegan al Tue Tue: golpe grave + chillido corto + plumas que se sueltan.
+    t = time(0.42)
+    thump = np.sin(sweep_phase(np.linspace(150, 45, len(t)))) * np.exp(-t / 0.06)
+    tq = time(0.2)
+    fq = np.linspace(1100, 650, len(tq)) * (1.0 + 0.05 * np.sin(2 * np.pi * 38 * tq))
+    squawk = np.zeros_like(t)
+    sq = (triangle(sweep_phase(fq)) + 0.4 * square(sweep_phase(fq * 2), 0.3) * 0.3)
+    squawk[int(SR * 0.02): int(SR * 0.02) + len(tq)] = sq * np.exp(-tq / 0.08) * attack(len(tq), 0.005) * 0.7
+    feathers = bandpass(rng.uniform(-1, 1, len(t)), 3800, q=0.8) * np.exp(-t / 0.15) * 0.35
+    return (thump * 1.2 + squawk + feathers) * attack(len(t), 0.001)
+
+
+def gust():
+    # Ráfaga del aleteo: ruido de viento que sube y baja (1,6 s).
+    t = time(1.6)
+    center = 450 + 750 * np.sin(np.pi * t / t[-1]) ** 2
+    x = bandpass(rng.uniform(-1, 1, len(t)), center, q=0.7)
+    flaps = 0.65 + 0.35 * np.abs(np.sin(2 * np.pi * 2.4 * t))
+    env = np.sin(np.pi * t / t[-1]) ** 0.6
+    return x * flaps * env
+
+
+def swoop():
+    # Picada: un "fiuuu" rápido de aire que sube y baja.
+    t = time(0.55)
+    center = 350 + 2200 * np.exp(-((t - 0.2) / 0.12) ** 2)
+    x = bandpass(rng.uniform(-1, 1, len(t)), center, q=1.4)
+    env = np.exp(-((t - 0.22) / 0.14) ** 2)
+    return x * env
+
+
+ALL = (step, jump, die, hook, swing, box_push, grab, throw, plate, gate, wind,
+       emboque_click, sparkle, confetti_pop, tuetue, boss_hit, gust, swoop)
 # --- Interfaz (menús, mapa, pausa; los reproduce el autoload UiFx) -------------
 # Familia de sonidos de madera + cuerda pulsada (como un charango), para que la
 # interfaz suene al mismo mundo que el emboque.
