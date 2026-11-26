@@ -331,6 +331,132 @@ def swoop():
 
 ALL = (step, jump, die, hook, swing, box_push, grab, throw, plate, gate, wind,
        emboque_click, sparkle, confetti_pop, tuetue, boss_hit, gust, swoop)
+# --- Interfaz (menús, mapa, pausa; los reproduce el autoload UiFx) -------------
+# Familia de sonidos de madera + cuerda pulsada (como un charango), para que la
+# interfaz suene al mismo mundo que el emboque.
+
+
+def pluck(freq, seconds, damping=0.996, brightness=0.6):
+    """Cuerda pulsada (Karplus-Strong): ruido en una línea de retardo que se
+    promedia a sí mismo. brightness < 1 suaviza el ataque (cuerda más opaca)."""
+    n = int(SR * seconds)
+    period = max(2, int(round(SR / freq)))
+    buf = rng.uniform(-1, 1, period)
+    buf = lowpass(buf, 2000 + 8000 * brightness)
+    out = np.zeros(n)
+    for i in range(n):
+        k = i % period
+        out[i] = buf[k]
+        buf[k] = damping * 0.5 * (buf[k] + buf[(k + 1) % period])
+    return out
+
+
+def wood_knock(t, pitch=1.0):
+    """Golpe de madera hueca (wood block): ataque de ruido + 3 resonancias."""
+    hit = highpass(rng.uniform(-1, 1, len(t)), 2000) * np.exp(-t / 0.0012)
+    body = (
+        np.sin(2 * np.pi * 820 * pitch * t) * np.exp(-t / 0.028)
+        + 0.55 * np.sin(2 * np.pi * 1960 * pitch * t) * np.exp(-t / 0.015)
+        + 0.5 * np.sin(2 * np.pi * 360 * pitch * t) * np.exp(-t / 0.03)
+    )
+    return hit * 0.7 + body
+
+
+def fade_tail(x, seconds=0.012):
+    """Fundido final corto (que el sonido no termine con un click)."""
+    k = min(len(x), int(SR * seconds))
+    x = x.copy()
+    x[-k:] *= np.linspace(1.0, 0.0, k)
+    return x
+
+
+def place(total, parts):
+    """Mezcla [(inicio_s, señal), ...] en un buffer de total segundos."""
+    x = np.zeros(int(SR * total))
+    for start, sig in parts:
+        i = int(SR * start)
+        m = min(len(sig), len(x) - i)
+        x[i:i + m] += sig[:m]
+    return x
+
+
+def ui_hover():
+    # Mouse encima / foco: "tic" de madera muy corto y suave, agudo.
+    t = time(0.045)
+    tick = bandpass(rng.uniform(-1, 1, len(t)), 3200, q=4.0) * np.exp(-t / 0.004)
+    tone = np.sin(2 * np.pi * 2350 * t) * np.exp(-t / 0.012) * 0.6
+    return fade_tail((tick + tone) * attack(len(t), 0.0008))
+
+
+def ui_tick():
+    # Slider / conteo de puntos: un "tic" aún más corto (se le cambia el tono).
+    t = time(0.03)
+    return fade_tail(np.sin(2 * np.pi * 1700 * t) * np.exp(-t / 0.006) * attack(len(t), 0.0005))
+
+
+def ui_click():
+    # Botón apretado: golpe de madera seco con cuerpo.
+    t = time(0.12)
+    x = wood_knock(t)
+    return fade_tail(np.tanh(x / np.max(np.abs(x)) * 2.0) * attack(len(t), 0.0005), 0.03)
+
+
+def ui_confirm():
+    # Jugar / entrar a un nivel / continuar: golpe de madera + dos notas de cuerda
+    # que suben una quinta (Sol → Re), brillantes.
+    t = time(0.12)
+    knock = wood_knock(t, 1.1) * 0.6
+    x = place(0.55, [
+        (0.0, knock),
+        (0.0, pluck(784.0, 0.5, 0.995, 0.8) * 0.9),
+        (0.075, pluck(1174.7, 0.47, 0.995, 0.8)),
+    ])
+    return x * np.clip((0.55 - time(0.55)) / 0.08, 0, 1)
+
+
+def ui_back():
+    # Volver / cancelar: golpe más grave y dos notas que bajan (Re → Sol), suaves.
+    t = time(0.1)
+    knock = wood_knock(t, 0.8) * 0.6
+    x = place(0.4, [
+        (0.0, knock),
+        (0.0, pluck(1174.7 / 2, 0.38, 0.993, 0.45) * 0.9),
+        (0.06, pluck(784.0 / 2, 0.34, 0.993, 0.45)),
+    ])
+    return x * np.clip((0.4 - time(0.4)) / 0.06, 0, 1)
+
+
+def ui_locked():
+    # Nivel bloqueado / no se puede: "tuc-tuc" de madera apagado, grave.
+    t = time(0.09)
+    thud = (np.sin(sweep_phase(np.linspace(260, 170, len(t)))) * np.exp(-t / 0.03)
+            + 0.4 * lowpass(rng.uniform(-1, 1, len(t)), 900) * np.exp(-t / 0.008))
+    return place(0.2, [(0.0, thud), (0.095, thud * 0.75)])
+
+
+def ui_open():
+    # Abrir la pausa: soplo de aire que sube + una nota de cuerda.
+    t = time(0.3)
+    air = bandpass(rng.uniform(-1, 1, len(t)), np.linspace(700, 2800, len(t)), q=1.5)
+    air *= np.sin(np.pi * t / t[-1]) ** 2 * 0.8
+    note = place(0.3, [(0.12, pluck(987.8, 0.18, 0.993, 0.5) * 0.5)])
+    return fade_tail((air + note) * attack(len(t), 0.002), 0.03)
+
+
+def ui_unlock():
+    # Nivel nuevo en el mapa: arpegio de cuerda que sube (Sol Si Re Sol) + brillo.
+    notes = (784.0, 987.8, 1174.7, 1568.0)
+    parts = [(0.07 * k, pluck(f, 0.6 - 0.05 * k, 0.996, 0.85) * (0.8 + 0.07 * k))
+             for k, f in enumerate(notes)]
+    t = time(0.8)
+    shimmer = np.sin(2 * np.pi * 3136.0 * t) * np.exp(-t / 0.25) * 0.15
+    x = place(0.8, parts) + place(0.8, [(0.21, shimmer)])
+    return x * np.clip((0.8 - time(0.8)) / 0.1, 0, 1)
+
+
+ALL = (step, jump, die, hook, swing, box_push, grab, throw, plate, gate, wind,
+       emboque_click, sparkle, confetti_pop,
+       ui_hover, ui_tick, ui_click, ui_confirm, ui_back, ui_locked, ui_open, ui_unlock)
 
 if __name__ == "__main__":
     import sys

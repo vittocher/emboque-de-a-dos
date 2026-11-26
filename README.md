@@ -18,10 +18,11 @@ Puzzle cooperativo local para 2 jugadores: cada uno lleva media mitad de un embo
 | **Jugador 1** (campana) | `A` / `D` | `W` | `T` | `R` | `S` | `G` |
 | **Jugador 2** (palito) | `←` / `→` | `↑` | `.` | `,` | `↓` | `L` |
 
-\* Solo en los niveles marcados en verde en el selector. **Esc** o **P** pausa.
+\* Solo en los niveles con la mecánica de lanzar (la rama de lanzar y el final). **Esc** o **P** pausa.
 
 ## Para desarrollar
 
-- [`CLAUDE.md`](CLAUDE.md): guía técnica (arquitectura, cómo armar un nivel, lecciones aprendidas, registro de tests).
+- [`CLAUDE.md`](CLAUDE.md): guía técnica (arquitectura, cómo armar un nivel, lecciones aprendidas).
+- [`docs/REGISTRO_TESTS.md`](docs/REGISTRO_TESTS.md): qué se probó de cada feature y con qué resultado.
 - [`GUIA_ASSETS.md`](GUIA_ASSETS.md): cómo reemplazar placeholders por arte.
 - Todo el arte va en `assets/`.

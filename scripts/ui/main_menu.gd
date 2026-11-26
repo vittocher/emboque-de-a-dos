@@ -12,6 +12,7 @@ func _ready() -> void:
 	$LanguageButton.pressed.connect(SettingsManager.cycle_language)
 	_show_flag()
 	_fade_in_after_intro()
+	_animate_entrance()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
@@ -34,8 +35,15 @@ func _fade_in_after_intro() -> void:
 	tween.tween_property(overlay, "color:a", 0.0, 0.6)
 	tween.tween_callback(overlay.queue_free)
 
+## Los botones entran uno tras otro (desde abajo); el de idioma, al final.
+func _animate_entrance() -> void:
+	var delay := 0.12
+	for button in [$Center/VBox/PlayButton, $Center/VBox/SettingsButton, $LanguageButton]:
+		button.appear(delay)
+		delay += 0.08
+
 func _on_play_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/ui/level_selector.tscn")
+	UiFx.go_to("res://scenes/ui/level_selector.tscn")
 
 func _on_settings_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/ui/settings.tscn")
+	UiFx.go_to("res://scenes/ui/settings.tscn")

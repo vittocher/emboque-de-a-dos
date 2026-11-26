@@ -2,20 +2,14 @@
 
 ## Qué es
 
-Puzzle **cooperativo local de 2 jugadores** (estilo *Fireboy & Watergirl*) en **Godot 4.7**, para **web (Newgrounds)**. Tema: amistad y tradición chilena. Concepto completo en `EmboqueDA2 Concepto.pdf`.
-
-**Emboque de a Dos**: puzzle **cooperativo local de 2 jugadores** (estilo *Fireboy & Watergirl*), en **Godot 4.7.2**, apuntado a **web (Newgrounds)**. Tema: amistad y tradición chilena.
+Puzzle **cooperativo local de 2 jugadores** (estilo *Fireboy & Watergirl*) en **Godot 4.7.2**, apuntado a **web (Newgrounds)**. Tema: amistad y tradición chilena. Concepto completo en `EmboqueDA2 Concepto.pdf`.
 
 ## Setup
 
-- **Godot 4.7.2**. Linux: `~/Godot/Godot_v4.7.2-stable_linux.x86_64`. Windows: `C:\Users\vitto\Desktop\Godot\Godot_v4.7.2-stable_win64(_console).exe`.
-- Escena de arranque: `scenes/ui/main_menu.tscn`. Para probar gameplay, abrir un nivel y usar **F6**.
-- Resolución base 1280×720, stretch `canvas_items` + `keep`. Física a **120 Hz**.
-
-- **Editor:** Godot **4.7.2** (ejecutable en `C:\Users\vitto\Desktop\Godot\Godot_v4.7.2-stable_win64.exe`; la variante `..._console.exe` sirve para CLI headless). En esa misma carpeta también está el 4.6 (versión previa). `config/features` en `project.godot` = `4.7`.
+- **Editor:** Godot **4.7.2** (`config/features` en `project.godot` = `4.7`). Windows: `C:\Users\vitto\Desktop\Godot\Godot_v4.7.2-stable_win64.exe` (la variante `..._console.exe` sirve para CLI headless). Linux: `~/Godot/Godot_v4.7.2-stable_linux.x86_64`.
 - **Abrir:** importar el `project.godot` de esta carpeta desde el Project Manager, o **F5** para jugar.
-- **Escena de arranque:** `res://scenes/ui/intro.tscn` (video de intro, se salta con cualquier tecla → menú `ui/main_menu.tscn`). Los niveles son `main.tscn` (Nivel 1), `level_2`…`level_4` y los `test_*` (ver Arquitectura). Durante el desarrollo, abrir un nivel y correr con **F6** (ejecutar escena actual) para saltarse el menú.
-- **Resolución base:** 1280×720 (16:9). Stretch `canvas_items` + aspect `keep` (default en Godot 4, por eso el editor lo omite del archivo). No pixel-art; se adapta a cualquier tamaño de embed sin deformar.
+- **Escena de arranque:** `res://scenes/ui/intro.tscn` (video de intro, se salta con cualquier tecla → menú `ui/main_menu.tscn`). Durante el desarrollo, abrir un nivel y correr con **F6** (ejecutar escena actual) para saltarse el menú.
+- **Resolución base:** 1280×720 (16:9). Stretch `canvas_items` + aspect `keep` (default en Godot 4, por eso el editor lo omite del archivo). No pixel-art; se adapta a cualquier tamaño de embed sin deformar. Física a **120 Hz**.
 
 ### Validación headless (sin abrir el editor)
 
@@ -32,7 +26,7 @@ timeout 150 "$GODOT" --headless --import --path .
 "$GODOT" --headless --path . -s ruta/al/test.gd
 ```
 
-Redirigir la salida a un archivo y filtrar aparte evita cuelgues del pipe. Los avisos `ObjectDB instances leaked` / `resources still in use at exit` al cerrar son normales en estas corridas. Para escribir tests, ver las trampas de tests en "Lecciones aprendidas" (input simulado, `-s` y autoloads, zonas de muerte); el registro de lo ya verificado está en "Registro de tests", al final.
+Redirigir la salida a un archivo y filtrar aparte evita cuelgues del pipe. Los avisos `ObjectDB instances leaked` / `resources still in use at exit` al cerrar son normales en estas corridas. Para escribir tests, ver las trampas de tests en "Lecciones aprendidas" (input simulado, `-s` y autoloads, zonas de muerte); el registro de lo ya verificado está en `docs/REGISTRO_TESTS.md`.
 
 ## Controles (Input Map en `project.godot`)
 
@@ -149,14 +143,17 @@ scenes/
                          tecla / clic / botón (mensaje abajo). Ver "Intro (video)".
   ui/main_menu.tscn      Menú: portada (assets/ui/portada.png, con el título y los controles ya dibujados) de fondo
                          + botones Jugar / Ajustes (sin Salir: el juego es para web).
-  ui/boton_madera.tscn   Botón de madera reutilizable del menú principal (boton_madera.gd + shader procedural
-                         shaders/madera_boton.gdshader).
+  ui/boton_madera.tscn   Botón de madera reutilizable (class BotonMadera: menú principal, mapa, victoria). Tabla con
+                         canto y sombra (shader madera_boton) que se hunde al apretarla; resaltada crece, se aclara,
+                         halo dorado y un destello la cruza. Cara (lo visual) + Btn (Button transparente: clic y foco).
+                         `press_sound` = sonido al apretarlo. Ver "Interfaz: respuesta y transiciones".
   ui/level_selector.tscn MAPA de niveles (ver "Mapa de niveles y progreso"): nodos de madera (ui/level_node.tscn)
                          unidos por cuerdas, panel con nombre/récord/sopaipillas, fondo con círculos (map_decor.gd).
   ui/settings.tscn       Ajustes (panel de madera, tema compartido ui/tema_madera.tres): volumen general / música /
                          efectos, pantalla completa, idioma, restaurar valores y borrar progreso (pide confirmar).
-  ui/tema_madera.tres    Tema de madera de los paneles (Ajustes y el panel de ajustes de la pausa): botones-tabla,
-                         sliders dorados, checkbox (assets/ui/check_on|off.png), listas.
+  ui/tema_madera.tres    Tema de madera de los paneles (Ajustes y el panel de ajustes de la pausa): botones-tabla
+                         con canto (se aclaran con el mouse, se hunden al apretar, anillo dorado con foco), sliders
+                         con perilla dorada (GradientTexture2D), checkbox (assets/ui/check_on|off.png), listas.
   ui/pause_menu.tscn     Menú de pausa (Esc / P), ÚNICO para todos los niveles: instanciarlo en cada nivel.
                          Diseño = imagen assets/ui/pause_menu.webp con botones invisibles encima (ver "Menú de pausa").
                        Trae también el indicador HUD de pausa (ui/hud_pause.tscn), así está en todos los niveles,
@@ -209,7 +206,7 @@ scripts/
                    suma `points` y queue_free.
   score_manager.gd Lleva el puntaje del nivel (y coleccionables juntados/totales) y actualiza el indicador del HUD
                    (ScoreHud o un Label: le pone `text`); lo oculta si el nivel no tiene coleccionables. Está en el grupo "score_manager".
-  level_catalog.gd class LevelCatalog: la ÚNICA lista de niveles (id, escena, nombre, posición en el mapa,
+  level_catalog.gd class LevelCatalog: la ÚNICA lista de niveles (id, escena, posición en el mapa,
                    de qué niveles depende). Desbloqueo, número de nivel, coleccionables por escena.
   block.gd / bowl.gd  Bloque de terreno con `size`; cuenco con `width`/`slope` (ambos @tool).
   mechanisms/      channel.gd (canales con color), pressure_plate.gd, gate.gd, moving_platform.gd, wind_zone.gd.
@@ -222,17 +219,20 @@ scripts/
                    script de ui/pause_menu.tscn. La pausa NO es global: cada nivel debe instanciar esa escena.
   settings_manager.gd AUTOLOAD (SettingsManager): volúmenes, buses de audio, pantalla completa, idioma, música,
                    persistencia.
-  languages.gd     class Languages: idiomas disponibles, nombre de cada uno, traducción desde código estático e
-                   imagen localizada (ver "Idiomas").
                    stop_music() / play_music(fade) (la intro calla la cueca mientras corre el video).
                    set_music_pitch(p): tono/velocidad de la música (lo usa la cámara lenta del closeup).
                    set_music_duck(db) / set_sfx_duck(db): bajada temporal de los buses Music / SFX sin tocar el
                    volumen de Ajustes (el silencio antes del golpe, TensionFx).
+  languages.gd     class Languages: idiomas disponibles, nombre de cada uno, traducción desde código estático e
+                   imagen localizada (ver "Idiomas").
   score_board.gd   AUTOLOAD (ScoreBoard): datos de la última victoria entre escenas + highscore por nivel +
                    niveles COMPLETADOS (y máximo de sopaipillas) en user://scores.cfg. De eso depende el
                    desbloqueo del mapa. `unlock_all` (solo desarrollo, F9 en el mapa) desbloquea todo.
   sfx.gd           AUTOLOAD (Sfx): registro único de efectos de sonido (SOUNDS: nombre → ruta + volumen base),
                    pool de AudioStreamPlayer, play(nombre, pitch, volumen). Sobrevive a la recarga del nivel.
+  ui_fx.gd         AUTOLOAD (UiFx): respuesta de TODA la interfaz (sonido, cursor de mano, foco con el mouse de
+                   cada botón/slider/lista, conectados solos) + cambios de pantalla con fundido (go_to / reload /
+                   reveal). Ver "Interfaz: respuesta y transiciones".
   ui/level_hint.gd class LevelHint (escena ui/level_hint.tscn): cartel de controles DENTRO de un nivel, sobre madera,
                    uno por jugador en su mitad de la pantalla (`player` p1/p2 = etiqueta). Cada fila de `rows` es
                    "@accion texto": `@p1_release` = tecla del Input Map, `/` = barra, lo demás = clave de i18n.
@@ -241,14 +241,17 @@ scripts/
                    (flechas dibujadas con líneas: la fuente por defecto no trae ← → en la web).
   ui/wood_plaque.gd  class WoodPlaque: ColorRect con el shader de madera de los botones (madera_boton.gdshader):
                    le pasa su tamaño y prende el brillo (`active`). Fondo de las placas del HUD.
-  ui/*.gd          Lógica de los menús (navegación con change_scene_to_file); intro.gd (class IntroScreen) = la intro; victory.gd muestra puntaje + récord;
+  ui/*.gd          Lógica de los menús (navegación con UiFx.go_to, con fundido); intro.gd (class IntroScreen) = la intro; victory.gd muestra puntaje + récord;
                    boton_madera.gd = el botón de madera; level_selector.gd = el mapa; level_node.gd = un nivel
                    del mapa; map_decor.gd = fondo del mapa y de la victoria.
 
 assets/            TODO el arte (sprites, fondos, UI), por tema: jugadores/, emboque/, entorno/, hazards/, props/, ui/.
-                   No crear otras carpetas de imágenes. Las subcarpetas alternativos/ guardan arte que hoy no se usa
-                   (poses y extremos de una versión anterior), por si se retoma.
-shaders/           madera_boton.gdshader (madera procedural de los botones del menú principal); silueta.gdshader
+                   No crear otras carpetas de imágenes. jugadores/p1|p2/alternativos/ guarda poses que hoy
+                   no se usan. Ojo: el export web es `all_resources`, así que igual entran al build. No dejar copias
+                   `-old` de un sprite al reemplazarlo: la versión anterior ya queda en git.
+shaders/           madera_boton.gdshader (madera procedural de los botones: veta, borde dorado, brillo al resaltar
+                   `active`; opcionales `pad` sombra/halo afuera, `depth` canto, `press` hundido, `shine` destello;
+                   en 0 queda la tabla plana de las placas del HUD); silueta.gdshader
                    (sombra/brillo con la forma de un sprite) y caja_suave.gdshader (sombra/luz difusa de un
                    rectángulo). Ver "Sombras y brillos". resaltar.gdshader: ajuste HSV (tono/saturación/brillo) +
                    contraste + contorno que late (la caja empujable; sin contorno, en los personajes). fondo.gdshader: el
@@ -272,11 +275,12 @@ tests/             Bot de pruebas (ver "Bot de pruebas"): play_level.gd, run_all
 trailer/           Tráiler: trailer_es.mp4 / trailer_en.mp4 + cómo rehacerlo (make_trailer.sh: el bot juega y el
                    Movie Maker de Godot graba; cards.py hace las tarjetas; edit.py monta al ritmo de la cueca).
                    Tiene .gdignore y está fuera del export. Ver trailer/README.md.
+docs/REGISTRO_TESTS.md  Qué se verificó de cada feature y con qué resultado (historial).
 GUIA_ASSETS.md     Guía para diseño: qué archivo reemplazar para cambiar cada sprite/sonido en TODOS los niveles.
 EmboqueDA2 Concepto.pdf  Documento de concepto del juego.
 ```
 
-Autoloads (en `project.godot`): **`SettingsManager`** (volumen Master/Música/Efectos, pantalla completa, persistencia; va **primero** en la lista), **`ScoreBoard`** (puntaje entre escenas + highscore por nivel) y **`Sfx`** (efectos de sonido, usa el bus SFX).
+Autoloads (en `project.godot`): **`SettingsManager`** (volumen Master/Música/Efectos, pantalla completa, persistencia; va **primero** en la lista), **`ScoreBoard`** (puntaje entre escenas + highscore por nivel) **`Sfx`** (efectos de sonido, usa el bus SFX) y **`UiFx`** (respuesta de la interfaz y transiciones; va después de `Sfx`, que usa).
 
 ### Volumen y buses de audio
 
@@ -291,7 +295,7 @@ Visual (Node2D)      ← el código lo inclina (balanceo) y aplasta/estira (squa
     Body, Eye        ← placeholders (ocultos, visible = false)
     Sprite (AnimatedSprite2D) ← arte real: escala 0.21, pies en y = +32, flip_h (los PNG miran a la izquierda)
 ```
-**Arte actual:** `assets/jugadores/p1|p2/` con un `SpriteFrames` por jugador (`p1_frames.tres` / `p2_frames.tres`). `player.gd` le pone al `Sprite` el de su `input_prefix` (exports `frames_p1` / `frames_p2` en `player.tscn`). Animaciones: `idle` (WALK_01 quieto), `walk` (WALK_02 → WALK_01 en loop a **10 FPS**, empieza con el paso abierto para que se note al instante), `aim` (THROW, al apuntar) y, **provisorias hasta que llegue el arte** (reusan esos mismos cuadros): `jump` (WALK_02, piernas abiertas), `fall` (THROW, brazos abiertos), `swing` (WALK_02) y `push` (caminata a 6 FPS). Si falta la animación del estado se usa `ANIM_FALLBACK` (`push` → `walk`) o `idle`.
+**Arte actual:** `assets/jugadores/p1|p2/` con un `SpriteFrames` por jugador (`p1_frames.tres` / `p2_frames.tres`). `player.gd` le pone al `Sprite` el de su `input_prefix` (exports `frames_p1` / `frames_p2` en `player.tscn`). Animaciones: `idle` (WALK_01), `walk` (WALK_02 → WALK_01 en loop a **10 FPS**), `aim` (THROW, al apuntar) y, **provisorias hasta que llegue el arte** (reusan esos mismos cuadros): `jump` (WALK_02, piernas abiertas), `fall` (THROW, brazos abiertos), `swing` (WALK_02) y `push` (caminata a 6 FPS). **Ojo con `idle`:** en el arte actual de J1, WALK_01 y WALK_02 son los dos pasos de la caminata (uno por pierna) y ninguno es una pose de pie (en la versión anterior, commit `d44ea7e`, el de J1 sí lo era), así que quieto queda a medio paso; J2 también, y en la pose contraria a la de J1. Falta un cuadro propio de pie. Si falta la animación del estado se usa `ANIM_FALLBACK` (`push` → `walk`) o `idle`.
 **Toques por código** (valen para cualquier arte): estirón al saltar y aplastón al aterrizar (proporcional a la caída, desde 320 px/s, con un golpe sordo = `step` grave), los dos con los **pies fijos** (`_squash(amount, pivot)`: la mano al engancharse, `FEET` al saltar/aterrizar); al empujar una caja el `Sprite` se inclina 9° hacia adelante girando sobre los pies.
 Para poner el arte definitivo: reemplazar los hijos de `Visual/Art` por el dibujo **mirando a la derecha** (el código lo da vuelta). Si se usa un `AnimatedSprite2D` llamado **`Sprite`** dentro de `Art`, el jugador reproduce solo las animaciones cuyos nombres coincidan con `get_anim_state()`: **`idle`, `walk`, `jump`, `fall`, `swing`, `push`, `aim`** (las que falten se ignoran; `aim` = apuntando un lanzamiento). Ya no hay `modulate` en `Player2`: cada jugador tiene su arte. `facing` es público por si otro script lo necesita. Al empezar, cada jugador mira hacia el centro de la pantalla.
 
@@ -310,16 +314,57 @@ Para poner el arte definitivo: reemplazar los hijos de `Visual/Art` por el dibuj
 | `emboque_click` | `win_manager.gd` `_celebrate` | Al embocar: "cli-click" de madera (el palito entra y se asienta), saturado suave para sonar fuerte sin subir el pico (+1 dB base). |
 | `sparkle` | `win_manager.gd` `_celebrate` | Al embocar, con las partículas doradas: campanitas agudas sutiles (−15 dB). |
 | `confetti_pop` | `win_manager.gd` `_celebrate` | Al embocar, con el confetti: dos pops (una esquina cada uno) y papel que cruje. Suena 0,06 s después del click (se oye el click solo y la suma no satura). |
+| `ui_hover` | `ui_fx.gd` | Mouse encima de un botón/slider/opción, o foco movido con flechas (no el foco que pone el código). Tic de madera suave, tono ±4 %. |
+| `ui_click` | `ui_fx.gd` | Al apretar un botón (default). En un toggle (checkbox), más agudo al prender (1,12) y grave al apagar (0,88). |
+| `ui_confirm` | `ui_fx.gd` (Jugar, Continuar), `level_selector.gd` | El sonido "especial": golpe de madera + dos notas de cuerda que suben (como un charango). Entrar a un nivel. |
+| `ui_back` | `ui_fx.gd` (botones Volver / Menú principal), Esc en los menús | Golpe grave + dos notas que bajan. |
+| `ui_locked` | `level_selector.gd` | Elegir un nivel bloqueado ("tuc-tuc" apagado, con la sacudida). |
+| `ui_tick` | `ui_fx.gd` (sliders), `victory.gd` (conteo) | Tic corto; el tono sube con el valor del slider / mientras se cuenta el puntaje. |
+| `ui_open` | `pause_menu.gd` | Abrir la pausa (soplo + nota); al cerrarla, el mismo más grave (0,8). |
+| `ui_unlock` | `level_selector.gd`, `victory.gd` | Arpegio que sube: nivel nuevo desbloqueado en el mapa, récord nuevo en la victoria. |
 
 `Sfx.play` ignora el mismo sonido repetido en el mismo tick de física (p. ej. las dos partes de una zona "ambos"). Emite `played(nombre)` (útil para tests).
 
-**Cada nivel debe incluir:** `WinManager`, `Player1/2`, `Emboque1/2` (con `end_scene` + `end_kind`), y el menú de pausa (`ui/pause_menu.tscn`, o inline como en `main`/`level_2`). Orden en el árbol: **Players → WinManager → Emboques**, para que fuerzas y correcciones se apliquen el mismo frame.
+### Zonas de muerte (`player_death_zone.gd` + `emboque_death_zone.gd`)
 
 `Area2D` que al ser tocadas (`body_entered`) recargan el nivel. El **filtro por máscara** decide a quién matan: jugadores = `mask 2`; emboque = `mask 12`. Hay **dos scripts separados** (jugador / emboque) para poder darles mecánicas distintas a futuro; la zona "ambos" los **compone** (dos `Area2D` hijas, una con cada script) y tiene su propio arte (fuego). Cada script setea su `collision_mask` en `_ready`, expone `signal triggered(body)` y `@export reload_on_death` (ponerlo en `false` en tests para no recargar). Guard `_fired` evita disparos repetidos.
 
-La recarga se hace con `LevelFlow.restart(tree)` (diferida: **recargar dentro de `body_entered`, un callback de física, está prohibido** en Godot, libera CollisionObjects a mitad del callback; y una sola vez aunque se toquen dos zonas en el mismo instante). **Desde que se emboca** (`LevelFlow.mark_won`, lo llama el WinManager) las zonas ya no matan ni los coleccionables suman: si no, caer al fuego en los 2,5 s del cartel de victoria recargaba el nivel en vez de ir a la pantalla de victoria. Nota: los niveles reales instancian `WinManager` (victoria) y `ui/pause_menu.tscn` (pausa) además de las zonas; `test_death.tscn` los tiene los tres.
+La recarga se hace con `LevelFlow.restart(tree)` (diferida: **recargar dentro de `body_entered`, un callback de física, está prohibido** en Godot, libera CollisionObjects a mitad del callback; y una sola vez aunque se toquen dos zonas en el mismo instante). **Desde que se emboca** (`LevelFlow.mark_won`, lo llama el WinManager) las zonas ya no matan ni los coleccionables suman: si no, caer al fuego en los 2,5 s del cartel de victoria recargaba el nivel en vez de ir a la pantalla de victoria.
 
-J1 = **campana**, J2 = **palito** (asignados en cada nivel vía `end_scene` + `end_kind` de cada `Emboque`).
+### Interfaz: respuesta y transiciones (`UiFx` + `BotonMadera` + `tema_madera.tres`)
+
+Todo control interactivo tiene que **verse y sentirse** como tal. El autoload **`UiFx`** (`scripts/ui_fx.gd`) se
+conecta solo, con `SceneTree.node_added`, a cada `BaseButton`, `Slider` y `PopupMenu` que entra al árbol (en
+cualquier escena, sin tocarla): cursor de mano, **el mouse le pasa el foco** (brilla uno solo; mouse y teclado van
+juntos), `ui_hover` al pasar el mouse o mover el foco con flechas, sonido al apretar, tic con tono en los sliders,
+tic/click en las listas. Al cargar una escena hay 0,3 s sin hover (el foco inicial y el mouse que ya estaba encima
+no suenan). Lo **visual** es de cada control:
+
+- **`BotonMadera`** (menú, mapa, victoria): tabla con canto (7 px) y sombra; resaltada (hover o foco) crece a 1,045,
+  la madera se aclara, borde dorado + halo afuera y un destello diagonal la cruza; apretada se hunde (cara y texto
+  bajan el canto). `appear(delay)` = entrada desde abajo (solo mueve la `Cara`: sirve dentro de contenedores).
+- **Tema de madera** (Ajustes y ajustes de la pausa): `Style_plank*` con canto (sombra sólida corrida 5 px), hover más
+  claro con borde dorado, pressed baja 4 px (expand_margin_top −4 / bottom +4, canto de 1 px), foco = anillo dorado.
+- **Mapa** (`LevelNode`): fichas con canto que crecen, se aclaran y se hunden; `bump()` al entrar con Enter.
+- **Pausa** (botones invisibles sobre la imagen): con foco, luz cálida encima (`Style_glow` con fondo 14 %) y el borde
+  dorado respira; al abrir, el tablero baja con rebote y suena `ui_open`; Ajustes aparece con un pequeño rebote.
+- **HUD de pausa**: crece y brilla con el mouse, con tic.
+
+Por control, como **metadata** (Inspector → Metadata): `ui_fx = false` (no conectarlo), `ui_press_sound = &"ui_back"`
+(otro sonido; `&""` = ninguno, cuando el script pone el suyo, como Continuar de la pausa o los niveles del mapa),
+`ui_slider_sound = false` (el slider de Efectos, que ya suena con `Sfx.preview`). En `BotonMadera`, el export
+`press_sound`.
+
+**Transiciones**: `UiFx.go_to(escena)` / `UiFx.reload()` funden al azul de los menús (0,2 s), cambian (despausando el
+árbol) y vuelven (0,3 s), en tiempo real (`set_ignore_time_scale`, aunque haya cámara lenta). Durante el fundido el
+velo bloquea el mouse y un segundo cambio se ignora (doble clic, Enter repetido); `UiFx.is_transitioning()` para
+no sonar dos veces. `UiFx.reveal()` = solo aparecer (la victoria, a la que se llega desde el WinManager sin `go_to`).
+La recarga por muerte (`LevelFlow.restart`) y el paso del nivel a la victoria siguen sin fundido.
+
+**Entradas animadas**: menú (botones uno tras otro), Ajustes (el panel sube), mapa (el panel de info se asoma al
+cambiar de nivel), victoria (título que cae y rebota con estrellitas `fx/emboque_burst.tscn` detrás, puntaje y
+sopaipillas que se cuentan con tic, "¡Nuevo récord!" dorado que late con `ui_unlock`, botones escalonados). Los
+botones funcionan desde el primer cuadro.
 
 ### Intro (video) (`ui/intro.tscn` + `ui/intro.gd`)
 
@@ -417,7 +462,7 @@ columna por idioma (`es`, `en`). Godot lo importa como `i18n/textos.<código>.tr
   Godot (genera la `.translation`) → sumarla en Proyecto → Configuración → Localización → Traducciones →
   (opcional) imágenes en `assets/ui/<código>/` y su bandera en `assets/ui/banderas/<código>.svg`. Los selectores la listan solos (`Languages.available()`).
 
-`CavitySensor` mask 8. Zonas de muerte: jugador mask 2, emboque mask 12 (seteado en `_ready`). Collectible mask 2. Los extremos colisionan entre sí; los jugadores no colisionan con nada salvo terreno.
+### Flujo de menús
 
 Arranque: `ui/intro.tscn` (video; cualquier tecla lo salta) → `main_menu` (aparece desde negro; la intro solo corre al iniciar el juego, volver al menú no la repite).
 `main_menu` → (Jugar) → `level_selector` (el MAPA) → (un nivel desbloqueado) → gameplay → (al ganar) → `ui/victory.tscn` → (Continuar) → mapa (anima lo recién desbloqueado) / (Reintentar) → el mismo nivel. Esc en el mapa vuelve al menú.
@@ -427,7 +472,7 @@ Para agregar niveles: una entrada en `LEVELS` de `scripts/level_catalog.gd` (el 
 ### Mapa de niveles y progreso (`level_selector` + `LevelCatalog` + `ScoreBoard`)
 
 Como la progresión del concepto: un árbol de niveles que se desbloquean al completar el anterior.
-**`LevelCatalog.LEVELS`** es la única lista: `id`, `scene`, `name`, `pos` (lugar en el mapa, 1280×720) y `from`
+**`LevelCatalog.LEVELS`** es la única lista: `id`, `scene`, `pos` (lugar en el mapa, 1280×720) y `from`
 (niveles de los que depende: se desbloquea al completar CUALQUIERA, o al menos `need`). Opcionales: `special`
 (nodo dorado y más grande), `rope: false` (sin cuerdas en el mapa) y `hint` (texto mientras está bloqueado).
 El número del nivel es su orden en la lista. `WinManager` toma el id y el nombre del catálogo.
@@ -516,7 +561,7 @@ barrer parámetros (`ctx.var_f`), `--shots=dir` guarda capturas (sin `--headless
 física o un nivel, correr `run_all.sh`.** Las soluciones son a la vez documentación de cómo se resuelve cada
 nivel.
 
-`emboque.gd` en `_physics_process`: ajusta `rope_length` (soltar/tirar) → desengancha con `abajo` → pasa al extremo `anchor_position`, `rope_length`, `hooked`, `hook_position` → `_limit_player` (si el extremo está a más de `rope_length`, arrastra al jugador con `_move_sliding`) → actualiza la `Line2D`.
+### Capas y máscaras de colisión
 
 - **Capa 1:** terreno (StaticBody2D del nivel).
 - **Capa 2:** jugadores. `mask = 33` (terreno 1 + cajas 32) → chocan con terreno y cajas (no entre sí, no con extremos).
@@ -526,13 +571,12 @@ nivel.
 - **Capa 6 (valor 32):** cajas (`PushBox`). `mask = 47` (terreno 1 + jugadores 2 + campana 4 + palito 8 + cajas 32).
 
 En Godot 4 un cuerpo solo **es afectado** por otro si su mask incluye la capa del otro: por eso la caja tiene a los extremos en su mask (para que la empujen) y los extremos a la caja (para chocar con ella).
-- Sensores Area2D: `CavitySensor` de la campana `mask = 8` (solo palito); no detecta su propio cuerpo.
 
-API para `WinManager`: `get_end()`, `get_end_position()`, `get_cavity_sensor()`.
+Sensores (`Area2D`, capa 0): `CavitySensor` de la campana `mask = 8` (solo palito; no detecta su propio cuerpo), `HookSensor` 16, coleccionables 14 (jugadores + extremos), zona de muerte del jugador 2, del emboque 12, placas y viento 46 (jugadores + extremos + cajas).
 
-### Victoria
+### Cuerda y extremos (`emboque.gd` + `rope_end.gd`)
 
-Si la punta del palito está a menos de `magnet_radius` (65) de la boca de la campana, `win_manager.gd` los atrae (`linear_accel` 750) y los alinea (`angular_gain` 2.1). Victoria = palito dentro del `CavitySensor` (respaldo: muy cerca y alineado). Muestra `WinLabel` y reinicia tras `restart_delay`.
+J1 = **campana**, J2 = **palito** (asignados en cada nivel vía `end_scene` + `end_kind` de cada `Emboque`).
 
 `emboque.gd` (coordinador) cada `_physics_process`:
 1. `_update_length` — `soltar`/`tirar` ajustan `rope_length` (clamp).
@@ -581,7 +625,7 @@ El extremo **en la mano no tiene colisiones** (`RopeEnd.set_held`: capa y másca
 
 ### Victoria y magnetismo (`win_manager.gd`)
 
-Identifica palito y campana por `end_kind`. Cada frame, si la punta del palito está a menos de `magnet_radius` de la boca de la campana, aplica magnetismo de **distancia** (fuerza que atrae la punta hacia la cavidad, y la campana hacia la punta) **y de ángulo** (alinea el eje del palito para que apunte a la cavidad, y gira la boca de la campana hacia la punta). Con la física resolviendo la colisión, el palito **entra por la boca**. La intensidad sigue una **curva** (`cercanía ^ falloff_exponent`, 3 por defecto): casi nada a distancia (a medio radio ≈12 %) y fuerte solo al final. **Trabado:** con el palito ya embocado (dentro del `CavitySensor` o su punta a menos de `lock_radius` = 18 px de la cavidad) el magnetismo pasa a un **resorte amortiguado** muy fuerte entre los dos extremos (`lock_strength`, `lock_damping`, tope `lock_max_accel`; fuerzas iguales y opuestas, así no arrastra al conjunto) + alineación rápida (`lock_angular_gain`): el emboque no se escapa ni tiembla (mediciones en "Registro de tests"). Con la victoria a los `capture_time` = 0,2 s de embocado, el trabado actúa solo ese instante. **Victoria** = el palito está dentro del `CavitySensor` de la campana (respaldo: muy cerca + bien alineado). Al ganar muestra `WinLabel`, registra el resultado en `ScoreBoard` (puntaje + highscore) y tras `restart_delay` salta a la **pantalla de victoria** (`victory_scene`, default `ui/victory.tscn`). **Va antes que los Emboque en el árbol** para que las fuerzas se integren el mismo frame. Exports para el resultado: `level_id` (clave estable del highscore; si queda vacío se deriva del nombre de archivo de la escena), `level_name` (nombre a mostrar).
+Identifica palito y campana por `end_kind`. Cada frame, si la punta del palito está a menos de `magnet_radius` de la boca de la campana, aplica magnetismo de **distancia** (fuerza que atrae la punta hacia la cavidad, y la campana hacia la punta) **y de ángulo** (alinea el eje del palito para que apunte a la cavidad, y gira la boca de la campana hacia la punta). Con la física resolviendo la colisión, el palito **entra por la boca**. La intensidad sigue una **curva** (`cercanía ^ falloff_exponent`, 3 por defecto): casi nada a distancia (a medio radio ≈12 %) y fuerte solo al final. **Trabado:** con el palito ya embocado (dentro del `CavitySensor` o su punta a menos de `lock_radius` = 18 px de la cavidad) el magnetismo pasa a un **resorte amortiguado** muy fuerte entre los dos extremos (`lock_strength`, `lock_damping`, tope `lock_max_accel`; fuerzas iguales y opuestas, así no arrastra al conjunto) + alineación rápida (`lock_angular_gain`): el emboque no se escapa ni tiembla (mediciones en `docs/REGISTRO_TESTS.md`). Con la victoria a los `capture_time` = 0,2 s de embocado, el trabado actúa solo ese instante. **Victoria** = el palito está dentro del `CavitySensor` de la campana (respaldo: muy cerca + bien alineado). Al ganar muestra `WinLabel`, registra el resultado en `ScoreBoard` (puntaje + highscore) y tras `restart_delay` salta a la **pantalla de victoria** (`victory_scene`, default `ui/victory.tscn`). **Va antes que los Emboque en el árbol** para que las fuerzas se integren el mismo frame. Exports para el resultado: `level_id` (clave estable del highscore; si queda vacío se deriva del nombre de archivo de la escena), `level_name` (nombre a mostrar).
 
 ### Animación del emboque (`WinManager._celebrate`)
 
@@ -624,11 +668,11 @@ Al ganar (grupo "Celebración" del Inspector del WinManager):
 
 ### Pantalla de victoria y highscore (`victory.gd` + `score_board.gd`)
 
-Al ganar, `WinManager` llama `ScoreBoard.report_win(level_id, level_name, score)` — el puntaje sale del `ScoreManager` del nivel (0 si no tiene) — y luego `change_scene_to_file(victory_scene)`. **`ScoreBoard`** es un autoload que (a) guarda los datos de la última victoria (`last_level_name`, `last_score`, `last_is_record`) para que `victory.gd` los muestre sin tener que pasar parámetros entre escenas, y (b) persiste el **highscore por nivel** en `user://scores.cfg` (sección `highscores`, clave = `level_id`), actualizándolo solo si el puntaje lo supera. `victory.tscn` es minimalista (estilo de los menús): título, nombre del nivel, puntaje, récord (muestra "¡Nuevo récord!" si se batió) y botón **Menú principal**.
+Al ganar, `WinManager` llama `ScoreBoard.report_win(level_id, level_name, score, collected, total)` — el puntaje y las sopaipillas salen del `ScoreManager` del nivel (0 si no tiene) — y luego `change_scene_to_file(victory_scene)`. **`ScoreBoard`** es un autoload que (a) guarda los datos de la última victoria (`last_level_id`, `last_level_name`, `last_score`, `last_is_record`, `last_collected`, `last_total`) para que `victory.gd` los muestre sin tener que pasar parámetros entre escenas, y (b) persiste el **highscore por nivel** en `user://scores.cfg` (sección `highscores`, clave = `level_id`), actualizándolo solo si el puntaje lo supera. `victory.tscn` (estilo del menú): título, número y nombre del nivel, puntaje, sopaipillas juntadas, récord (muestra "¡Nuevo récord!" si se batió) y botones **Reintentar** (solo si el nivel está en el catálogo) y **Continuar** (vuelve al mapa; Esc hace lo mismo).
 
 ## Anatomía de un nivel (checklist antes de diseñar)
 
-**Lo más simple (y lo que usan los 23 niveles nuevos):** *New Inherited Scene* desde
+**Lo más simple (y lo que usan los 27 niveles nuevos y `level_4`):** *New Inherited Scene* desde
 `scenes/levels/level_base.tscn`, que ya trae todo lo obligatorio de abajo en el orden correcto; el nivel solo
 agrega bloques (`block.tscn` con su `size`), objetos y la posición de los jugadores, y una entrada en
 `LevelCatalog`. La lista de abajo explica qué trae la base (y sirve para niveles hechos a mano).
@@ -636,7 +680,7 @@ agrega bloques (`block.tscn` con su `size`), objetos y la posición de los jugad
 Un nivel es una escena `.tscn` con raíz `Node2D`. Antes de ponerse a diseñar el
 trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 `level_2.tscn` como plantilla y copiar/ajustar). El **orden en el árbol importa**
-(ver trampa más abajo): `WinManager` y `CloseupManager` van **antes** que los
+(ver "Lecciones aprendidas"): `WinManager` y `CloseupManager` van **antes** que los
 `Emboque`, y los `Emboque` **después** de los `Player`.
 
 **Obligatorio (sin esto no es un nivel jugable):**
@@ -679,16 +723,7 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 
 **Antes de diseñar el trazado conviene tener decidido:** dónde arrancan los dos jugadores, por dónde va el muro/separación que obliga a cooperar, dónde se juntan los emboques (el punto de "embocar"), qué HookPoints hacen falta para llegar, y dónde están los peligros (zonas de muerte) y recompensas (coleccionables). Recordar que la cámara es **fija 1280×720**: todo el nivel cabe en una pantalla.
 
-- **Nunca teletransportar** (`global_position = ...`) para corregir la cuerda: atraviesa paredes. Usar movimientos con barrido o restricción por velocidad.
-- **`move_and_collide` no desliza**: se detiene en el primer contacto y descarta el resto. Usar `_move_sliding()`.
-- **Medir el progreso de la restricción por reducción real de distancia**, no por cuánto se movió (deslizar por un muro no acorta la cuerda).
-- **Tunneling entre cuerpos delgados:** se evita con `continuous_cd = 2` + `max_speed` + física a 120 Hz. Mantener `max_speed / ticks` bastante menor que la pared más fina (6px).
-- **Formas cóncavas:** armarlas con varios `CollisionShape2D` convexos.
-- **Definir `_integrate_forces` no desactiva colisiones** (salvo `custom_integrator = true`).
-- **No liberar/recargar dentro de callbacks de física** (`body_entered`, etc.): usar `call_deferred`.
-- **Tipado:** propiedades de un nodo tipado como `Node2D` devuelven Variant y rompen `:=`; tipar con el `class_name` real.
-- **UIDs:** no inventar `uid://` a mano; en `ext_resource` basta el `path`. Que Godot re-guarde escenas al abrirlas es esperado.
-- **Tests de colisión con péndulo:** medir el pico, no el frame final.
+## Lecciones aprendidas
 
 - **Nunca corregir la restricción con `global_position = ...` (teletransporte):** ignora colisiones y el extremo atraviesa paredes. Usar siempre movimientos con barrido de colisión.
 - **`move_and_collide` se detiene en el primer contacto y NO desliza.** Si el vector de corrección tiene componente contra una superficie (p. ej. hacia el piso), aborta *todo* el movimiento, incluida la parte útil. Por eso existe `_move_sliding()`, que proyecta el resto sobre la normal y continúa. Fue la causa de que la cuerda no limitara al jugador.
@@ -778,6 +813,8 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
   una persona: si los extremos se cruzan a mitad de camino, la cámara lenta del closeup los acorta en tiempo de
   juego. Al hacer la cámara lenta más fuerte (0,35 → 0,25) fallaron `movil_4` (la espera antes de bajar el extremo
   por la ranura ya no alcanzaba para que se asentara; se alargó) y `final` (otro punto de frenado).
+  Al suavizarla (0,15 → 0,4) `level_4` dejó de ganarse: la campana quedaba apoyada en la repisa, al borde de la
+  ranura. Un plan robusto espera una **condición** (`until`: que el extremo haya caído), no un tiempo.
 - **`PinJoint2D` no sirve para soldar dos RigidBody2D:** con `angular_limit` 0..0 el ángulo relativo igual giraba
   hasta 180° y con los jugadores tirando se separaban 57 px. Para unir dos cuerpos de forma exacta, uno va
   montado en el otro (congelado, sin colisiones, copiando la transformación) y el que lleva aplica las fuerzas
@@ -792,11 +829,22 @@ trazado, todo nivel jugable necesita **estos nodos** (tomar `main.tscn` o
 - **La cuerda frena los empujones:** un jugador empujado (picada del Tue Tue) arrastra su extremo, que queda atrás,
   y `_limit_player` lo retiene: el empujón recorre ~250 px aunque sea de 800 px/s. Y si sube, choca con los
   escalones: por eso el empujón es bajo (−220) y largo.
+- **Un `Container` le reinicia posición y ESCALA a sus hijos cada vez que se reordena** (al cambiar el texto o
+  el tamaño mínimo de cualquier hijo): animar `scale`/`position` de un hijo directo de un VBox/HBox/CenterContainer
+  se pierde a mitad de camino. Animar un hijo propio que no maneje el contenedor (la `Cara` de BotonMadera, el
+  `Title` dentro de `TitleBox` en la victoria) o el contenedor entero desde un padre que no sea contenedor.
+- **Un `Label` con `label_settings` ignora `add_theme_color_override("font_color")`**: el color va en sus
+  LabelSettings (duplicarlas antes de cambiarlas: son un recurso compartido). Por eso "¡Nuevo récord!" nunca
+  salía dorado.
+- **Conectar los controles con `SceneTree.node_added` (UiFx) ve la metadata de la escena** (se asigna al
+  instanciar, antes de entrar al árbol), pero no lo que el `_ready` de un padre le ponga después: lo que se lee
+  al apretar (el sonido) puede ir en `_ready`, lo que se decide al conectar (`ui_fx = false`) tiene que estar
+  en la escena.
 - **Arte hecho en paralelo por dos personas se pisa en el merge sin conflicto de texto:** pasó con los jugadores (sprites `Abierto`/`Cruzado` de una rama + `Sprite` animado de otra, los dos visibles). Tras un merge, correr y mirar cada nivel; todo el arte va en `assets/` para que se note cuando alguien ya tomó un asset.
 
 ## Estado de desarrollo
 
-Hecho (el detalle de lo verificado con tests headless está en "Registro de tests", al final):
+Hecho (el detalle de lo verificado con tests headless está en `docs/REGISTRO_TESTS.md`):
 
 **Mecánica**
 - **Base (fases 0–5):** Input Map y capas; personaje plataformero; cuerda híbrida (extremo-péndulo + cuerda visual) con largo continuo; el extremo colisiona y la cuerda limita al jugador; enganche a `HookPoint`; victoria con magnetismo.
@@ -835,23 +883,30 @@ Hecho (el detalle de lo verificado con tests headless está en "Registro de test
 - **HUD de madera** (estilo de los botones del menú): indicador "P · PAUSA" arriba a la izquierda (en todos los
   niveles, vía el PauseMenu; clic = pausar) y puntaje con la sopaipilla arriba a la derecha (salta al sumar).
 - **Menús:** principal (portada, botones de madera, botón de idioma; sin Salir), mapa de niveles ramificado con progreso, ajustes con el tema de madera (y borrar progreso), pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
-- **Audio:** autoload `Sfx` con 18 efectos placeholder (incluye click, brillo y pop de confetti del emboque), música (cueca, sigue en la pausa) y volumen por categoría (General / Música / Efectos, con muestra al mover Efectos).
+- **Audio:** autoload `Sfx` con 22 efectos placeholder (incluye click, brillo y pop de confetti del emboque y 8 de la interfaz), música (cueca, sigue en la pausa) y volumen por categoría (General / Música / Efectos, con muestra al mover Efectos).
+- **Interfaz pulida** (autoload `UiFx`): todo botón/slider/lista con cursor de mano, foco con el mouse y sonidos de
+  madera y cuerda (hover, click, confirmar, volver, bloqueado, abrir pausa, desbloquear); botones de madera con
+  canto que se hunden, se aclaran, halo y destello al resaltar; perillas doradas; cambios de pantalla con fundido;
+  entradas animadas (menú, Ajustes, pausa, victoria con conteo de puntaje y estrellitas).
 - **Arte (`assets/`):** jugadores animados (idle / caminata a 10 FPS / THROW al apuntar), palito, campana y cuerda, cajas, zonas de muerte animadas (fuego / púas / caca), sopaipillas, ganchos, terreno (piso por piezas + pared) y fondo.
 
 Pendiente:
 - **Fase 6** — Pasada de tuning de la sensación (magnetismo, masas, largos, velocidades, radios del closeup) jugando los niveles reales.
-- **Arte que falta o hay que pulir:** cuadros propios para `jump` / `fall` / `swing` / `push` (hoy son provisorias con los cuadros de caminar/lanzar); costuras entre tablas de `piso_neutral` (vienen del dibujo); alinear bien el arte del palito y la campana con su colisión; la mano (`RopeAnchor`) no coincide exactamente con la mano del dibujo.
+- **Arte que falta o hay que pulir:** una pose de pie para `idle` (ver "Arte del jugador"); cuadros propios para `jump` / `fall` / `swing` / `push` (hoy son provisorias con los cuadros de caminar/lanzar); costuras entre tablas de `piso_neutral` (vienen del dibujo); alinear bien el arte del palito y la campana con su colisión; la mano (`RopeAnchor`) no coincide exactamente con la mano del dibujo.
 - **Web:** el preset exporta y se probó en Chromium headless (intro, menú, idiomas, mapa, nivel, pausa); falta subirlo a Newgrounds y probarlo con gente.
 - **Imágenes en inglés definitivas** (`assets/ui/en/portada.png`, `pause_menu.webp`): hoy son el arte original
   con el texto reescrito por código; diseño puede reemplazarlas con el mismo nombre.
 - **Niveles del equipo fuera del mapa** (`main`, `level_3`): corregir el inicio (ver Lecciones) si se quieren sumar.
 - **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos.
 - **Arte del Tue Tue:** el actual es provisorio, dibujado por código (ver GUIA_ASSETS.md).
+- **Tráiler:** los `start` de los clips en `trailer/edit.py` son tiempos fijos del bot; al regrabar hay que revisarlos (p. ej. `level_4` ahora emboca a los ~20 s de juego; antes, ~14).
+- **Sonido:** reemplazar los efectos placeholder sintetizados por los definitivos (también los `ui_*` de la interfaz).
 
-Post-prototipo (del concepto): más objetos dinámicos, mapa de progresión de niveles (el selector como grafo conectado), más niveles.
+Post-prototipo (del concepto): más objetos dinámicos, más niveles.
 
 ## Convenciones
 
+- Al terminar una feature: actualizar la sección que corresponda de este archivo, agregar una línea en "Estado de desarrollo" y anotar qué se probó y el resultado en `docs/REGISTRO_TESTS.md` (no acá).
 - Comentarios y nombres de usuario en **español**; código en GDScript idiomático de Godot 4.
 - Placeholders geométricos (`Polygon2D`/formas) hasta que llegue el arte; al llegar se ocultan (`visible = false`), no se borran.
 - **Todo el arte va en `assets/`** (ver Arquitectura). Al mover un archivo, moverlo **junto con su `.import`** (conserva el uid) y actualizar las rutas `res://` que lo usan.

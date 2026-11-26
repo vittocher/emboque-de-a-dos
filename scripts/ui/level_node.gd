@@ -1,15 +1,19 @@
 extends Control
 class_name LevelNode
 
-## Un nivel en el mapa: disco de madera (mismo shader que los botones del menú)
-## con su número. Estados: bloqueado (oscuro, sin número), disponible (madera
-## con un anillo que late: "jugá este") y completado (número dorado; una
-## sopaipilla al lado si se juntaron todas).
+## Un nivel en el mapa: ficha de madera (mismo shader que los botones del menú,
+## con canto y sombra) con su número. Estados: bloqueado (oscuro, sin número),
+## disponible (madera con un anillo que late: "jugá este") y completado (número
+## dorado; una sopaipilla al lado si se juntaron todas). Resaltada crece y se
+## aclara; al apretarla se hunde. Los sonidos de elegir los pone el mapa (entrar
+## o "bloqueado"); el de pasar encima, UiFx.
 
 signal chosen(level_id: String)
 signal focused(level_id: String)
 
 const SIZE := 64.0
+## Alto del canto de la ficha (px); igual que `depth` del material.
+const DEPTH := 5.0
 
 var level_id := ""
 var unlocked := false
@@ -26,6 +30,9 @@ var _hover := false
 var _focus := false
 var _pulse := 0.0
 var _base_scale := 1.0
+var _press := 0.0
+var _press_tween: Tween
+var _lit_tween: Tween
 
 func _ready() -> void:
 	pivot_offset = Vector2(SIZE, SIZE) * 0.5
@@ -39,6 +46,8 @@ func _ready() -> void:
 		_refresh()
 		focused.emit(level_id))
 	_btn.focus_exited.connect(func() -> void: _focus = false; _refresh())
+	_btn.button_down.connect(_animate_press.bind(1.0, 0.05))
+	_btn.button_up.connect(_animate_press.bind(0.0, 0.14))
 	_ring.draw.connect(_draw_ring)
 
 func setup(id: String, number: int, is_unlocked: bool, is_completed: bool, got_all: bool,
@@ -75,10 +84,34 @@ func _process(delta: float) -> void:
 
 func _refresh() -> void:
 	var active := _focus or _hover
-	(_fondo.material as ShaderMaterial).set_shader_parameter("active", 1.0 if active else 0.0)
+	var mat := _fondo.material as ShaderMaterial
+	if _lit_tween != null:
+		_lit_tween.kill()
+	_lit_tween = create_tween().set_parallel()
+	_lit_tween.tween_method(func(v: float) -> void: mat.set_shader_parameter("active", v),
+		float(mat.get_shader_parameter("active")), 1.0 if active else 0.0, 0.12)
 	var target := Vector2.ONE * _base_scale * (1.14 if active else 1.0)
-	create_tween().tween_property(self, "scale", target, 0.12) \
+	_lit_tween.tween_property(self, "scale", target, 0.12) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+## Golpe de apretar (al elegirla con Enter no hay button_down).
+func bump() -> void:
+	_apply_press(1.0)
+	_animate_press(0.0, 0.18)
+
+func _animate_press(target: float, seconds: float) -> void:
+	if _press_tween != null:
+		_press_tween.kill()
+	_press_tween = create_tween()
+	_press_tween.tween_method(_apply_press, _press, target, seconds) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+## Hundida 0..1: la cara del disco y el número bajan juntos.
+func _apply_press(amount: float) -> void:
+	_press = amount
+	(_fondo.material as ShaderMaterial).set_shader_parameter("press", amount)
+	_number.offset_top = DEPTH * amount
+	_number.offset_bottom = -DEPTH + DEPTH * amount
 
 ## Anillo que late alrededor de los niveles disponibles sin completar.
 func _draw_ring() -> void:
