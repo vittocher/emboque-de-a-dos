@@ -83,6 +83,10 @@ scenes/
                        del video (assets/enemigos/tue_tue) o el pájaro (alternativos/pajaro). Arte provisorio
                        (tools/generate_tuetue_art.py).
   boss/boss_bar.tscn   Barra de vida del jefe en el HUD (BossBar, arriba al centro): nombre + un ícono por vida.
+tools/portada/     Rehace la portada (es/en) con el ambiente de los niveles: hacer_portada.sh corre Godot
+                   (render_fondo.gd: pared, TerrainArt, sopaipillas, placa de madera) y pega encima lo de
+                   adelante de la portada original (extraer.py lo separa de su fondo plano; componer.py).
+                   Tiene .gdignore. Si cambian los controles, editar la ORIGINAL y volver a correrlo.
   block.tscn           Bloque de terreno (StaticBody2D, block.gd) con `size` editable: piso, plataforma o muro.
                        TerrainArt lo viste solo. Con él se traza todo nivel nuevo.
   bowl.tscn            Cuenco en V (bowl.gd: `width`, `slope`), tablas resbalosas (friction 0): la META de muchos
@@ -137,7 +141,10 @@ scenes/
   ui/intro.tscn          Intro: video de la historia (video/intro.ogv) al arrancar el juego; se salta con cualquier
                          tecla / clic / botón (mensaje abajo). Ver "Intro (video)".
   ui/main_menu.tscn      Menú: portada (assets/ui/portada.png, con el título y los controles ya dibujados) de fondo
-                         + botones Jugar / Ajustes (sin Salir: el juego es para web).
+                         + botones Jugar / Ajustes (sin Salir: el juego es para web). La portada tiene el ambiente
+                         de los niveles (pared, plataformas de madera, sopaipillas; controles sobre una placa de
+                         madera) y se arma con tools/portada/ a partir de la original del equipo (en
+                         assets/ui/alternativos/portada_original.png y en/...).
   ui/boton_madera.tscn   Botón de madera reutilizable (class BotonMadera: menú principal, mapa, victoria). Tabla con
                          canto y sombra (shader madera_boton) que se hunde al apretarla; resaltada crece, se aclara,
                          halo dorado y un destello la cruza. Cara (lo visual) + Btn (Button transparente: clic y foco).
@@ -1185,7 +1192,7 @@ Hecho (el detalle de lo verificado con tests headless está en `docs/REGISTRO_TE
 - **Idiomas:** español e inglés (todo el texto en `i18n/textos.csv`, imágenes con texto por idioma), selector con bandera (Chile / Reino Unido) en el menú principal, Ajustes y pausa; agregar un idioma = una columna.
 - **HUD de madera** (estilo de los botones del menú): indicador "P · PAUSA" arriba a la izquierda (en todos los
   niveles, vía el PauseMenu; clic = pausar) y puntaje con la sopaipilla arriba a la derecha (salta al sumar).
-- **Menús:** principal (portada, botones de madera, botón de idioma; sin Salir), mapa de niveles ramificado con progreso, ajustes con el tema de madera (y borrar progreso), pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
+- **Menús:** principal (portada con el ambiente de los niveles, botones de madera, botón de idioma; sin Salir), mapa de niveles ramificado con progreso, ajustes con el tema de madera (y borrar progreso), pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
 - **Audio:** autoload `Sfx` con 22 efectos placeholder (incluye click, brillo y pop de confetti del emboque y 8 de la interfaz), música (cueca, sigue en la pausa) y volumen por categoría (General / Música / Efectos, con muestra al mover Efectos).
 - **Interfaz pulida** (autoload `UiFx`): todo botón/slider/lista con cursor de mano, foco con el mouse y sonidos de
   madera y cuerda (hover, click, confirmar, volver, bloqueado, abrir pausa, desbloquear); botones de madera con
@@ -1278,6 +1285,20 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 - **Menú de pausa (diseño del equipo):** cada uno de los 7 niveles tiene exactamente un PauseMenu; Esc pausa/reanuda; foco en Continuar; los 4 botones calzan con los pintados; hover mueve el foco; Ajustes muestra sliders y oculta botones; el slider cambia SettingsManager; Volver devuelve el foco a Ajustes; Continuar reanuda. PASS 43/43. Luego se agregó P como segunda tecla (acción `pause`): P pausa y reanuda, Esc también (en `level_3`). PASS.
 - **Arte (jugadores, cajas, zonas, sopaipillas, terreno, fondo, ganchos):** cada nivel cargado y capturado sin errores de script; animación de caminata a la frecuencia pedida (cambio de frame cada 12 ticks a 10 FPS con física a 120 Hz).
 
+### Portada con el ambiente de los niveles (`tools/portada/`)
+
+La portada original (fondo azul marino plano con círculos de color y plataformas oscuras) se rehízo con el arte de
+los niveles. Godot dibuja el fondo a 1920×1080 (con `--rendering-driver opengl3`, como la web): `background.tscn`
+con su shader, bloques vestidos por `TerrainArt` con sus sombras (repisas donde pisan los personajes a y=698, el
+piso donde descansan palito y campana a y=786, vigas colgando a los lados del título y repisitas con
+sopaipillas) y una placa con `madera_boton.gdshader` más oscura para los controles. Lo de adelante sale de la
+original: cada pixel cercano a un color del fondo (o a una mezcla de dos, en los bordes de los círculos, o a una
+versión más oscura de un círculo: las sombras de los personajes) es fondo; los huecos encerrados dentro de los
+personajes no; en el borde se quita el fondo mezclado ("color a alfa", con un mínimo para lo oscuro sobre oscuro)
+y la línea azul del borde de las plataformas se borra. Verificado con capturas: personajes recortados limpios sobre
+magenta, pies sobre las repisas nuevas, palito y campana sobre el piso, texto de los controles legible; menú
+principal en es y en (botones y botón de idioma sin tapar nada). La original queda en `assets/ui/alternativos/`.
+
 ### Banderas de idioma
 
 Con Xvfb (es/en): bandera de Chile junto a "Español" y del Reino Unido junto a "English" en el botón del menú
@@ -1298,7 +1319,8 @@ el escalón y el paso nunca terminaba; y J1 levanta y vuelve a dejar caer la cam
 
 Controles de la cuerda invertidos (soltar = T / `.`, tirar = R / `,`). En la portada (`assets/ui/portada.png` y
 `assets/ui/en/portada.png`) las tapitas de esas teclas se intercambiaron píxel a píxel (el resto del dibujo intacto;
-ojo: si se vuelven a cambiar, la portada hay que editarla, la pausa no). Pausa (Xvfb, tronco_1 y lanzar_1, es/en,
+ojo: si se vuelven a cambiar, la portada hay que editarla, la pausa no; desde la portada nueva, se edita la
+original en `assets/ui/alternativos/` y se corre `tools/portada/hacer_portada.sh`). Pausa (Xvfb, tronco_1 y lanzar_1, es/en,
 también con Ajustes abierto): un panel por jugador en las franjas de los costados (18..266 y 1014..1262, alto 292 con
 lanzar), teclas leídas del Input Map (T/R y ./, ya invertidas), fila "Lanzar / recoger" solo en lanzar_1. PASS.
 
