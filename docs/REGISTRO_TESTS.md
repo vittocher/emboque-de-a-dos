@@ -365,3 +365,22 @@ movil_2 se gana con 11 de 16 combinaciones de vaivén (40/55 px, cuerda 170/200,
   plataforma (cuerda 140 y 215); con 100 pasa. El botón pide cuerda ≥ ~190.
 - **Bot** 29/29; **controles** todos OK; auditoría: quedan la púa de isla de caja_1, la caca de la plataforma de movil_1 (el
   fuego de abajo castiga antes la cuerda larga) y las del pasillo de placa_3 (son para la campana).
+
+## Jefe: subida nueva, golpe al tocarlo y cuerdas al azar en la cima
+
+- **Saltos** (`tests/reach.py` sobre cada par de plataformas): los 17 saltos por lado existen; margen ≥ 25 px salvo los
+  esperados; ninguna repisa sube a una torre sin el gancho y no hay saltos de un lado al otro.
+- **Golpe y cuerdas** (script headless, 25/25 PASS): tocarlo en la pelea → empujón (380, −240) hacia afuera, aturdido
+  (no responde) 0,35 s con estrellitas, parpadeo 1,2 s sin segundo golpe; después vuelve a golpear hacia el otro lado; no le
+  quita vida al Tue Tue. Subida: avisa la picada sobre J1 (línea en su x) y lo golpea si se queda quieto (a J2 no); la
+  ráfaga arrastra 259 px en 2 s; un extremo rápido lo marea 4,0 s. Cima: 20 cambios de cuerda, siempre uno −20..−45 y el
+  otro +15..+75, al azar (J1 12 veces, J2 8); con una cuerda al mínimo, a esa se la alarga; una caída real las cambia.
+- **Checkpoints**: 21/21 PASS (recargas reales).
+- **Bot** (`tests/solutions/jefe.gd`, escalador que lee el trazado, espera momentos seguros para lanzar, esquiva picadas y
+  aguanta ráfagas): subida sola gana con salto 465/470/475 (~51 s); cima sola gana (11 s); en la cima solo esquivando
+  aguanta 40 s; nivel completo gana (80–84 s) en la mayoría de las corridas, pero a veces el bot pierde en la cima tras
+  varios intentos (lanzamientos errados): es el bot, no el nivel. Controles: quietos en la pelea → al foso (10 s); sin
+  esquivar → al foso (8 s); quietos en la subida → la cámara los deja abajo.
+- `run_all.sh`: el jefe usa `const TIMEOUT := 150`. `final`, `placa_2` y `tronco_4` fallan igual con el código anterior
+  (fallas previas del bot, no de estos cambios).
+

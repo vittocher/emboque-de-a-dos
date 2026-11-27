@@ -124,7 +124,7 @@ El "click" de zoom de la cámara y las piezas pegadas se ajustan en el Inspector
 
 | Qué | Archivo | Escena | Notas |
 |---|---|---|---|
-| Portada del menú principal (título y controles dibujados) | `assets/ui/portada.png` (español) y `assets/ui/en/portada.png` (inglés) | `scenes/ui/main_menu.tscn` | La fila de lanzar ahora dice "LANZAR" (el mapa ya no tiene "niveles verdes"). |
+| Portada del menú principal (título y controles dibujados) | `assets/ui/portada.png` (español) y `assets/ui/en/portada.png` (inglés) | `scenes/ui/main_menu.tscn` | Tiene el ambiente de los niveles y se **genera**: el título, los personajes, el emboque y los controles salen de la portada original del equipo (`assets/ui/alternativos/portada_original.png` y `en/portada_original.png`). Para cambiar algo de eso, editar la original y correr `tools/portada/hacer_portada.sh`; para una portada hecha a mano, reemplazar directo `portada.png` (1920×1080). |
 | Menú de pausa | `assets/ui/pause_menu.webp` (español) y `assets/ui/en/pause_menu.webp` (inglés) | `scenes/ui/pause_menu.tscn` | Ver "Menú de pausa" en CLAUDE.md. Los botones pintados tienen que quedar en el mismo lugar en todos los idiomas. |
 | Banderas de idioma (al lado del nombre en el botón de idioma del menú, en Ajustes y en la pausa) | `assets/ui/banderas/es.svg` (Chile) y `assets/ui/banderas/en.svg` (Reino Unido) | `Languages.flag_of` | SVG en 3:2; se importan al doble de tamaño con mipmaps. Una bandera por código de idioma: un idioma nuevo solo necesita su `<código>.svg`. |
 | Botones de madera, nodos del mapa | (procedurales: `shaders/madera_boton.gdshader`) | `scenes/ui/boton_madera.tscn`, `scenes/ui/level_node.tscn` | Colores de la madera en los parámetros del shader. |

@@ -137,7 +137,10 @@ scenes/
   ui/intro.tscn          Intro: video de la historia (video/intro.ogv) al arrancar el juego; se salta con cualquier
                          tecla / clic / botón (mensaje abajo). Ver "Intro (video)".
   ui/main_menu.tscn      Menú: portada (assets/ui/portada.png, con el título y los controles ya dibujados) de fondo
-                         + botones Jugar / Ajustes (sin Salir: el juego es para web).
+                         + botones Jugar / Ajustes (sin Salir: el juego es para web). La portada tiene el ambiente
+                         de los niveles (pared, plataformas de madera, sopaipillas; controles sobre una placa de
+                         madera) y se arma con tools/portada/ a partir de la original del equipo (en
+                         assets/ui/alternativos/portada_original.png y en/...).
   ui/boton_madera.tscn   Botón de madera reutilizable (class BotonMadera: menú principal, mapa, victoria). Tabla con
                          canto y sombra (shader madera_boton) que se hunde al apretarla; resaltada crece, se aclara,
                          halo dorado y un destello la cruza. Cara (lo visual) + Btn (Button transparente: clic y foco).
@@ -269,6 +272,10 @@ tools/generate_sfx.py  Sintetiza los placeholders de audio/sfx (numpy): `python 
                    (sin nombres, todos; con nombres, solo esos, p. ej. `plate gate wind`).
 tools/generate_tuetue_art.py  Dibuja el arte provisorio del Tue Tue (Pillow + numpy): la cabeza (papel recortado) en
                    assets/enemigos/tue_tue/ y el pájaro en assets/enemigos/tue_tue/alternativos/pajaro/.
+tools/portada/     Rehace la portada (es/en) con el ambiente de los niveles: hacer_portada.sh corre Godot
+                   (render_fondo.gd: pared, TerrainArt, sopaipillas, placa de madera) y pega encima lo de
+                   adelante de la portada original (extraer.py lo separa de su fondo plano; componer.py).
+                   Tiene .gdignore. Si cambian los controles, editar la ORIGINAL y volver a correrlo.
 tests/             Bot de pruebas (ver "Bot de pruebas"): play_level.gd, run_all.sh, solutions/<nivel>.gd,
 tests/             Bot de pruebas (ver "Bot de pruebas"): play_level.gd, run_all.sh, run_controls.sh, monkey.gd + run_shortcuts.sh
                    (atajos), reach.py (alcance de saltos), solutions/<nivel>.gd,
@@ -533,9 +540,12 @@ lo mueve `TueTue` según el modo. Todo es determinista (patrón fijo, sin azar):
 | Fase | Qué pasa |
 |---|---|
 | 1. Pelea (`FIGHT`) | Arena con fosos de púas a los costados. El Tue Tue repite `FIGHT_PATTERN`: **planea** en el centro (a tiro de un lanzamiento desde el piso: el alcance es `max_length` 320) y entre planeos **ataca**: PICADA a ras del piso (aviso: tiembla y chilla 0,9 s; empuja a quien toca hacia el foso del lado al que va, `swoop_knockback` bajo para pasar bajo los escalones) o RÁFAGA desde un costado (2,6 s: arrastra a los jugadores, `Player.add_push`, y a los extremos que cuelgan). Se esquiva saltando la picada y caminando contra la ráfaga. Un extremo **lanzado** (o a más de 550 px/s) que lo toca le quita una vida (5); tras un golpe ataca sin planear. Barra de vida (`BossBar`) arriba al centro. |
-| 2. Subida (`ESCAPE` → `CLIMB`) | Sin vidas escapa hacia arriba; a los 3 s la cámara sube sola (40 px/s; 75 si los dos van en la mitad de arriba) hasta la cima. Escalones en zigzag de 120 px por lado (afuera x 40..200 / adentro 240..400 y su espejo). Quien queda bajo el borde de abajo muere (`abyss_margin`). Un techo invisible (`WorldBoundaryShape2D`) sigue el borde de arriba y el fondo acompaña a la cámara. El Tue Tue vuela arriba de la pantalla. Con el emboque **en la mano** se salta sin que la cuerda reste altura ni amarre a los escalones. |
+| 2. Subida (`ESCAPE` → `CLIMB`) | Sin vidas escapa hacia arriba; a los 3 s la cámara sube sola (30 px/s; 60 si los dos van en la mitad de arriba) hasta la cima. Quien queda bajo el borde de abajo muere (`abyss_margin`) y un techo invisible sigue el borde de arriba (el que va adelante espera al otro). **Recorrido** (generado por código, se puede editar a mano), 17 saltos por lado para el salto de 115 px: la primera isla sobre el foso (angosta y pegada a la pared, para que en la pelea no ataje a quien la ráfaga bota al foso), una ola de islas de 70–85 px en 4 columnas (subidas de 70–80) y **dos torres con gancho** por lado a distintas alturas (izq. tras la 6.ª isla, der. tras la 2.ª): desde una repisa más ancha se lanza el emboque al gancho (54°, 304 px), se trepa la cuerda y se salta arriba (el gancho tiene `metadata/rehook_delay` 1,5: el extremo no lo vuelve a enganchar al saltar). Púas de 20 px en un borde de algunas islas. El Tue Tue ataca (`CLIMB_PATTERN`, descanso `climb_rest_time` 2,2 s): **picada** sobre un jugador (lo sigue `peck_track_time`, marca con una línea roja dónde cae y cae en vertical; vuelve a subir por la misma línea: se esquiva saltando a otra isla o corriéndose al otro borde) y **ráfaga** desde una esquina de arriba (`climb_gust_push` 170: caminar en contra). Pegarle con el emboque lanzado lo marea `climb_stun_time` (4 s, opcional). |
 | 3. Cima (`SUMMIT`) | **Sin cuenco** (decisión del equipo: los extremos no se juntan solos). Dos repisas delgadas con un hueco de 132 px y una **cortina** (muro de 68 px que cuelga del techo hasta 30 px sobre ellas): nadie cruza al lado del otro, la cortina frena a cada uno con la mano ~12 px más allá del borde de su repisa y los extremos cuelgan libres sobre el vacío a ~108 px (S ≈ 100: hay que balancearse **los dos a la vez**). Recién aquí se encienden `WinManager.active` y `CloseupManager.enabled` (+ `set_home` con el rectángulo de la cima). El Tue Tue no deja de atacar (`HARASS_PATTERN`, entre ataques una vuelta de `orbit_time` 1,6 s): **picadas** por las repisas a la altura del pecho (empujan, `summit_knockback`, alejando al jugador de la ranura y sacando su extremo del cuenco), **ráfagas** (arrastran a los jugadores, `summit_gust_push`, y soplan los extremos fuera del cuenco) y **caídas** bajo la cortina, donde cuelgan los extremos (golpean a quien esté pegado a ella y desparraman los extremos). Apenas los dos extremos se acercan (`react_radius` 80, dando vueltas o yendo a atacar) cae sobre ellos con un aviso corto (`dive_telegraph_time`). Se esquiva igual que en la arena (saltar la picada, caminar contra la ráfaga, alejarse de la cortina). Pegarle de un lanzamiento (la cortina tapa el lado del otro: cada uno le pega cuando pasa por su lado) lo deja **mareado** `stun_time` (8 s) en un rincón: la ventana para embocar (sin marearlo es casi imposible). Un empujón puede tirar a alguien de la repisa (si no cae en un escalón, muere y retoma en la cima). |
 | `WON` | Al embocar se va chillando (`beaten`); el WinManager sigue como en cualquier nivel. |
+
+**Tocarlo duele** en todo el nivel (`TueTue._touch_players`): `Player.hurt` = empujón hacia afuera del pájaro (`contact_knockback`, o el del ataque), **aturdido** `hurt_stun_time` 0,35 s (sin controles ni cuerda, estrellitas sobre la cabeza; si apuntaba, pierde la mira) y **parpadeo** `hurt_blink_time` 1,2 s en que no lo vuelven a golpear. **No hay vida.** Para que sea justo, el Tue Tue va a sus ataques por arriba (sube, cruza y baja recién al costado: `_set_via`) y tras la caída de la cima sube derecho por el hueco. Picadas a la altura del centro del jugador (`swoop_y` 588, `summit_line_dy` -92: se saltan).
+**Cuerdas al azar en la cima:** cada vez que desparrama los extremos (caída) o termina una ráfaga, a uno al azar le acorta la cuerda (`rope_shorten` 20–45 px: su extremo sube) y al otro se la alarga (`rope_lengthen` 15–75 px), en 0,35 s (`_shuffle_ropes`): hay que volver a encontrar los largos.
 
 **Checkpoints:** morir después de derrotarlo (la huida o la subida) o en la cima recarga y retoma al comienzo de esa fase (`BossFight._checkpoint`,
 estático; `LevelFlow.restart` anota que la recarga fue por una muerte y `LevelFlow.consume_death_reload` lo
@@ -1164,6 +1174,7 @@ Hecho (el detalle de lo verificado con tests headless está en `docs/REGISTRO_TE
 - **Zonas de muerte** (jugador / emboque / ambos), **caja empujable**, **coleccionables + puntaje** (también los recoge el emboque).
 - **Mecánicas nuevas:** placas de presión, compuertas, plataformas móviles/ascensores, corrientes de aire (volantín), cuenco/embudo como meta.
 - **30 niveles en un mapa ramificado** (tronco + 6 ramas + final + jefe), todos ganados por el bot de pruebas (salvo `placa_3`, falla previa del bot). Escena base heredable y bloques con `size`. Todas las ramas tienen 4 niveles.
+- **Jefe: subida nueva y más difícil** (17 saltos por lado, dos torres con gancho, púas; el Tue Tue ataca con picadas y ráfagas y se puede marear), **tocar al Tue Tue golpea** (empujón, aturdido corto, parpadeo; sin vida) y en la cima **cambia los largos de cuerda al azar** al desparramar.
 - **Jefe final, el Tue Tue** (`levels/jefe.tscn`): pelea pegándole con el emboque lanzado mientras empuja a los
   fosos con picadas y ráfagas → subida con la cámara que sube sola (parkour, el que queda abajo muere) → último
   emboque en la cima mientras el pájaro desparrama los extremos (pegarle lo marea). Checkpoints en la subida y la
@@ -1185,7 +1196,7 @@ Hecho (el detalle de lo verificado con tests headless está en `docs/REGISTRO_TE
 - **Idiomas:** español e inglés (todo el texto en `i18n/textos.csv`, imágenes con texto por idioma), selector con bandera (Chile / Reino Unido) en el menú principal, Ajustes y pausa; agregar un idioma = una columna.
 - **HUD de madera** (estilo de los botones del menú): indicador "P · PAUSA" arriba a la izquierda (en todos los
   niveles, vía el PauseMenu; clic = pausar) y puntaje con la sopaipilla arriba a la derecha (salta al sumar).
-- **Menús:** principal (portada, botones de madera, botón de idioma; sin Salir), mapa de niveles ramificado con progreso, ajustes con el tema de madera (y borrar progreso), pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
+- **Menús:** principal (portada con el ambiente de los niveles, botones de madera, botón de idioma; sin Salir), mapa de niveles ramificado con progreso, ajustes con el tema de madera (y borrar progreso), pausa con el diseño del equipo, pantalla de victoria (Reintentar / Continuar, sopaipillas, highscore por nivel en `user://scores.cfg`).
 - **Audio:** autoload `Sfx` con 22 efectos placeholder (incluye click, brillo y pop de confetti del emboque y 8 de la interfaz), música (cueca, sigue en la pausa) y volumen por categoría (General / Música / Efectos, con muestra al mover Efectos).
 - **Interfaz pulida** (autoload `UiFx`): todo botón/slider/lista con cursor de mano, foco con el mouse y sonidos de
   madera y cuerda (hover, click, confirmar, volver, bloqueado, abrir pausa, desbloquear); botones de madera con
@@ -1278,6 +1289,20 @@ Qué se verificó de cada feature con tests headless y con qué resultado. Los s
 - **Menú de pausa (diseño del equipo):** cada uno de los 7 niveles tiene exactamente un PauseMenu; Esc pausa/reanuda; foco en Continuar; los 4 botones calzan con los pintados; hover mueve el foco; Ajustes muestra sliders y oculta botones; el slider cambia SettingsManager; Volver devuelve el foco a Ajustes; Continuar reanuda. PASS 43/43. Luego se agregó P como segunda tecla (acción `pause`): P pausa y reanuda, Esc también (en `level_3`). PASS.
 - **Arte (jugadores, cajas, zonas, sopaipillas, terreno, fondo, ganchos):** cada nivel cargado y capturado sin errores de script; animación de caminata a la frecuencia pedida (cambio de frame cada 12 ticks a 10 FPS con física a 120 Hz).
 
+### Portada con el ambiente de los niveles (`tools/portada/`)
+
+La portada original (fondo azul marino plano con círculos de color y plataformas oscuras) se rehízo con el arte de
+los niveles. Godot dibuja el fondo a 1920×1080 (con `--rendering-driver opengl3`, como la web): `background.tscn`
+con su shader, bloques vestidos por `TerrainArt` con sus sombras (repisas donde pisan los personajes a y=698, el
+piso donde descansan palito y campana a y=786, vigas colgando a los lados del título y repisitas con
+sopaipillas) y una placa con `madera_boton.gdshader` más oscura para los controles. Lo de adelante sale de la
+original: cada pixel cercano a un color del fondo (o a una mezcla de dos, en los bordes de los círculos, o a una
+versión más oscura de un círculo: las sombras de los personajes) es fondo; los huecos encerrados dentro de los
+personajes no; en el borde se quita el fondo mezclado ("color a alfa", con un mínimo para lo oscuro sobre oscuro)
+y la línea azul del borde de las plataformas se borra. Verificado con capturas: personajes recortados limpios sobre
+magenta, pies sobre las repisas nuevas, palito y campana sobre el piso, texto de los controles legible; menú
+principal en es y en (botones y botón de idioma sin tapar nada). La original queda en `assets/ui/alternativos/`.
+
 ### Banderas de idioma
 
 Con Xvfb (es/en): bandera de Chile junto a "Español" y del Reino Unido junto a "English" en el botón del menú
@@ -1298,7 +1323,8 @@ el escalón y el paso nunca terminaba; y J1 levanta y vuelve a dejar caer la cam
 
 Controles de la cuerda invertidos (soltar = T / `.`, tirar = R / `,`). En la portada (`assets/ui/portada.png` y
 `assets/ui/en/portada.png`) las tapitas de esas teclas se intercambiaron píxel a píxel (el resto del dibujo intacto;
-ojo: si se vuelven a cambiar, la portada hay que editarla, la pausa no). Pausa (Xvfb, tronco_1 y lanzar_1, es/en,
+ojo: si se vuelven a cambiar, la portada hay que editarla, la pausa no; desde la portada nueva, se edita la
+original en `assets/ui/alternativos/` y se corre `tools/portada/hacer_portada.sh`). Pausa (Xvfb, tronco_1 y lanzar_1, es/en,
 también con Ajustes abierto): un panel por jugador en las franjas de los costados (18..266 y 1014..1262, alto 292 con
 lanzar), teclas leídas del Input Map (T/R y ./, ya invertidas), fila "Lanzar / recoger" solo en lanzar_1. PASS.
 

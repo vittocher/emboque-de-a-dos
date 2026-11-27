@@ -48,8 +48,8 @@ enum Phase { INTRO, FIGHT, ESCAPE, CLIMB, SUMMIT, WON }
 @export var climb_delay: float = 3.0
 ## Rapidez de la cámara (px/s). Si los dos van en la mitad de arriba de la
 ## pantalla, sube más rápido (no hay que esperarla).
-@export var climb_speed: float = 40.0
-@export var climb_speed_fast: float = 75.0
+@export var climb_speed: float = 30.0
+@export var climb_speed_fast: float = 60.0
 ## Muere quien queda esta distancia por debajo del borde de abajo de la pantalla.
 @export var abyss_margin: float = 10.0
 

@@ -18,6 +18,8 @@ class_name Player
 signal swing_jumped
 ## Se emite al cortar el salto (soltar la tecla subiendo): el Emboque frena también al extremo.
 signal jump_cut
+## Se emite al recibir un golpe (hurt): el Emboque suelta la mira si apuntaba.
+signal hurt_taken
 
 ## Prefijo de las acciones del Input Map: "p1" o "p2".
 @export var input_prefix: String = "p1"
@@ -68,6 +70,12 @@ signal jump_cut
 @export var swing_launch_multiplier: float = 1.1
 ## Frenado horizontal suave mientras se conserva el impulso del lanzamiento (px/s^2).
 @export var launch_air_drag: float = 180.0
+
+@export_group("Golpe")
+## Tras un golpe (hurt): segundos sin responder a los controles (aturdido).
+@export var hurt_stun_time: float = 0.35
+## Segundos que parpadea tras un golpe; mientras, no lo pueden volver a golpear.
+@export var hurt_blink_time: float = 1.2
 
 ## Holgura para considerar la cuerda tensa (px).
 const TAUT_TOLERANCE := 2.0
@@ -127,6 +135,9 @@ var _wind := Vector2.ZERO       # aceleración del viento de este tick (WindZone
 var _wind_cap := 0.0
 var _push := Vector2.ZERO       # arrastre de este tick (add_push), como una cinta: no queda como impulso
 var _squash_tween: Tween
+var _stun := 0.0                # aturdido tras un golpe: no responde a los controles
+var _blink := 0.0               # parpadeando tras un golpe: no lo pueden volver a golpear
+var _stun_fx: Node2D            # estrellitas girando sobre la cabeza mientras está aturdido
 
 @onready var _visual: Node2D = $Visual
 @onready var _art: Node2D = $Visual/Art
@@ -148,8 +159,10 @@ func _ready() -> void:
 	if _sprite != null and frames != null:
 		_sprite.sprite_frames = frames
 		_sprite.play("idle")
+	_make_stun_fx()
 
 func _physics_process(delta: float) -> void:
+	_update_hurt(delta)
 	if _hooked and _taut:
 		_pushing = false
 		# Colgando, el viento no empuja al jugador (y no se acumula para después).
@@ -172,15 +185,15 @@ func _process_platformer(delta: float) -> void:
 	_update_jump_cut()
 	_apply_wind(delta)
 
-	# Salto (solo desde el suelo).
-	if not aiming and is_on_floor() and Input.is_action_just_pressed(input_prefix + "_jump"):
+	# Salto (solo desde el suelo; aturdido no responde).
+	if not aiming and _stun <= 0.0 and is_on_floor() and Input.is_action_just_pressed(input_prefix + "_jump"):
 		velocity.y = jump_velocity
 		_jumping = true
 		Sfx.play(&"jump")
 		_squash(Vector2(0.88, 1.14), FEET)
 
 	# Movimiento horizontal (apuntando se queda quieto; el input solo lo gira).
-	var direction := 0.0 if aiming else Input.get_axis(input_prefix + "_left", input_prefix + "_right")
+	var direction := 0.0 if aiming or _stun > 0.0 else Input.get_axis(input_prefix + "_left", input_prefix + "_right")
 	var control := 1.0 if is_on_floor() else air_control
 	if _launched and not is_on_floor() and _apply_launch_air_control(direction, delta):
 		pass
@@ -305,7 +318,68 @@ func knockback(v: Vector2) -> void:
 	_taut = false
 	velocity = v
 	_launched = true
+	_jumping = false
 	_squash(Vector2(1.25, 0.78))
+
+## Golpe (tocar al Tue Tue): sale despedido como con knockback, queda aturdido
+## [member hurt_stun_time] (sin controles, con estrellitas) y parpadea
+## [member hurt_blink_time], rato en que no lo pueden volver a golpear. No hay vida:
+## es el empujón y el susto. Devuelve false si estaba parpadeando (no le pasa nada).
+func hurt(v: Vector2) -> bool:
+	if _blink > 0.0:
+		return false
+	knockback(v)
+	_stun = hurt_stun_time
+	_blink = hurt_blink_time
+	hurt_taken.emit()
+	return true
+
+## Aturdido tras un golpe: no camina, no salta ni maneja la cuerda.
+func is_stunned() -> bool:
+	return _stun > 0.0
+
+## Parpadeando tras un golpe: no lo pueden volver a golpear.
+func is_blinking() -> bool:
+	return _blink > 0.0
+
+func _update_hurt(delta: float) -> void:
+	if _stun > 0.0:
+		_stun = maxf(0.0, _stun - delta)
+	if _blink > 0.0:
+		_blink = maxf(0.0, _blink - delta)
+		# Parpadeo rojizo y semitransparente (también la sombra: es hija del dibujo).
+		var on := int(_blink / 0.07) % 2 == 0
+		_visual.modulate = Color(1.0, 0.45, 0.45, 0.4) if on else Color(1.0, 0.85, 0.85, 1.0)
+		if _blink <= 0.0:
+			_visual.modulate = Color.WHITE
+	if _stun_fx != null:
+		_stun_fx.visible = _stun > 0.0
+		if _stun_fx.visible:
+			var t := Time.get_ticks_msec() / 1000.0 * 7.0
+			for i in _stun_fx.get_child_count():
+				var a := t + i * TAU / _stun_fx.get_child_count()
+				var star := _stun_fx.get_child(i) as Node2D
+				star.position = Vector2(cos(a) * 17.0, sin(a) * 5.0)
+				star.rotation = t * 1.5
+				star.z_index = 1 if sin(a) > 0.0 else -1
+
+## Tres estrellitas amarillas que giran sobre la cabeza (aturdido).
+func _make_stun_fx() -> void:
+	_stun_fx = Node2D.new()
+	_stun_fx.name = "StunStars"
+	_stun_fx.position = Vector2(0, -42)
+	_stun_fx.visible = false
+	add_child(_stun_fx)
+	var points := PackedVector2Array()
+	for k in 10:
+		var r := 6.5 if k % 2 == 0 else 2.8
+		var a := -PI / 2.0 + k * PI / 5.0
+		points.append(Vector2(cos(a), sin(a)) * r)
+	for i in 3:
+		var star := Polygon2D.new()
+		star.polygon = points
+		star.color = Color(1.0, 0.86, 0.25)
+		_stun_fx.add_child(star)
 
 ## Empuje del viento: suma su aceleración, pero sin pasar de [member _wind_cap]
 ## en la dirección del viento (si no, sube sin límite).
@@ -477,7 +551,7 @@ func _swing_velocity() -> Vector2:
 ## Hacia dónde mira: la dirección del input; sin input, colgando o lanzado, hacia
 ## donde se mueve. El arte (Visual/Art) se espeja según esto.
 func _update_facing() -> void:
-	var direction := Input.get_axis(input_prefix + "_left", input_prefix + "_right")
+	var direction := 0.0 if _stun > 0.0 else Input.get_axis(input_prefix + "_left", input_prefix + "_right")
 	if direction != 0.0:
 		facing = 1 if direction > 0.0 else -1
 	elif ((_hooked and _taut) or _launched) and absf(velocity.x) > FACE_MIN_SPEED:

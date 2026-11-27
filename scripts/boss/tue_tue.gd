@@ -10,14 +10,23 @@ class_name TueTue
 ##   planeo ataca: PICADA a ras del piso (empuja a quien toque) o RÁFAGA desde un
 ##   costado (arrastra a todos hacia el foso de púas del otro lado). Un extremo
 ##   LANZADO (o muy rápido) que lo toca le quita una vida; sin vidas → defeated.
-## - FOLLOW (fase 2): vuela arriba de la pantalla mientras la cámara sube.
+## - FOLLOW (fase 2): vuela arriba de la pantalla mientras la cámara sube y cada
+##   tanto ataca: PICADA sobre un jugador (se pone encima, lo sigue un rato, marca
+##   con una línea dónde va a caer y cae en vertical) o RÁFAGA desde una esquina
+##   (arrastra a los jugadores de lado: hay que caminar en contra para no caerse de
+##   las islas). Si le pegan con el emboque lanzado queda mareado un rato (opcional).
 ## - HARASS (fase 3, la cima): no deja de atacar. Entre vueltas cortas hace
 ##   PICADAS por las repisas (empujan a los jugadores y, con la cuerda, mueven sus
 ##   extremos), RÁFAGAS (arrastran a los jugadores y soplan los extremos) y CAÍDAS en
 ##   picada bajo la cortina, donde cuelgan los extremos (golpean a quien esté junto a
 ##   la cortina y desparraman los extremos). Apenas los dos extremos se acercan, cae
 ##   sobre ellos. Si le pegan, queda mareado unos segundos: la ventana para embocar.
+##   Cuando desparrama los extremos (caída o ráfaga) además les cambia la cuerda: a
+##   uno, al azar, se la acorta (su extremo sube) y al otro se la alarga (baja).
 ## - BEATEN: tras el emboque final se va chillando.
+##
+## En todo el nivel, el jugador que lo toca recibe un golpe (Player.hurt: empujón,
+## aturdido y parpadeo; no hay vida).
 ##
 ## Diseño ("look"): la cabeza transformada (como en el video de la intro) o el
 ## pájaro del primer boceto. Se cambia en el Inspector.
@@ -28,7 +37,8 @@ signal stunned
 
 enum Mode { IDLE, FIGHT, FLEE, FOLLOW, HARASS, BEATEN }
 ## Estados de la pelea / acoso (el bot de pruebas los lee por número).
-enum State { IDLE, MOVE, HOVER, TELEGRAPH, SWOOP, GUST, HURT, ORBIT, DIVE, STUNNED, GONE }
+## (PECK va al final para no cambiar el número de los demás.)
+enum State { IDLE, MOVE, HOVER, TELEGRAPH, SWOOP, GUST, HURT, ORBIT, DIVE, STUNNED, GONE, PECK }
 
 ## Los diseños: cuadros (vuelo + grito), trocitos que salen al pegarle, ícono de
 ## vida del HUD y escala del dibujo.
@@ -62,7 +72,7 @@ const LOOKS := [
 @export var arena_left: float = 140.0
 @export var arena_right: float = 1140.0
 ## Altura de la picada (a la altura del pecho de quien está en el piso).
-@export var swoop_y: float = 572.0
+@export var swoop_y: float = 588.0
 @export var swoop_speed: float = 700.0
 @export var telegraph_time: float = 0.9
 ## Empujón al jugador que toca en picada (x hacia donde va la picada).
@@ -77,6 +87,29 @@ const LOOKS := [
 @export var hit_min_speed: float = 550.0
 ## Tras un golpe: invulnerable este rato (s).
 @export var hurt_time: float = 0.7
+## Empujón a un jugador que lo toca (fuera de los ataques; x hacia afuera de él).
+@export var contact_knockback: Vector2 = Vector2(380, -240)
+
+@export_group("Subida")
+## Descanso antes del primer ataque y entre ataque y ataque (s): da vueltas arriba.
+@export var climb_first_rest: float = 3.0
+@export var climb_rest_time: float = 2.2
+## Picada: altura sobre la que avisa (px bajo el borde de arriba de la pantalla),
+## cuánto rato sigue al jugador (y a qué rapidez) antes de fijar dónde cae, aviso
+## total y rapidez de la caída.
+@export var peck_height: float = 95.0
+@export var peck_track_time: float = 0.55
+@export var peck_track_speed: float = 320.0
+@export var peck_telegraph_time: float = 1.0
+@export var peck_speed: float = 640.0
+## Empujón de la picada (x hacia afuera del pájaro).
+@export var peck_knockback: Vector2 = Vector2(300, -180)
+## Ráfaga de la subida: duración y arrastre (más suave que en la arena: con
+## 320 px/s caminando en contra igual se avanza).
+@export var climb_gust_time: float = 2.0
+@export var climb_gust_push: float = 170.0
+## Mareado en la subida (s): no ataca.
+@export var climb_stun_time: float = 4.0
 
 @export_group("Acoso en la cima")
 @export var orbit_radius: Vector2 = Vector2(260, 120)
@@ -84,7 +117,7 @@ const LOOKS := [
 @export var orbit_time: float = 1.6
 ## Picadas y ráfagas de la cima: altura respecto del punto del emboque (a la altura
 ## del pecho de quien está en las repisas) y medio ancho del recorrido.
-@export var summit_line_dy: float = -108.0
+@export var summit_line_dy: float = -92.0
 @export var summit_half_width: float = 320.0
 ## Empujón de la picada en la cima: aleja a los jugadores de la cortina (y, con la
 ## cuerda, a su extremo del otro) sin tirarlos siempre de las repisas.
@@ -105,6 +138,11 @@ const LOOKS := [
 ## Aviso antes de caer sobre el punto del emboque (más corto que el de los otros ataques).
 @export var dive_telegraph_time: float = 0.55
 @export var orbit_min_time: float = 0.5
+## Al desparramar los extremos: cuánto se acorta la cuerda de uno (mín, máx) y cuánto
+## se alarga la del otro, al azar, y en cuánto tiempo (s).
+@export var rope_shorten: Vector2 = Vector2(20, 45)
+@export var rope_lengthen: Vector2 = Vector2(15, 75)
+@export var rope_shift_time: float = 0.35
 
 ## Orden fijo de la pelea: planear en un punto / picada desde un lado / ráfaga
 ## desde un lado (from = -1 izquierda, 1 derecha).
@@ -129,6 +167,13 @@ const HARASS_PATTERN := [
 	{"do": "orbit"}, {"do": "gust", "from": 1},
 ]
 
+## Orden fijo de la subida: picada a J1 / ráfaga desde la izquierda / picada a J2 /
+## ráfaga desde la derecha (who = 0 J1, 1 J2).
+const CLIMB_PATTERN := [
+	{"do": "peck", "who": 0}, {"do": "gust", "from": -1},
+	{"do": "peck", "who": 1}, {"do": "gust", "from": 1},
+]
+
 var mode: Mode = Mode.IDLE
 var state: State = State.IDLE
 var hp: int = 5
@@ -148,6 +193,14 @@ var _harass_center := Vector2.ZERO
 var _orbit_phase := 0.0
 var _phase := 0.0             # reloj del bamboleo
 var _hover_base := Vector2.ZERO
+var _climb_i := -1
+var _rest := 0.0              # descanso actual de la subida
+var _peck_target: Player
+var _peck_x := 0.0            # dónde cae la picada (fijo al terminar de seguirlo)
+var _peck_bottom := 0.0       # hasta dónde baja (respecto del borde de arriba de la pantalla; 0 = ya sube)
+var _rope_tweens := {}
+var _via := Vector2.ZERO      # paso previo por arriba al ir a atacar (no atraviesa a nadie)
+var _via_on := false
 
 @onready var _art: Node2D = $Art
 @onready var _sprite: AnimatedSprite2D = $Art/Sprite
@@ -199,13 +252,19 @@ func follow(camera: Camera2D) -> void:
 	mode = Mode.FOLLOW
 	visible = true
 	_camera = camera
-	_set_state(State.MOVE)
+	_climb_i = -1
+	_rest = climb_first_rest
+	_set_state(State.ORBIT)
 	position = camera.global_position + Vector2(0, -470)
 
 ## Fase 3: acosa los extremos alrededor de [param center] (donde se emboca).
 func harass(center: Vector2) -> void:
 	mode = Mode.HARASS
 	visible = true
+	_gust_fx.emitting = false
+	_art.position = Vector2.ZERO
+	_stars.visible = false
+	queue_redraw()
 	_harass_center = center
 	_orbit_phase = 0.0
 	_harass_i = -1
@@ -241,6 +300,7 @@ func _physics_process(delta: float) -> void:
 			_follow(delta)
 		Mode.HARASS:
 			_harass(delta)
+	_touch_players()
 	_animate(delta)
 
 func _fight(delta: float) -> void:
@@ -261,8 +321,13 @@ func _harass(delta: float) -> void:
 	match state:
 		State.ORBIT:
 			_orbit_phase += delta * 1.3
+			# Por sobre las cabezas de quienes están en las repisas (saltando sí se lo topan).
 			var want := _harass_center + Vector2(cos(_orbit_phase) * orbit_radius.x,
-				-170.0 - absf(sin(_orbit_phase)) * orbit_radius.y)
+				-200.0 - absf(sin(_orbit_phase)) * orbit_radius.y)
+			if position.y > _harass_center.y - 190.0:
+				# Tras caer al punto del emboque, sube derecho (por el hueco entre las
+				# repisas) antes de ponerse a dar vueltas: no atraviesa a nadie.
+				want = Vector2(position.x, _harass_center.y - 200.0)
 			_fly_to(want, fly_speed, delta)
 			if _t >= orbit_min_time and _ends_close():
 				# Están por embocar: cae sobre el punto del emboque ya (fuera del patrón).
@@ -289,7 +354,13 @@ func _harass(delta: float) -> void:
 func _attack(delta: float) -> void:
 	match state:
 		State.MOVE:
-			if _fly_to(_target, fly_speed * (1.0 if mode == Mode.FIGHT else 1.3), delta):
+			var spd := fly_speed * (1.0 if mode == Mode.FIGHT else 1.3)
+			if _via_on:
+				# Primero por arriba (sobre las cabezas) y recién al costado baja.
+				if _fly_to(_via, spd, delta):
+					_via_on = false
+				return
+			if _fly_to(_target, spd, delta):
 				match _move_then:
 					"hover":
 						_set_state(State.HOVER)
@@ -328,6 +399,8 @@ func _attack(delta: float) -> void:
 			_blow(-int(step.from), delta)
 			if _t >= (gust_time if mode == Mode.FIGHT else summit_gust_time):
 				_gust_fx.emitting = false
+				if mode == Mode.HARASS:
+					_shuffle_ropes()
 				_attack_done()
 		State.DIVE:
 			_knock_players(func(p: Player) -> int:
@@ -373,6 +446,7 @@ func _begin_attack(s: Dictionary) -> void:
 	step = s
 	_set_state(State.MOVE)
 	_move_then = "telegraph"
+	_via_on = false
 	match str(s.do):
 		"swoop":
 			var x := _lane_right() + 40.0 if int(s.from) > 0 else _lane_left() - 40.0
@@ -382,6 +456,16 @@ func _begin_attack(s: Dictionary) -> void:
 			_target = Vector2(gx, _gust_line())
 		"dive":
 			_target = _harass_center + Vector2(0, -200)
+	_set_via()
+
+
+## Si el punto de partida está más abajo, primero sube/cruza por arriba (160 px sobre
+## él) y baja recién encima: tocarlo duele, y en línea recta atravesaría a los
+## jugadores (en las repisas de la cima, en el piso de la arena).
+func _set_via() -> void:
+	_via = Vector2(_target.x, minf(position.y, _target.y - 160.0))
+	_via_on = step.get("do", "") != "dive" and _target.y > position.y + 40.0 \
+		and position.distance_to(_via) > 10.0
 
 # Bordes y alturas de los ataques: la arena (fase 1) o las repisas de la cima.
 func _lane_left() -> float:
@@ -403,34 +487,139 @@ func _knock_players(side_of: Callable, kb: Vector2) -> void:
 		if body is Player and not _swoop_hit.has(body):
 			_swoop_hit[body] = true
 			var side: int = side_of.call(body)
-			(body as Player).knockback(Vector2(kb.x * side, kb.y))
-			Sfx.play(&"boss_hit", 1.4, -6.0)
+			if (body as Player).hurt(Vector2(kb.x * side, kb.y)):
+				Sfx.play(&"boss_hit", 1.4, -6.0)
+
+## Tocarlo duele siempre (no solo en los ataques): empujón hacia afuera del pájaro,
+## aturdido y parpadeo. Mareado no hace daño.
+func _touch_players() -> void:
+	if not visible or state == State.STUNNED or state == State.GONE:
+		return
+	if mode != Mode.FIGHT and mode != Mode.FOLLOW and mode != Mode.HARASS:
+		return
+	for body in _hitbox.get_overlapping_bodies():
+		if body is Player:
+			var pl := body as Player
+			var side := signf(pl.global_position.x - position.x)
+			if side == 0.0:
+				side = 1.0
+			if pl.hurt(Vector2(contact_knockback.x * side, contact_knockback.y)):
+				Sfx.play(&"boss_hit", 1.4, -6.0)
 
 ## Ráfaga hacia [param dir]: arrastra a todos los jugadores y empuja los extremos
 ## que cuelgan (no los lanzados: el tiro sigue recto).
 func _blow(dir: int, _delta: float) -> void:
-	var push := gust_push if mode != Mode.HARASS else summit_gust_push
+	var push := gust_push
+	var end_force := gust_end_force
+	if mode == Mode.HARASS:
+		push = summit_gust_push
+	elif mode == Mode.FOLLOW:
+		push = climb_gust_push
+		end_force *= 0.5
 	for p in get_tree().get_nodes_in_group(&"players"):
 		(p as Player).add_push(Vector2(dir * push, 0))
 	for e in _emboques():
 		var end := e.get_end()
 		if end != null and not e.is_flying() and not e.is_held() and not end.is_attached():
-			end.apply_central_force(Vector2(dir * gust_end_force * end.mass, -0.35 * gust_end_force * end.mass))
+			end.apply_central_force(Vector2(dir * end_force * end.mass, -0.35 * end_force * end.mass))
 
 func _start_gust_fx(dir: int) -> void:
 	_gust_fx.direction = Vector2(dir, 0)
 	_gust_fx.position = Vector2(dir * 40, 0)
 	_gust_fx.emitting = true
 
+## La subida: da vueltas arriba de la pantalla (que sigue subiendo) y entre
+## descanso y descanso ataca según CLIMB_PATTERN.
 func _follow(delta: float) -> void:
 	if _camera == null:
 		return
 	var top := _camera.global_position.y - 360.0
-	var want := Vector2(640.0 + sin(_phase * 0.7) * 330.0, top + 110.0 + sin(_phase * 2.3) * 14.0)
-	_fly_to(want, fly_speed, delta)
-	# Cada tanto chilla (no ataca: la cámara ya los apura).
-	if fmod(_phase, 6.0) < delta:
-		_screech()
+	match state:
+		State.ORBIT:
+			var want := Vector2(640.0 + sin(_phase * 0.7) * 330.0, top + 75.0 + sin(_phase * 2.3) * 14.0)
+			_fly_to(want, fly_speed, delta)
+			if _t >= _rest:
+				_next_climb()
+		State.STUNNED:
+			_fly_to(Vector2(_target.x, top + 90.0 + sin(_t * 2.0) * 8.0), fly_speed, delta)
+			if _t >= climb_stun_time:
+				_stars.visible = false
+				_rest = climb_rest_time
+				_set_state(State.ORBIT)
+				_screech()
+		State.MOVE:
+			if _fly_to(_climb_spot(top), fly_speed * 1.3, delta):
+				_set_state(State.TELEGRAPH)
+				_screech()
+		State.TELEGRAPH:
+			_art.position = Vector2(randf_range(-3, 3), randf_range(-3, 3))
+			var pos := _climb_spot(top)
+			if step.do == "peck":
+				# Sigue al jugador un rato y después fija dónde cae (la línea lo marca).
+				position.y = pos.y
+				if _t < peck_track_time:
+					position.x = move_toward(position.x, pos.x, peck_track_speed * delta)
+				_peck_x = position.x
+				queue_redraw()
+				if _t >= peck_telegraph_time:
+					_art.position = Vector2.ZERO
+					_swoop_hit.clear()
+					_peck_bottom = minf(_peck_target.global_position.y + 170.0, top + 680.0) - top
+					_set_state(State.PECK)
+					Sfx.play(&"swoop")
+			else:
+				position = pos
+				if _t >= telegraph_time:
+					_art.position = Vector2.ZERO
+					_set_state(State.GUST)
+					_start_gust_fx(-int(step.from))
+					Sfx.play(&"gust")
+		State.PECK:
+			# Cae en vertical hasta pasar al jugador y vuelve a subir por la misma línea
+			# (así quien la esquivó sabe por dónde no pararse).
+			position.x = _peck_x
+			if _peck_bottom > 0.0 and position.y < top + _peck_bottom:
+				position.y += peck_speed * delta
+			else:
+				_peck_bottom = 0.0
+				position.y -= peck_speed * 0.8 * delta
+				if position.y <= top + peck_height:
+					_climb_done()
+			_knock_players(func(p: Player) -> int:
+				return 1 if p.global_position.x >= position.x else -1, peck_knockback)
+		State.GUST:
+			position = _climb_spot(top) + Vector2(0, sin(_t * 9.0) * 6.0)
+			_blow(-int(step.from), delta)
+			if _t >= climb_gust_time:
+				_gust_fx.emitting = false
+				_climb_done()
+
+## Dónde se pone para el ataque de la subida en curso: sobre el jugador (picada) o
+## en una esquina de arriba (ráfaga).
+func _climb_spot(top: float) -> Vector2:
+	if step.do == "peck" and is_instance_valid(_peck_target):
+		return Vector2(clampf(_peck_target.global_position.x, 60.0, 1220.0), top + peck_height)
+	# Ráfaga: arriba en la esquina, sobre las torres (no topa a quien trepa la cuerda).
+	return Vector2(70.0 if int(step.get("from", -1)) < 0 else 1210.0, top + 50.0)
+
+func _next_climb() -> void:
+	_climb_i = (_climb_i + 1) % CLIMB_PATTERN.size()
+	step = CLIMB_PATTERN[_climb_i]
+	_peck_target = null
+	if step.do == "peck":
+		var prefix := "p%d" % (int(step.who) + 1)
+		for p in get_tree().get_nodes_in_group(&"players"):
+			if (p as Player).input_prefix == prefix:
+				_peck_target = p
+		if _peck_target == null:
+			_climb_done()
+			return
+	_set_state(State.MOVE)
+
+func _climb_done() -> void:
+	_rest = climb_rest_time
+	_set_state(State.ORBIT)
+	queue_redraw()
 
 ## Los dos extremos colgando cerca uno del otro (están por embocar).
 func _ends_close() -> bool:
@@ -455,13 +644,41 @@ func _scatter_ends() -> void:
 			continue
 		var dir_x := signf(off.x) if absf(off.x) > 4.0 else (1.0 if e.end_kind == "palito" else -1.0)
 		end.linear_velocity = Vector2(dir_x * blow_speed, -blow_speed * 0.55)
+	_shuffle_ropes()
+
+## Les cambia la cuerda al desparramarlos: a uno (al azar) se la acorta y al otro se
+## la alarga, cada uno una cantidad al azar. Así no basta con esperar a que los
+## extremos vuelvan a juntarse solos: hay que volver a encontrar los largos.
+func _shuffle_ropes() -> void:
+	var ems: Array[Emboque] = []
+	for e in _emboques():
+		if e.get_end() != null and not e.is_held() and not e.get_end().is_attached():
+			ems.append(e)
+	if ems.size() < 2:
+		return
+	ems.shuffle()
+	# El que se acorta tiene que tener cuerda para acortar.
+	if ems[0].rope_length <= ems[0].min_length + 10.0:
+		ems.reverse()
+	_shift_rope(ems[0], -randf_range(rope_shorten.x, rope_shorten.y))
+	_shift_rope(ems[1], randf_range(rope_lengthen.x, rope_lengthen.y))
+	Sfx.play(&"swing", 1.35, -4.0)
+
+func _shift_rope(e: Emboque, amount: float) -> void:
+	var to := clampf(e.rope_length + amount, e.min_length, e.max_length)
+	var old: Tween = _rope_tweens.get(e)
+	if old != null:
+		old.kill()
+	var tw := create_tween().set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
+	tw.tween_property(e, "rope_length", to, rope_shift_time).set_trans(Tween.TRANS_SINE)
+	_rope_tweens[e] = tw
 
 # --- Golpes ---
 
 func _on_hurtbox_body_entered(body: Node) -> void:
 	if not body is RopeEnd or _hurt > 0.0:
 		return
-	if mode != Mode.FIGHT and not (mode == Mode.HARASS and state != State.STUNNED):
+	if mode != Mode.FIGHT and not ((mode == Mode.HARASS or mode == Mode.FOLLOW) and state != State.STUNNED):
 		return
 	var end := body as RopeEnd
 	var emboque := end.get_parent() as Emboque
@@ -486,6 +703,13 @@ func _on_hurtbox_body_entered(body: Node) -> void:
 			return
 		_set_state(State.HURT)
 		_target = position + v.normalized() * 70.0
+	elif mode == Mode.FOLLOW:
+		# En la subida: mareado arriba al centro (entre los dos caminos) un rato.
+		_set_state(State.STUNNED)
+		_target = Vector2(640, 0)
+		_stars.visible = true
+		queue_redraw()
+		stunned.emit()
 	else:
 		# En la cima: mareado en un rincón alto.
 		_set_state(State.STUNNED)
@@ -493,6 +717,18 @@ func _on_hurtbox_body_entered(body: Node) -> void:
 		_target = _harass_center + Vector2(side * -380.0, -250.0)
 		_stars.visible = true
 		stunned.emit()
+
+## Aviso de la picada de la subida: una línea punteada hasta donde va a caer (tenue
+## mientras sigue al jugador, fuerte cuando ya fijó el lugar).
+func _draw() -> void:
+	if mode != Mode.FOLLOW or state != State.TELEGRAPH or step.get("do", "") != "peck":
+		return
+	if not is_instance_valid(_peck_target):
+		return
+	var locked := _t >= peck_track_time
+	var bottom := minf(_peck_target.global_position.y + 170.0, _camera.global_position.y + 320.0)
+	var col := Color(1.0, 0.3, 0.2, 0.75 if locked else 0.3)
+	draw_dashed_line(Vector2(0, 50), Vector2(0, bottom - position.y), col, 5.0 if locked else 3.0, 14.0)
 
 func _flash() -> void:
 	var tw := create_tween()
@@ -525,7 +761,7 @@ func _screech() -> void:
 
 func _animate(delta: float) -> void:
 	# Aletea más rápido al soplar o picar; mareado, las estrellas giran.
-	var fast := state == State.GUST or state == State.SWOOP or state == State.DIVE
+	var fast := state == State.GUST or state == State.SWOOP or state == State.DIVE or state == State.PECK
 	_sprite.speed_scale = 2.2 if fast else 1.0
 	if _stars.visible:
 		_stars.rotation += delta * 4.0

@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
 [ext_resource type="Script" path="res://scripts/level_rules.gd" id="4_rules"]
 [ext_resource type="PackedScene" path="res://scenes/player_death_zone.tscn" id="5_spikes"]
+[ext_resource type="PackedScene" path="res://scenes/hook_point.tscn" id="6_hook"]
 [ext_resource type="PackedScene" path="res://scenes/boss/tue_tue.tscn" id="7_tuetue"]
 [ext_resource type="Script" path="res://scripts/boss/boss_fight.gd" id="8_fight"]
 [ext_resource type="PackedScene" path="res://scenes/boss/boss_bar.tscn" id="9_bar"]
@@ -55,117 +56,189 @@ scale = Vector2(1.4, 1.2)
 position = Vector2(1210, 682)
 scale = Vector2(1.4, 1.2)
 
-[node name="StepL0" parent="." instance=ExtResource("2_block")]
-position = Vector2(120, 512)
-size = Vector2(160, 24)
+[node name="L1" parent="." instance=ExtResource("2_block")]
+position = Vector2(50, 562)
+size = Vector2(60, 24)
 
-[node name="StepR0" parent="." instance=ExtResource("2_block")]
-position = Vector2(1160, 512)
-size = Vector2(160, 24)
+[node name="L2" parent="." instance=ExtResource("2_block")]
+position = Vector2(262.5, 492)
+size = Vector2(85, 24)
 
-[node name="StepL1" parent="." instance=ExtResource("2_block")]
-position = Vector2(320, 392)
-size = Vector2(160, 24)
+[node name="L3" parent="." instance=ExtResource("2_block")]
+position = Vector2(395, 422)
+size = Vector2(70, 24)
 
-[node name="StepR1" parent="." instance=ExtResource("2_block")]
-position = Vector2(960, 392)
-size = Vector2(160, 24)
+[node name="L4" parent="." instance=ExtResource("2_block")]
+position = Vector2(212.5, 352)
+size = Vector2(85, 24)
 
-[node name="StepL2" parent="." instance=ExtResource("2_block")]
-position = Vector2(120, 272)
-size = Vector2(160, 24)
+[node name="L5" parent="." instance=ExtResource("2_block")]
+position = Vector2(72.5, 282)
+size = Vector2(85, 24)
 
-[node name="StepR2" parent="." instance=ExtResource("2_block")]
-position = Vector2(1160, 272)
-size = Vector2(160, 24)
+[node name="L6" parent="." instance=ExtResource("2_block")]
+position = Vector2(282.5, 212)
+size = Vector2(125, 24)
 
-[node name="StepL3" parent="." instance=ExtResource("2_block")]
-position = Vector2(320, 152)
-size = Vector2(160, 24)
+[node name="L7" parent="." instance=ExtResource("2_block")]
+position = Vector2(262.5, -114)
+size = Vector2(85, 24)
 
-[node name="StepR3" parent="." instance=ExtResource("2_block")]
-position = Vector2(960, 152)
-size = Vector2(160, 24)
+[node name="L8" parent="." instance=ExtResource("2_block")]
+position = Vector2(395, -194)
+size = Vector2(70, 24)
 
-[node name="StepL4" parent="." instance=ExtResource("2_block")]
-position = Vector2(120, 32)
-size = Vector2(160, 24)
+[node name="L9" parent="." instance=ExtResource("2_block")]
+position = Vector2(212.5, -274)
+size = Vector2(85, 24)
 
-[node name="StepR4" parent="." instance=ExtResource("2_block")]
-position = Vector2(1160, 32)
-size = Vector2(160, 24)
+[node name="L10" parent="." instance=ExtResource("2_block")]
+position = Vector2(72.5, -354)
+size = Vector2(85, 24)
 
-[node name="StepL5" parent="." instance=ExtResource("2_block")]
-position = Vector2(320, -88)
-size = Vector2(160, 24)
+[node name="L11" parent="." instance=ExtResource("2_block")]
+position = Vector2(262.5, -434)
+size = Vector2(85, 24)
 
-[node name="StepR5" parent="." instance=ExtResource("2_block")]
-position = Vector2(960, -88)
-size = Vector2(160, 24)
+[node name="L12" parent="." instance=ExtResource("2_block")]
+position = Vector2(395, -514)
+size = Vector2(70, 24)
 
-[node name="StepL6" parent="." instance=ExtResource("2_block")]
-position = Vector2(120, -208)
-size = Vector2(160, 24)
+[node name="L13" parent="." instance=ExtResource("2_block")]
+position = Vector2(212.5, -594)
+size = Vector2(85, 24)
 
-[node name="StepR6" parent="." instance=ExtResource("2_block")]
-position = Vector2(1160, -208)
-size = Vector2(160, 24)
+[node name="L14" parent="." instance=ExtResource("2_block")]
+position = Vector2(72.5, -674)
+size = Vector2(85, 24)
 
-[node name="StepL7" parent="." instance=ExtResource("2_block")]
-position = Vector2(320, -328)
-size = Vector2(160, 24)
+[node name="L15" parent="." instance=ExtResource("2_block")]
+position = Vector2(282.5, -754)
+size = Vector2(125, 24)
 
-[node name="StepR7" parent="." instance=ExtResource("2_block")]
-position = Vector2(960, -328)
-size = Vector2(160, 24)
+[node name="L16" parent="." instance=ExtResource("2_block")]
+position = Vector2(262.5, -1084)
+size = Vector2(85, 24)
 
-[node name="StepL8" parent="." instance=ExtResource("2_block")]
-position = Vector2(120, -448)
-size = Vector2(160, 24)
+[node name="LT1" parent="." instance=ExtResource("2_block")]
+position = Vector2(55, 19)
+size = Vector2(90, 130)
 
-[node name="StepR8" parent="." instance=ExtResource("2_block")]
-position = Vector2(1160, -448)
-size = Vector2(160, 24)
+[node name="LT2" parent="." instance=ExtResource("2_block")]
+position = Vector2(55, -947)
+size = Vector2(90, 130)
 
-[node name="StepL9" parent="." instance=ExtResource("2_block")]
-position = Vector2(320, -568)
-size = Vector2(160, 24)
+[node name="R1" parent="." instance=ExtResource("2_block")]
+position = Vector2(1230, 557)
+size = Vector2(60, 24)
 
-[node name="StepR9" parent="." instance=ExtResource("2_block")]
-position = Vector2(960, -568)
-size = Vector2(160, 24)
+[node name="R2" parent="." instance=ExtResource("2_block")]
+position = Vector2(997.5, 482)
+size = Vector2(125, 24)
 
-[node name="StepL10" parent="." instance=ExtResource("2_block")]
-position = Vector2(120, -688)
-size = Vector2(160, 24)
+[node name="R3" parent="." instance=ExtResource("2_block")]
+position = Vector2(1017.5, 160)
+size = Vector2(85, 24)
 
-[node name="StepR10" parent="." instance=ExtResource("2_block")]
-position = Vector2(1160, -688)
-size = Vector2(160, 24)
+[node name="R4" parent="." instance=ExtResource("2_block")]
+position = Vector2(885, 84)
+size = Vector2(70, 24)
 
-[node name="StepL11" parent="." instance=ExtResource("2_block")]
-position = Vector2(320, -808)
-size = Vector2(160, 24)
+[node name="R5" parent="." instance=ExtResource("2_block")]
+position = Vector2(1067.5, 8)
+size = Vector2(85, 24)
 
-[node name="StepR11" parent="." instance=ExtResource("2_block")]
-position = Vector2(960, -808)
-size = Vector2(160, 24)
+[node name="R6" parent="." instance=ExtResource("2_block")]
+position = Vector2(1207.5, -69)
+size = Vector2(85, 24)
 
-[node name="StepL12" parent="." instance=ExtResource("2_block")]
-position = Vector2(120, -928)
-size = Vector2(160, 24)
+[node name="R7" parent="." instance=ExtResource("2_block")]
+position = Vector2(1017.5, -145)
+size = Vector2(85, 24)
 
-[node name="StepR12" parent="." instance=ExtResource("2_block")]
-position = Vector2(1160, -928)
-size = Vector2(160, 24)
+[node name="R8" parent="." instance=ExtResource("2_block")]
+position = Vector2(885, -221)
+size = Vector2(70, 24)
 
-[node name="StepL13" parent="." instance=ExtResource("2_block")]
-position = Vector2(320, -1048)
-size = Vector2(160, 24)
+[node name="R9" parent="." instance=ExtResource("2_block")]
+position = Vector2(1067.5, -297)
+size = Vector2(85, 24)
 
-[node name="StepR13" parent="." instance=ExtResource("2_block")]
-position = Vector2(960, -1048)
-size = Vector2(160, 24)
+[node name="R10" parent="." instance=ExtResource("2_block")]
+position = Vector2(1207.5, -373)
+size = Vector2(85, 24)
+
+[node name="R11" parent="." instance=ExtResource("2_block")]
+position = Vector2(1017.5, -449)
+size = Vector2(85, 24)
+
+[node name="R12" parent="." instance=ExtResource("2_block")]
+position = Vector2(885, -526)
+size = Vector2(70, 24)
+
+[node name="R13" parent="." instance=ExtResource("2_block")]
+position = Vector2(1067.5, -602)
+size = Vector2(85, 24)
+
+[node name="R14" parent="." instance=ExtResource("2_block")]
+position = Vector2(1207.5, -678)
+size = Vector2(85, 24)
+
+[node name="R15" parent="." instance=ExtResource("2_block")]
+position = Vector2(997.5, -754)
+size = Vector2(125, 24)
+
+[node name="R16" parent="." instance=ExtResource("2_block")]
+position = Vector2(1017.5, -1084)
+size = Vector2(85, 24)
+
+[node name="RT1" parent="." instance=ExtResource("2_block")]
+position = Vector2(1225, 289)
+size = Vector2(90, 130)
+
+[node name="RT2" parent="." instance=ExtResource("2_block")]
+position = Vector2(1225, -947)
+size = Vector2(90, 130)
+
+[node name="LT1Hook" parent="." instance=ExtResource("6_hook")]
+position = Vector2(120, -96)
+metadata/rehook_delay = 1.5
+
+[node name="LT2Hook" parent="." instance=ExtResource("6_hook")]
+position = Vector2(120, -1062)
+metadata/rehook_delay = 1.5
+
+[node name="RT1Hook" parent="." instance=ExtResource("6_hook")]
+position = Vector2(1160, 174)
+metadata/rehook_delay = 1.5
+
+[node name="RT2Hook" parent="." instance=ExtResource("6_hook")]
+position = Vector2(1160, -1062)
+metadata/rehook_delay = 1.5
+
+[node name="SpikesL4" parent="." instance=ExtResource("5_spikes")]
+position = Vector2(245, 328)
+scale = Vector2(0.2, 0.8)
+
+[node name="SpikesL8" parent="." instance=ExtResource("5_spikes")]
+position = Vector2(420, -218)
+scale = Vector2(0.2, 0.8)
+
+[node name="SpikesL12" parent="." instance=ExtResource("5_spikes")]
+position = Vector2(420, -538)
+scale = Vector2(0.2, 0.8)
+
+[node name="SpikesR4" parent="." instance=ExtResource("5_spikes")]
+position = Vector2(860, 60)
+scale = Vector2(0.2, 0.8)
+
+[node name="SpikesR8" parent="." instance=ExtResource("5_spikes")]
+position = Vector2(860, -245)
+scale = Vector2(0.2, 0.8)
+
+[node name="SpikesR12" parent="." instance=ExtResource("5_spikes")]
+position = Vector2(860, -550)
+scale = Vector2(0.2, 0.8)
 
 [node name="SummitLeft" parent="." instance=ExtResource("2_block")]
 position = Vector2(502, -1168)
@@ -179,23 +252,23 @@ size = Vector2(144, 24)
 position = Vector2(640, -1335)
 size = Vector2(68, 250)
 
+[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(72.5, 230)
+
+[node name="Collectible4" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(1207.5, -121)
+
+[node name="Collectible5" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(72.5, -406)
+
+[node name="Collectible6" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(1207.5, -425)
+
 [node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
 position = Vector2(70, 640)
 
 [node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
 position = Vector2(1210, 640)
-
-[node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(150, -15)
-
-[node name="Collectible4" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(1130, -15)
-
-[node name="Collectible5" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(320, -615)
-
-[node name="Collectible6" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(960, -615)
 
 [node name="Collectible7" parent="." instance=ExtResource("3_collectible")]
 position = Vector2(640, -1130)
