@@ -6,6 +6,7 @@ class_name WindZone
 ## del emboque (son livianos: suben como un volantín) y un poco a los jugadores
 ## (los ayuda a subir o los frena). Se ve como rayitas de aire que corren en su
 ## dirección y suena mientras haya algo adentro.
+## Con [member gust_off] > 0 sopla en RÁFAGAS: sopla, para, sopla…
 
 ## Tamaño de la zona (px). La posición del nodo es el centro.
 @export var size := Vector2(120, 300):
@@ -24,7 +25,18 @@ class_name WindZone
 ## Velocidad máxima a la que el viento lleva a un jugador (px/s).
 @export var player_max_speed := 330.0
 
+@export_group("Ráfagas")
+## Segundos soplando y segundos en calma. gust_off = 0 → sopla siempre.
+@export var gust_on := 2.0
+@export var gust_off := 0.0
+## Desfase del ciclo (s), para que dos corrientes no vayan a la par.
+@export var gust_offset := 0.0
+
+## Segundos que la ráfaga demora en llegar a toda su fuerza y en irse.
+const GUST_RAMP := 0.3
+
 var _sound: AudioStreamPlayer2D
+var _time := 0.0
 
 func _enter_tree() -> void:
 	_apply()
@@ -46,10 +58,29 @@ func _ready() -> void:
 		add_child(_sound)
 		_sound.play()
 
-func _physics_process(_delta: float) -> void:
+## Fuerza actual de la ráfaga, 0..1 (1 siempre si la corriente es constante).
+func gust_power() -> float:
+	if gust_off <= 0.0:
+		return 1.0
+	var t := fposmod(_time + gust_offset, gust_on + gust_off)
+	return clampf(minf(t, gust_on - t) / GUST_RAMP, 0.0, 1.0)
+
+func _show_gust(power: float) -> void:
+	($Streaks as CPUParticles2D).emitting = power > 0.0
+	($Tint as Polygon2D).modulate.a = lerpf(0.3, 1.0, power)
+	if _sound != null:
+		_sound.volume_db = Sfx.base_volume(&"wind") + linear_to_db(maxf(power, 0.01))
+
+func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
-	var dir := direction.normalized()
+	_time += delta
+	var power := gust_power()
+	if gust_off > 0.0:
+		_show_gust(power)
+	if power <= 0.0:
+		return
+	var dir := direction.normalized() * power
 	for body in get_overlapping_bodies():
 		if body is RigidBody2D:
 			(body as RigidBody2D).apply_central_force(dir * strength * (body as RigidBody2D).mass)

@@ -1,11 +1,14 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/levels/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/levels/level_base_large.tscn" id="1_base"]
 [ext_resource type="PackedScene" path="res://scenes/block.tscn" id="2_block"]
 [ext_resource type="PackedScene" path="res://scenes/collectible.tscn" id="3_collectible"]
 [ext_resource type="PackedScene" path="res://scenes/hook_point.tscn" id="4_hook"]
 [ext_resource type="Script" path="res://scripts/level_rules.gd" id="5_rules"]
 [ext_resource type="PackedScene" path="res://scenes/ui/level_hint.tscn" id="90_hint"]
+[ext_resource type="PackedScene" path="res://scenes/fall_zone.tscn" id="n_fall"]
+[ext_resource type="PackedScene" path="res://scenes/emboque_death_zone.tscn" id="n_caca"]
+[ext_resource type="PackedScene" path="res://scenes/player_death_zone.tscn" id="n_puas"]
 
 [node name="Lanzar1" instance=ExtResource("1_base")]
 
@@ -14,45 +17,145 @@ script = ExtResource("5_rules")
 throw_enabled = true
 
 [node name="Player1" parent="."]
-position = Vector2(250, 460)
+position = Vector2(370, 760)
 
 [node name="Player2" parent="."]
-position = Vector2(1030, 460)
+position = Vector2(1550, 800)
 
-[node name="Ground" parent="." instance=ExtResource("2_block")]
-position = Vector2(640, 700)
-size = Vector2(1280, 40)
+[node name="Emboque1" parent="." index="8"]
+rope_length = 80.0
 
-[node name="TowerLeft" parent="." instance=ExtResource("2_block")]
-position = Vector2(570.5, 545)
-size = Vector2(101, 270)
-
-[node name="TowerRight" parent="." instance=ExtResource("2_block")]
-position = Vector2(709.5, 545)
-size = Vector2(101, 270)
-
-[node name="ShaftFloor" parent="." instance=ExtResource("2_block")]
-position = Vector2(640, 600)
-size = Vector2(38, 160)
+[node name="Emboque2" parent="." index="9"]
+rope_length = 80.0
 
 [node name="HookLeft" parent="." instance=ExtResource("4_hook")]
-position = Vector2(495, 375)
+position = Vector2(565, 241)
 
 [node name="HookRight" parent="." instance=ExtResource("4_hook")]
-position = Vector2(785, 375)
+position = Vector2(1035, 363)
+
+[node name="GroundLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(345, 570)
+size = Vector2(490, 24)
+
+[node name="GroundRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(1173, 692)
+size = Vector2(326, 24)
+
+[node name="TowerLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(640, 624)
+size = Vector2(100, 672)
+
+[node name="TowerRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(960, 685)
+size = Vector2(100, 550)
+
+[node name="FallZone" parent="." instance=ExtResource("n_fall")]
+position = Vector2(800, 1010)
+scale = Vector2(1.25, 1)
+
+[node name="Wall" parent="." instance=ExtResource("2_block")]
+position = Vector2(800, -100)
+size = Vector2(16, 716)
+
+[node name="LowCeiling" parent="." instance=ExtResource("2_block")]
+position = Vector2(255, 34)
+size = Vector2(180, 868)
+
+[node name="CacaLeft" parent="." instance=ExtResource("n_caca")]
+position = Vector2(262, 546)
+scale = Vector2(1.45, 0.8)
+
+[node name="StartLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(445, 920)
+size = Vector2(290, 80)
+
+[node name="PillarLeft" parent="." instance=ExtResource("2_block")]
+position = Vector2(575, 731)
+size = Vector2(30, 298)
+
+[node name="SpikeFloorL" parent="." instance=ExtResource("2_block")]
+position = Vector2(150, 945)
+size = Vector2(300, 30)
+
+[node name="SpikesFloorL" parent="." instance=ExtResource("n_puas")]
+position = Vector2(150, 915)
+scale = Vector2(3, 1)
+
+[node name="L1" parent="." instance=ExtResource("2_block")]
+position = Vector2(222.5, 818)
+size = Vector2(65, 24)
+
+[node name="L2" parent="." instance=ExtResource("2_block")]
+position = Vector2(114, 744)
+size = Vector2(68, 24)
+
+[node name="L3" parent="." instance=ExtResource("2_block")]
+position = Vector2(26, 662)
+size = Vector2(52, 24)
+
+[node name="StartRight" parent="." instance=ExtResource("2_block")]
+position = Vector2(1540, 920)
+size = Vector2(120, 80)
+
+[node name="SpikeFloorR" parent="." instance=ExtResource("2_block")]
+position = Vector2(1270, 945)
+size = Vector2(420, 30)
+
+[node name="SpikesFloorR" parent="." instance=ExtResource("n_puas")]
+position = Vector2(1270, 915)
+scale = Vector2(4.2, 1)
+
+[node name="R1" parent="." instance=ExtResource("2_block")]
+position = Vector2(1403, 818)
+size = Vector2(66, 24)
+
+[node name="R2" parent="." instance=ExtResource("2_block")]
+position = Vector2(1525, 744)
+size = Vector2(70, 24)
+
+[node name="CacaR2" parent="." instance=ExtResource("n_caca")]
+position = Vector2(1525, 720)
+scale = Vector2(0.7, 0.8)
+
+[node name="R3" parent="." instance=ExtResource("2_block")]
+position = Vector2(1405, 668)
+size = Vector2(70, 24)
+
+[node name="CacaR3" parent="." instance=ExtResource("n_caca")]
+position = Vector2(1405, 644)
+scale = Vector2(0.7, 0.8)
+
+[node name="R4" parent="." instance=ExtResource("2_block")]
+position = Vector2(1530, 592)
+size = Vector2(80, 24)
+
+[node name="R5" parent="." instance=ExtResource("2_block")]
+position = Vector2(1415, 518)
+size = Vector2(50, 24)
+
+[node name="WallRightIn" parent="." instance=ExtResource("2_block")]
+position = Vector2(1346, 568)
+size = Vector2(20, 272)
+
+[node name="Collectible5" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(1530, 680)
+
+[node name="Collectible4" parent="." instance=ExtResource("3_collectible")]
+position = Vector2(240, 520)
 
 [node name="Collectible1" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(470, 470)
+position = Vector2(540, 350)
 
 [node name="Collectible2" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(810, 470)
+position = Vector2(1060, 470)
 
 [node name="Collectible3" parent="." instance=ExtResource("3_collectible")]
-position = Vector2(640, 500)
+position = Vector2(800, 322)
 
 [node name="HintP1" parent="UI" instance=ExtResource("90_hint")]
-anchor_left = 0.25
-anchor_right = 0.25
+anchor_left = 0.14
+anchor_right = 0.14
 offset_top = 84.0
 offset_bottom = 84.0
 grow_horizontal = 2

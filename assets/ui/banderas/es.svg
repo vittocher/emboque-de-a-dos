@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="48" viewBox="0 0 60 40">
+  <!-- Bandera de Chile (3:2): idioma "es". -->
+  <rect width="60" height="40" fill="#D52B1E"/>
+  <rect width="60" height="20" fill="#FFFFFF"/>
+  <rect width="20" height="20" fill="#0039A6"/>
+  <polygon points="10.000,5.000 11.123,8.455 14.755,8.455 11.816,10.590 12.939,14.045 10.000,11.910 7.061,14.045 8.184,10.590 5.245,8.455 8.877,8.455" fill="#FFFFFF"/>
+  <rect x="0.5" y="0.5" width="59" height="39" fill="none" stroke="#1a0e05" stroke-opacity="0.45" stroke-width="1"/>
+</svg>

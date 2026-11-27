@@ -117,6 +117,9 @@ func _animate_unlocks(fresh: Array[String]) -> void:
 			tween.tween_method(func(v: float) -> void: rope.points = _rope_points(a, b, v), 0.0, 1.0, 0.55) \
 				.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 		(_by_id[id] as LevelNode).pop_in(0.7 + i * 0.2)
+	if not fresh.is_empty():
+		# Arpegio de "nivel nuevo" cuando aparece el primero.
+		get_tree().create_timer(0.7).timeout.connect(Sfx.play.bind(&"ui_unlock"))
 
 func _initial_focus(fresh: Array[String]) -> String:
 	if not fresh.is_empty():
@@ -161,6 +164,7 @@ func _link_focus_neighbors() -> void:
 			btn.set(prop, btn.get_path_to(best.button()) if best != null else btn.get_path_to(btn))
 
 func _on_focused(id: String) -> void:
+	_flash_info()
 	var level := LevelCatalog.get_level(id)
 	var number := LevelCatalog.number_of(id)
 	if not LevelCatalog.is_unlocked(id):
@@ -181,12 +185,23 @@ func _on_focused(id: String) -> void:
 		parts.append(tr("MAP_NOT_DONE"))
 	_details.text = "   ·   ".join(parts)
 
+## El panel de abajo (nombre, récord) se asoma al cambiar de nivel.
+func _flash_info() -> void:
+	var info := $Info as Control
+	var tween := create_tween()
+	tween.tween_property(info, "modulate:a", 1.0, 0.16).from(0.35)
+
 func _on_chosen(id: String) -> void:
+	var node := _by_id[id] as LevelNode
 	if not LevelCatalog.is_unlocked(id) or not _exists(id):
-		(_by_id[id] as LevelNode).shake()
+		Sfx.play(&"ui_locked")
+		node.shake()
 		return
-	get_tree().paused = false
-	get_tree().change_scene_to_file(LevelCatalog.get_level(id).scene)
+	if UiFx.is_transitioning():
+		return
+	Sfx.play(&"ui_confirm")
+	node.bump()
+	UiFx.go_to(LevelCatalog.get_level(id).scene)
 
 func _exists(id: String) -> bool:
 	return ResourceLoader.exists(LevelCatalog.get_level(id).get("scene", ""))
@@ -201,6 +216,8 @@ func _update_progress() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
+		if not UiFx.is_transitioning():
+			Sfx.play(&"ui_back")
 		_go_back()
 	elif OS.is_debug_build() and event is InputEventKey and event.pressed and not event.echo \
 			and event.physical_keycode == KEY_F9:
@@ -208,5 +225,4 @@ func _unhandled_input(event: InputEvent) -> void:
 		_build()
 
 func _go_back() -> void:
-	get_tree().paused = false
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	UiFx.go_to("res://scenes/ui/main_menu.tscn")

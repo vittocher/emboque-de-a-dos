@@ -43,20 +43,22 @@ theme_override_constants/separation = 18
 [node name="PlayButton" parent="Center/VBox" unique_id=628638890 instance=ExtResource("3_boton")]
 layout_mode = 2
 text = "MENU_PLAY"
+press_sound = &"ui_confirm"
 
 [node name="SettingsButton" parent="Center/VBox" unique_id=129822819 instance=ExtResource("3_boton")]
 layout_mode = 2
 text = "MENU_SETTINGS"
 
 [node name="LanguageButton" parent="." unique_id=1398317482 instance=ExtResource("3_boton")]
-custom_minimum_size = Vector2(190, 52)
+custom_minimum_size = Vector2(210, 52)
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -214.0
+offset_left = -234.0
 offset_top = 24.0
 offset_right = -24.0
 offset_bottom = 76.0
 grow_horizontal = 0
 text = "LANGUAGE_NAME"
+icon_max_width = 36

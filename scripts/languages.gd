@@ -12,7 +12,9 @@ class_name Languages
 ##      LANGUAGE_NAME es el nombre que se muestra en el selector: "Français").
 ##   2. Abrir el proyecto en Godot (genera i18n/textos.fr.translation) y sumarlo
 ##      en Proyecto → Configuración → Localización → Traducciones.
-##   3. Opcional: imágenes con texto dibujado traducidas, con el mismo nombre, en
+##   3. Opcional: su bandera en assets/ui/banderas/<código>.svg (la muestran los
+##      selectores al lado del nombre; sin archivo, solo el nombre).
+##   4. Opcional: imágenes con texto dibujado traducidas, con el mismo nombre, en
 ##      una subcarpeta con el código del idioma (assets/ui/fr/portada.png). Si no
 ##      están, se usa la original (ver localized_texture).
 ## Nada más: el selector de idioma (menú principal y Ajustes) los lista solos.
@@ -41,6 +43,12 @@ static func name_of(code: String) -> String:
 		if name != "":
 			return name
 	return TranslationServer.get_locale_name(code)
+
+## Bandera del idioma (assets/ui/banderas/<código>.svg: es = Chile, en = Reino
+## Unido), o null si no tiene.
+static func flag_of(code: String) -> Texture2D:
+	var path := "res://assets/ui/banderas/%s.svg" % code
+	return load(path) as Texture2D if ResourceLoader.exists(path) else null
 
 ## El idioma del sistema si el juego lo tiene; si no, el por defecto.
 static func system_default() -> String:
